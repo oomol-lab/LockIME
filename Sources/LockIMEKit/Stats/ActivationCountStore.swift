@@ -6,10 +6,12 @@ import Foundation
 /// app restarts *and* Sparkle updates (which relaunch the process). Keeping it
 /// in memory would reset it to zero on every launch, so it lives here instead.
 ///
-/// `UserDefaults` is thread-safe and `key` is immutable. `increment()` is a
-/// read-modify-write, though, so a lock serializes it to keep the compound
-/// step atomic — without it concurrent callers could race and undercount,
-/// which would defeat the `@unchecked Sendable` claim.
+/// `UserDefaults` is itself thread-safe and `key` is immutable, so *reading*
+/// the total needs no lock — a single `integer(forKey:)` is already atomic.
+/// Only `increment()` does: it is a read-modify-write, and without a lock two
+/// concurrent callers could read the same value and both write back the same
+/// `+1`, losing a count. The lock serializes just that compound write, which
+/// is all the `@unchecked Sendable` claim requires.
 public final class ActivationCountStore: @unchecked Sendable {
     private let defaults: UserDefaults
     private let key: String
@@ -21,11 +23,10 @@ public final class ActivationCountStore: @unchecked Sendable {
     }
 
     /// The stored lifetime total (zero when nothing has been recorded yet).
-    public var count: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return defaults.integer(forKey: key)
-    }
+    /// Unlocked on purpose: the single `UserDefaults` read is atomic and yields
+    /// a consistent value — the count just before or just after an in-flight
+    /// increment, never a torn one.
+    public var count: Int { defaults.integer(forKey: key) }
 
     /// Increment the stored total by one and return the new value.
     @discardableResult
