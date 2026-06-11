@@ -80,20 +80,26 @@ One signature moment only: `.contentTransition(.symbolEffect(.replace))` on
 ## 3. App icon — `Assets.xcassets/AppIcon.appiconset` (full PNG set)
 
 Classic 10-image macOS `.appiconset`, **not** Icon Composer `.icon` (headless/CI
-friendly; OS adds Tahoe glass automatically). `.icon` deferred as future polish.
+friendly). The source master stays full-bleed, but the shipped appicon PNGs carry
+a rounded-rect alpha mask so macOS 14/15 Launchpad and Finder never expose raw
+square corners. `.icon` deferred as future polish.
 
-- **Master 1024×1024, PNG-24, sRGB, fully opaque, FULL-BLEED.** Do **not** draw
-  your own rounded rect / gutter — the OS crops. Glyph within ~10% safe inset
-  (central ~820²). No baked gloss/bevel/shadow — OS adds glass + Dock shadow.
+- **Master 1024×1024, PNG-24, sRGB, opaque, FULL-BLEED source art.** Do **not**
+  add a gutter, gloss, bevel, or shadow. Glyph within ~10% safe inset (central
+  ~820²). The appiconset generator applies the rounded-rect alpha mask to the
+  shipped PNGs (`cornerRadius ~= side * 0.2237`).
 - Required 10 images (idiom=mac): 16, 32(16@2x), 32, 64(32@2x), 128, 256(128@2x),
   256, 512(256@2x), 512, 1024(512@2x). **All ten** — one PNG → empty plist → grey
   generic icon.
 - Pipeline: `scripts/MakeIcon.swift` (SwiftUI `ImageRenderer`) renders the 1024
-  master; `sips` downscales; hand-written `Contents.json`. Cache-bust when
-  verifying: `sudo rm -rf /Library/Caches/com.apple.iconservices.store; killall Dock`.
+  master when the committed raster master is absent; `sips` downscales;
+  `scripts/icon-tools/MaskAppIcon.swift` applies the alpha mask; hand-written
+  `Contents.json`. Cache-bust when verifying:
+  `sudo rm -rf /Library/Caches/com.apple.iconservices.store; killall Dock`.
 - **Visual:** opaque diagonal indigo→blue (`#2A5BE0`→`#1840B4`); near-white
   `#F5F7FF` closed padlock with a subtle IME affordance (文/A monogram or caret);
-  flat/clean, at most a faint top inner highlight — let the OS add the glass.
+  flat/clean, at most a faint top inner highlight. Keep the blue art edge-to-edge
+  inside the mask; do not bake new-system glass into the PNG.
 - Wiring: `project.yml` → target `resources: - path: Sources/LockIME/Assets.xcassets`
   and `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`. **Do not** add
   `CFBundleIconName`/`CFBundleIconFile` to Info.plist — actool injects them.
@@ -169,7 +175,7 @@ Reduce Transparency). Replace with:
 |---|---|
 | Toast | Delete; NSAlert + inline Updates result + "Last checked" |
 | Settings nav | Keep 6-tab top TabView, widen to 680 |
-| Icon format | `.appiconset` PNG set, full-bleed, OS-masked |
+| Icon format | `.appiconset` PNG set, full-bleed source, pre-masked shipped PNGs |
 | Accent delivery | Asset-catalog `AccentColor` as Global Accent |
 | Update header art | Real app icon, not lock SF Symbol |
 | Menu style | Native `.menu` |
@@ -179,8 +185,8 @@ Reduce Transparency). Replace with:
 
 ## 6. Risks (Xcode 26 / macOS 26)
 
-- Self-drawn squircle / pre-Tahoe gutter → double-rounded icon. Full-bleed; ship
-  all 10 sizes.
+- Opaque full-bleed appiconset PNGs expose square corners on older Launchpad.
+  Keep the source full-bleed, but ship the masked PNGs in all 10 sizes.
 - Icon caching hides rebuilds — bust the iconservices cache + `killall Dock`.
 - No manual `CFBundleIcon*` keys — actool owns them.
 - `.tint()` no-ops on macOS `Picker` — use the `AccentColor` asset (app target,

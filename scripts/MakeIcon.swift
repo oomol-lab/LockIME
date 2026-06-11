@@ -3,11 +3,11 @@
 //
 //   swift scripts/MakeIcon.swift            # writes /tmp/lockime-icon/master.png (+ preview)
 //
-// The master is FULL-BLEED (opaque, edge-to-edge) per macOS 26 "Tahoe": we do NOT
-// draw the rounded-rect ourselves — the OS applies the Liquid Glass squircle mask
-// and edge treatment. `make-appicon.sh` downscales the master into the 10-image
-// AppIcon.appiconset. A masked preview.png is also emitted so the post-crop look
-// can be judged without installing the app.
+// The master is full-bleed (opaque, edge-to-edge) so the artwork has no baked
+// gutter or bevel. `make-appicon.sh` downscales it, then applies the shipped
+// rounded-rect alpha mask for macOS 14/15 Launchpad compatibility. A masked
+// preview.png is also emitted so the post-crop look can be judged without
+// installing the app.
 
 import AppKit
 import SwiftUI
@@ -178,7 +178,7 @@ func run() {
     let dir = "/tmp/lockime-icon"
     try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
 
-    // The master ships full-bleed (no self-drawn squircle).
+    // The source master stays full-bleed; the appiconset generator masks it.
     writePNG(IconView(), size: 1024, to: "\(dir)/master.png")
 
     // A masked preview to judge the post-crop Tahoe look (NOT shipped).

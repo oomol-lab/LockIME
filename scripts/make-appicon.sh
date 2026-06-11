@@ -5,10 +5,11 @@
 #
 #   ./scripts/make-appicon.sh
 #
-# Normalizes the master to a 1024 full-bleed square, then downscales with sips
-# into the 7 unique pixel sizes the macOS .appiconset needs
-# (16/32/64/128/256/512/1024). Contents.json (committed) maps those into the 10
-# required @1x/@2x slots.
+# Normalizes the master to a 1024 full-bleed square, downscales with sips into
+# the 7 unique pixel sizes the macOS .appiconset needs
+# (16/32/64/128/256/512/1024), then applies the rounded-rect alpha mask that
+# older Launchpad/Finder surfaces do not apply for us. Contents.json
+# (committed) maps those files into the 10 required @1x/@2x slots.
 #
 # If the raster master is absent, falls back to rendering the legacy SwiftUI
 # vector padlock (scripts/MakeIcon.swift).
@@ -18,6 +19,7 @@ cd "$(dirname "$0")/.."
 SET="Sources/LockIME/Assets.xcassets/AppIcon.appiconset"
 TMP="/tmp/lockime-icon"
 MASTER="scripts/appicon-master.png"
+MASK="scripts/icon-tools/MaskAppIcon.swift"
 
 mkdir -p "$TMP"
 if [[ -f "$MASTER" ]]; then
@@ -30,10 +32,14 @@ fi
 
 echo "→ downscaling into ${SET}…"
 mkdir -p "$SET"
+mask_args=()
 for sz in 16 32 64 128 256 512; do
-  sips -s format png -z "$sz" "$sz" "$TMP/master.png" --out "$SET/icon_${sz}.png" >/dev/null
+  raw="$TMP/icon_${sz}-raw.png"
+  sips -s format png -z "$sz" "$sz" "$TMP/master.png" --out "$raw" >/dev/null
+  mask_args+=("$raw" "$SET/icon_${sz}.png")
 done
-cp "$TMP/master.png" "$SET/icon_1024.png"
+mask_args+=("$TMP/master.png" "$SET/icon_1024.png")
+swift "$MASK" "${mask_args[@]}"
 
 echo "✓ appiconset updated:"
 ls -1 "$SET" | sed 's/^/   /'
