@@ -55,7 +55,7 @@ struct MenuBarView: View {
         Button {
             state.showAbout()
         } label: {
-            Label("About LockIME", systemImage: "info.circle")
+            Label("About", systemImage: "info.circle")
         }
 
         Divider()
@@ -63,7 +63,7 @@ struct MenuBarView: View {
         Button {
             NSApplication.shared.terminate(nil)
         } label: {
-            Label("Quit LockIME", systemImage: "power")
+            Label("Quit", systemImage: "power")
         }
         .keyboardShortcut("q", modifiers: .command)
     }

@@ -1614,6 +1614,58 @@
         }
       }
     },
+    "About": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關於"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "情報"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acerca de"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobre"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "О программе"
+          }
+        }
+      }
+    },
     "About LockIME": {
       "localizations": {
         "zh-Hans": {
@@ -3330,54 +3382,54 @@
         }
       }
     },
-    "Quit LockIME": {
+    "Quit": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "退出 LockIME"
+            "value": "退出"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "結束 LockIME"
+            "value": "結束"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "LockIME を終了"
+            "value": "終了"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quitter LockIME"
+            "value": "Quitter"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "LockIME beenden"
+            "value": "Beenden"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salir de LockIME"
+            "value": "Salir"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encerrar o LockIME"
+            "value": "Encerrar"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завершить LockIME"
+            "value": "Завершить"
           }
         }
       }
