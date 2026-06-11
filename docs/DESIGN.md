@@ -160,7 +160,11 @@ window level; panes own internal insets — verify no double-padding.
   `.body` + bundle ID `.caption2 .secondary`). Empty state =
   `ContentUnavailableView` with an action. Rows `.transition(.move(edge:.top)
   .combined(with:.opacity))`; wrap upsert/remove in `withAnimation(DS.Motion.list)`.
-- **Shortcuts:** native recorder rows.
+- **Shortcuts:** native recorder rows in two sections — **Global** (toggle lock,
+  lock to previous/next input source) and **Current app** (cycle, or remove, the
+  frontmost app's rule). Recorder titles must be `LocalizedStringKey(...)`, not a
+  bare `String` literal, or the label renders in the system language (see the
+  i18n guards in CLAUDE.md).
 - **Updates:** `LabeledContent` "Last checked: …" ("Never" fallback), Check
   button, inline up-to-date/error result (see 4.6), badge the tab when an update
   is available.

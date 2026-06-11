@@ -101,6 +101,25 @@ struct LocalizationGuardTests {
         }
     }
 
+    @Test("KeyboardShortcuts recorder titles are never bare string literals")
+    func recorderTitlesAreLocalized() throws {
+        // `KeyboardShortcuts.Recorder` exposes both a `String` and a
+        // `LocalizedStringKey` initializer. A bare string literal binds to the
+        // `String` one (concrete literal default), which renders verbatim and
+        // bypasses the app's language override — a mixed-language Shortcuts
+        // pane. Force the localized overload with `LocalizedStringKey("…")`.
+        for (name, text) in try Self.appSwiftFiles() {
+            for (index, line) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+                let code = line.prefix(upTo: line.firstRange(of: "//")?.lowerBound ?? line.endIndex)
+                if code.contains(".Recorder(\""), !line.contains("i18n-exempt") {
+                    Issue.record(
+                        "\(name):\(index + 1) passes a bare string to KeyboardShortcuts.Recorder — wrap it in LocalizedStringKey(\"…\")"
+                    )
+                }
+            }
+        }
+    }
+
     @Test("redirected third-party bundles exist and cover every supported language")
     func thirdPartyBundlesCoverAllLanguages() throws {
         // `ThirdPartyBundleLocalization` redirects each listed package

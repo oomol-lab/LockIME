@@ -60,8 +60,9 @@ Either way, the app keeps itself up to date via Sparkle.
   another app) change it, globally or per-app.
 - **Menu-bar control** — activate/deactivate, switch the locked input source,
   view the current source, and track the activation count from the menu bar.
-- **Global toggle shortcut** — turn locking on or off with a configurable keyboard
-  shortcut.
+- **Keyboard shortcuts** — configurable global shortcuts to toggle locking and
+  cycle the locked input source, plus per-app shortcuts to cycle or unbind the
+  rule for whichever app is frontmost.
 - **Launch at login** — starts automatically when you log in (off by default).
 - **Light & dark mode** — a unified, system-native design language that adapts to
   light and dark appearance, plus a bespoke app icon. See

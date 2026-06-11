@@ -148,6 +148,29 @@ final class AppState {
             self.setMasterEnabled(!self.isLocked)
         }
 
+        // Global "lock to previous/next source" — cycle the global target
+        // through the input-source list (wrapping), turning locking on.
+        KeyboardShortcuts.onKeyUp(for: .globalPreviousSource) { [weak self] in
+            self?.cycleGlobalSource(.previous)
+        }
+        KeyboardShortcuts.onKeyUp(for: .globalNextSource) { [weak self] in
+            self?.cycleGlobalSource(.next)
+        }
+
+        // Frontmost-app "lock to previous/next source" — cycle that app's own
+        // rule. No rule for the frontmost app ⇒ nothing happens.
+        KeyboardShortcuts.onKeyUp(for: .appPreviousSource) { [weak self] in
+            self?.cycleFrontmostAppSource(.previous)
+        }
+        KeyboardShortcuts.onKeyUp(for: .appNextSource) { [weak self] in
+            self?.cycleFrontmostAppSource(.next)
+        }
+
+        // Frontmost-app "remove rule" — drop that app's rule. No rule ⇒ no-op.
+        KeyboardShortcuts.onKeyUp(for: .removeFrontmostAppRule) { [weak self] in
+            self?.removeFrontmostAppRule()
+        }
+
         // Mirror the configured shortcut into observable state, and keep it in
         // sync so the menu header reflects binds/clears made in Settings live.
         toggleLockShortcut = KeyboardShortcuts.getShortcut(for: .toggleLock)
@@ -221,6 +244,56 @@ final class AppState {
         config.defaultSourceID = id
         config.isEnabled = true
         commit()
+    }
+
+    // MARK: - Shortcut-driven source cycling
+
+    /// Lock the *global* target to the previous/next input source in the list,
+    /// wrapping around the ends, and turn locking on — the same write path as
+    /// `lockToSource`. Never lands on "none", and does nothing when fewer than
+    /// two input sources are installed (there's nowhere to cycle).
+    func cycleGlobalSource(_ direction: CycleDirection) {
+        let reference = config.defaultSourceID ?? engine?.currentSourceID()
+        guard let next = SourceCycler.step(
+            from: reference, in: availableSources.map(\.id), direction: direction
+        ) else { return }
+        config.defaultSourceID = next
+        config.isEnabled = true
+        commit()
+    }
+
+    /// Lock the *frontmost app's* rule to the previous/next input source,
+    /// scoped to that app. Does nothing when the frontmost app has no rule of
+    /// its own, and never lands on "none" (it pins the rule to a valid source).
+    func cycleFrontmostAppSource(_ direction: CycleDirection) {
+        guard let bundleID = frontmostApplicationBundleID,
+              var rule = config.rule(for: bundleID)
+        else { return }
+        let reference = rule.lockedSourceID ?? engine?.currentSourceID()
+        guard let next = SourceCycler.step(
+            from: reference, in: availableSources.map(\.id), direction: direction
+        ) else { return }
+        rule.mode = .locked
+        rule.lockedSourceID = next
+        upsertRule(rule)
+    }
+
+    /// Remove the rule bound to the frontmost app. Does nothing when that app
+    /// has no rule, so pressing it in an unconfigured app is harmless.
+    func removeFrontmostAppRule() {
+        guard let bundleID = frontmostApplicationBundleID,
+              config.rule(for: bundleID) != nil
+        else { return }
+        removeRule(bundleID: bundleID)
+    }
+
+    /// The app the user is actually looking at when a global shortcut fires.
+    /// Read fresh from `NSWorkspace` rather than the mirrored `frontmostBundleID`
+    /// (which only updates on the *next* activation, so it can be stale or nil
+    /// right after launch) — a global hotkey doesn't steal focus, so this is the
+    /// same app the engine resolves rules against.
+    private var frontmostApplicationBundleID: String? {
+        NSWorkspace.shared.frontmostApplication?.bundleIdentifier
     }
 
     func upsertRule(_ rule: AppRule) {
