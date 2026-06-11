@@ -38,10 +38,14 @@ public final class TISInputSourceProvider: InputSourceProviding {
 
         guard TISSelectInputSource(source) == noErr else { return false }
 
-        // CJKV input methods often ignore a background `TISSelectInputSource`;
-        // a momentary key-window nudge makes the switch take effect.
-        if Self.bool(source, kTISPropertyInputSourceIsSelectCapable),
-           InputSourceClassifier.isCJKV(languages: Self.languages(source)) {
+        // CJKV input methods sometimes ignore a background `TISSelectInputSource`:
+        // the call returns `noErr` but the active source doesn't actually flip.
+        // Only nudge when a read-back confirms the switch didn't take — the old
+        // code nudged on *every* CJKV switch, and the nudge re-activated the
+        // frontmost app, which reset the mouse pointer in Chromium/Electron
+        // apps (issue #1).
+        if InputSourceClassifier.isCJKV(languages: Self.languages(source)),
+           currentSourceID() != id {
             FocusNudge.perform()
         }
         return true
