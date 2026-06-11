@@ -58,8 +58,8 @@ Either way, the app keeps itself up to date via Sparkle.
 
 - **Instant re-lock** — switches the active input source back the moment you (or
   another app) change it, globally or per-app.
-- **Menu-bar control** — activate/deactivate, view the current source, and track
-  the activation count from the menu bar.
+- **Menu-bar control** — activate/deactivate, switch the locked input source,
+  view the current source, and track the activation count from the menu bar.
 - **Global toggle shortcut** — turn locking on or off with a configurable keyboard
   shortcut.
 - **Launch at login** — starts automatically when you log in (off by default).

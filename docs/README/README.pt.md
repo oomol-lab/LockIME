@@ -54,7 +54,7 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 ## Features
 
 - **Rebloqueio instantâneo** — devolve a fonte de entrada ativa para a bloqueada no momento em que você (ou outro app) a troca, globalmente ou por app.
-- **Controle pela barra de menus** — ative/desative, veja a fonte atual e acompanhe o contador de ativações pela barra de menus.
+- **Controle pela barra de menus** — ative/desative, troque a fonte de entrada bloqueada, veja a fonte atual e acompanhe o contador de ativações pela barra de menus.
 - **Atalho global de alternância** — ligue ou desligue o bloqueio com um atalho de teclado configurável.
 - **Iniciar no login** — inicia automaticamente quando você faz login (desativado por padrão).
 - **Modo claro e escuro** — uma linguagem de design unificada e nativa do sistema, que se adapta às aparências clara e escura, além de um ícone de app sob medida. Veja [docs/DESIGN.md](../DESIGN.md).

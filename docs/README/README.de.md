@@ -50,7 +50,7 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 ## Features
 
 - **Sofortiges Wieder-Sperren** — schaltet die aktive Eingabequelle in dem Moment zurück, in dem du (oder eine andere App) sie wechselst, global oder pro App.
-- **Steuerung über die Menüleiste** — aktivieren/deaktivieren, die aktuelle Eingabequelle einsehen und die Auslösungen direkt in der Menüleiste verfolgen.
+- **Steuerung über die Menüleiste** — aktivieren/deaktivieren, die gesperrte Eingabequelle wechseln, die aktuelle Eingabequelle einsehen und die Auslösungen direkt in der Menüleiste verfolgen.
 - **Globaler Umschalt-Kurzbefehl** — Sperren mit einem konfigurierbaren Tastatur-Kurzbefehl ein- und ausschalten.
 - **Start bei Anmeldung** — startet automatisch beim Anmelden (standardmäßig aus).
 - **Heller & dunkler Modus** — eine einheitliche, systemnative Designsprache, die sich an helles und dunkles Erscheinungsbild anpasst, plus ein maßgeschneidertes App-Symbol. Siehe [docs/DESIGN.md](../DESIGN.md).

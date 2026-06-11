@@ -50,7 +50,7 @@ Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silic
 ## Features
 
 - **Reverrouillage instantané** — rebascule la source de saisie active dès que vous (ou une autre application) la changez, globalement ou par application.
-- **Contrôle depuis la barre de menus** — activer/désactiver, voir la source actuelle et suivre le nombre d'activations depuis la barre de menus.
+- **Contrôle depuis la barre de menus** — activer/désactiver, changer la source de saisie verrouillée, voir la source actuelle et suivre le nombre d'activations depuis la barre de menus.
 - **Raccourci global de bascule** — activez ou désactivez le verrouillage avec un raccourci clavier configurable.
 - **Lancement à la connexion** — démarre automatiquement à l'ouverture de session (désactivé par défaut).
 - **Mode clair et sombre** — un langage de design unifié et natif du système, qui s'adapte aux apparences claire et sombre, avec une icône d'application sur mesure. Voir [docs/DESIGN.md](../DESIGN.md).

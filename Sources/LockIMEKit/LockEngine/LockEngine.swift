@@ -9,6 +9,7 @@ public final class LockEngine {
     private let provider: any InputSourceProviding
     private let controller: LockController
     private let observer: InputSourceChangeObserver
+    private let enabledSourcesObserver: InputSourceChangeObserver
     private let appMonitor: any FrontmostAppMonitoring
     private let urlProvider: (any BrowserURLProviding)?
     private var urlPollTask: Task<Void, Never>?
@@ -19,6 +20,9 @@ public final class LockEngine {
     public var onCurrentSourceChange: (@MainActor (String) -> Void)?
     /// Fired when the frontmost app changes.
     public var onFrontmostChange: (@MainActor (String?) -> Void)?
+    /// Fired when the system's enabled input sources change (e.g. the user adds
+    /// or removes one in System Settings), with the refreshed selectable list.
+    public var onSelectableSourcesChange: (@MainActor ([InputSource]) -> Void)?
 
     private var config: LockConfiguration = .default
     private var frontmostBundleID: String?
@@ -34,6 +38,7 @@ public final class LockEngine {
         self.provider = provider
         self.controller = LockController(provider: provider)
         self.observer = InputSourceChangeObserver()
+        self.enabledSourcesObserver = InputSourceChangeObserver(.enabledSourcesChanged)
         self.appMonitor = appMonitor ?? AppActivationMonitor()
         self.urlProvider = urlProvider
         self.controller.onActivation = { [weak self] event in
@@ -44,12 +49,14 @@ public final class LockEngine {
     public func start() {
         frontmostBundleID = appMonitor.currentBundleID()
         observer.start { [weak self] in self?.handleSourceChange() }
+        enabledSourcesObserver.start { [weak self] in self?.handleEnabledSourcesChange() }
         appMonitor.start { [weak self] id in self?.handleFrontmostChange(id) }
         notifyCurrent()
     }
 
     public func stop() {
         observer.stop()
+        enabledSourcesObserver.stop()
         appMonitor.stop()
         urlPollTask?.cancel()
         urlPollTask = nil
@@ -79,6 +86,10 @@ public final class LockEngine {
     private func handleSourceChange() {
         controller.selectedSourceDidChange()
         notifyCurrent()
+    }
+
+    private func handleEnabledSourcesChange() {
+        onSelectableSourcesChange?(provider.selectableSources())
     }
 
     private func handleFrontmostChange(_ bundleID: String?) {

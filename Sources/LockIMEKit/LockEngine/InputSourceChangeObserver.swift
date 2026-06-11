@@ -1,17 +1,39 @@
 import Carbon
 import Foundation
 
-/// Observes the system-wide "selected keyboard input source changed"
-/// distributed notification and invokes a handler on the main actor.
+/// A Text Input Source distributed notification this observer can watch. Keeps
+/// the Carbon constants encapsulated here (the only file that imports Carbon)
+/// so callers like `LockEngine` stay Foundation-only.
+public enum InputSourceEvent: Sendable {
+    /// The selected keyboard input source changed.
+    case selectionChanged
+    /// The set of enabled input sources changed — e.g. the user added or
+    /// removed one in System Settings ▸ Keyboard ▸ Input Sources.
+    case enabledSourcesChanged
+
+    var notificationName: CFString {
+        switch self {
+        case .selectionChanged: kTISNotifySelectedKeyboardInputSourceChanged
+        case .enabledSourcesChanged: kTISNotifyEnabledKeyboardInputSourcesChanged
+        }
+    }
+}
+
+/// Observes a system-wide Text Input Source distributed notification and invokes
+/// a handler on the main actor. Defaults to the selected-source-changed event;
+/// pass `.enabledSourcesChanged` to watch the enabled list instead.
 ///
 /// CFNotificationCenter's distributed center delivers on the run loop of the
 /// registering thread; we register from the main actor, so delivery is on main.
 @MainActor
 public final class InputSourceChangeObserver {
+    private let notification: CFString
     private var handler: (@MainActor () -> Void)?
     private var isRegistered = false
 
-    public init() {}
+    public init(_ event: InputSourceEvent = .selectionChanged) {
+        self.notification = event.notificationName
+    }
 
     public func start(_ handler: @escaping @MainActor () -> Void) {
         guard !isRegistered else { return }
@@ -30,7 +52,7 @@ public final class InputSourceChangeObserver {
                     instance.handler?()
                 }
             },
-            kTISNotifySelectedKeyboardInputSourceChanged,
+            notification,
             nil,
             .deliverImmediately
         )

@@ -54,7 +54,7 @@ En cualquier caso, la aplicación se mantiene actualizada mediante Sparkle.
 ## Features
 
 - **Rebloqueo instantáneo** — devuelve la fuente de entrada activa a la bloqueada en el momento en que tú (u otra aplicación) la cambias, globalmente o por aplicación.
-- **Control desde la barra de menús** — activa/desactiva, consulta la fuente actual y sigue el contador de activaciones desde la barra de menús.
+- **Control desde la barra de menús** — activa/desactiva, cambia la fuente de entrada bloqueada, consulta la fuente actual y sigue el contador de activaciones desde la barra de menús.
 - **Atajo global de alternancia** — enciende o apaga el bloqueo con un atajo de teclado configurable.
 - **Arranque al iniciar sesión** — se inicia automáticamente al iniciar sesión (desactivado por defecto).
 - **Modo claro y oscuro** — un lenguaje de diseño unificado y nativo del sistema que se adapta a la apariencia clara y oscura, además de un icono de aplicación a medida. Ver [docs/DESIGN.md](../DESIGN.md).

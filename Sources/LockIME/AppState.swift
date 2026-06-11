@@ -21,6 +21,11 @@ final class AppState {
     private(set) var loginItemState: LoginItemState = .unknown
     private(set) var accessibilityGranted: Bool = false
 
+    /// The configured global toggle-lock shortcut, mirrored as observable state
+    /// so the menu-bar header re-renders the moment the user binds or clears it
+    /// in Settings (a plain `getShortcut` read isn't tracked by `@Observable`).
+    private(set) var toggleLockShortcut: KeyboardShortcuts.Shortcut?
+
     let updateController = UpdateController()
 
     /// About window, hosted in AppKit so it reliably comes to the foreground.
@@ -50,6 +55,13 @@ final class AppState {
     @ObservationIgnored let logStore = LogStore()
     @ObservationIgnored private var engine: LockEngine?
     @ObservationIgnored private var purgeTask: Task<Void, Never>?
+    @ObservationIgnored private var shortcutObserver: (any NSObjectProtocol)?
+
+    /// KeyboardShortcuts posts this (internal) notification whenever a name's
+    /// shortcut is set or cleared. It isn't public, so observe it by its raw
+    /// string — the same way the library's own `NSMenuItem` helper does.
+    @ObservationIgnored private static let shortcutChanged =
+        Notification.Name("KeyboardShortcuts_shortcutByNameDidChange")
 
     /// Guides the user to grant Accessibility access via the floating drag
     /// helper. Created lazily so it does no work until the user actually
@@ -110,6 +122,11 @@ final class AppState {
         engine.onFrontmostChange = { [weak self] bundleID in
             self?.frontmostBundleID = bundleID
         }
+        // Keep the tray switcher and Settings pickers in sync when the user
+        // adds or removes an input source in System Settings while we run.
+        engine.onSelectableSourcesChange = { [weak self] sources in
+            self?.availableSources = sources
+        }
         engine.start()
 
         availableSources = engine.selectableSources()
@@ -131,6 +148,17 @@ final class AppState {
             self.setMasterEnabled(!self.isLocked)
         }
 
+        // Mirror the configured shortcut into observable state, and keep it in
+        // sync so the menu header reflects binds/clears made in Settings live.
+        toggleLockShortcut = KeyboardShortcuts.getShortcut(for: .toggleLock)
+        shortcutObserver = NotificationCenter.default.addObserver(
+            forName: Self.shortcutChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.toggleLockShortcut = KeyboardShortcuts.getShortcut(for: .toggleLock)
+            }
+        }
+
         // Purge the 24h log now and hourly thereafter.
         logStore.purgeExpired()
         purgeTask = Task { @MainActor [weak self] in
@@ -148,10 +176,17 @@ final class AppState {
         purgeTask?.cancel()
         purgeTask = nil
         accessibilityWatcher.stop()
+        if let shortcutObserver {
+            NotificationCenter.default.removeObserver(shortcutObserver)
+            self.shortcutObserver = nil
+        }
     }
 
     deinit {
         purgeTask?.cancel()
+        // The shortcut observer is torn down in `stop()`; a nonisolated deinit
+        // can't touch the non-Sendable token, and it captures `self` weakly so a
+        // lingering registration is harmless (AppState lives for the app's life).
     }
 
     func purgeLog() {
@@ -176,6 +211,15 @@ final class AppState {
 
     func setDefaultSource(_ id: InputSourceID?) {
         config.defaultSourceID = id
+        commit()
+    }
+
+    /// Lock to a specific source from the menu bar: make it the global target
+    /// and turn locking on in a single commit. Clicking the already-locked
+    /// source instead disables locking via `setMasterEnabled(false)`.
+    func lockToSource(_ id: InputSourceID) {
+        config.defaultSourceID = id
+        config.isEnabled = true
         commit()
     }
 

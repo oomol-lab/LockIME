@@ -108,7 +108,41 @@ square corners. `.icon` deferred as future polish.
 
 ### 4.1 Menu-bar menu — native `.menuBarExtraStyle(.menu)`
 Bar glyph: template `lock.fill`/`lock.open`, swapped by state, optional one-shot
-`.symbolEffect`. Header: non-interactive `Label` "Locked · ABC". Master toggle.
+`.symbolEffect`. Header: a padlock glyph (`lock.fill` when locked,
+`lock.open.fill` when unlocked) plus the lock state word only ("Locked" /
+"Unlocked"), with the configured global toggle-lock shortcut echoed on the right.
+The current source name is **deliberately not repeated** here — the list below
+already marks the locked source with a checkmark. It's a **disabled** `Button`:
+a `Label` alone won't render a menu accelerator, but a disabled Button draws the
+key-equivalent glyphs natively while never firing them, so it stays a pure hint
+with no clash against the real global handler. The shortcut is read from
+`AppState.toggleLockShortcut` (mirrored from `KeyboardShortcuts` and kept in sync
+via the library's `shortcutByNameDidChange` notification — a plain `getShortcut`
+read isn't `@Observable`-tracked, so the header wouldn't refresh when the user
+binds/clears it in Settings). It's mapped through `menuDisplayShortcut`, a
+best-effort `KeyboardShortcut` for single printable keys (any modifiers, up to
+"⌃⌥⇧⌘X"); exotic keys (Space, arrows, F-keys) still work globally but aren't
+echoed. **The system input sources are flattened directly into the
+menu**, bracketed by one divider above and one below — no master toggle, no
+submenu. Each source is a `Button` carrying a leading checkmark **image** (the
+`CheckmarkSlot` NSImages), shown on the locked one and a same-size transparent
+slot otherwise; a source is checked iff locking is on **and** it is the global
+target (`config.defaultSourceID`). The image (not a `Toggle`'s native checkmark,
+which lives in NSMenu's *state* column and collapses to zero width when nothing
+is checked) keeps the gutter reserved at a constant width, so the menu never
+grows or shrinks as the lock toggles — and NSMenu drops SwiftUI's `.opacity` on a
+Label's system-image icon, so the slot must swap the image itself, not hide a
+symbol. Clicking an unchecked source locks to it (`AppState.lockToSource` sets
+the target *and* enables locking in one commit, re-resolving and flipping the
+active source immediately); clicking the checked source disables locking
+(`setMasterEnabled(false)`), leaving the target remembered. This is the same
+write path as the App Rules "Global default" picker. Source names are
+`Text(verbatim:)` system strings, not catalog keys. The
+engine keeps the list live via a second
+`InputSourceChangeObserver(.enabledSourcesChanged)`, so adding/removing an input
+source in System Settings updates both this menu and the Settings pickers. The
+global toggle-lock shortcut (Settings ▸ Shortcuts) is unchanged — it flips
+locking on/off against the remembered target, independent of this list.
 Collapse Settings / Check for Updates / About into one `Section` (fewer dividers).
 Keep `.keyboardShortcut` hints. Zero custom color — NSMenu supplies everything.
 (Active-scope `.badge` is a nice-to-have — verify it renders on the real macOS 26
