@@ -45,6 +45,7 @@ final class AppState {
     }
 
     @ObservationIgnored private let store = RuleStore()
+    @ObservationIgnored private let activationStore = ActivationCountStore()
     @ObservationIgnored private let loginItem = LoginItemController()
     @ObservationIgnored let logStore = LogStore()
     @ObservationIgnored private var engine: LockEngine?
@@ -93,13 +94,14 @@ final class AppState {
     func start() {
         guard engine == nil else { return }
         config = store.load()
+        activationCount = activationStore.count
 
         let engine = LockEngine(urlProvider: AccessibilityBrowserURLReader())
         self.engine = engine
         accessibilityGranted = AXIsProcessTrusted()
         engine.onActivation = { [weak self] event in
             guard let self else { return }
-            self.activationCount += 1
+            self.activationCount = self.activationStore.increment()
             self.logStore.record(event)
         }
         engine.onCurrentSourceChange = { [weak self] name in
