@@ -6345,6 +6345,110 @@
           }
         }
       }
+    },
+    "Development build": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发版本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開發版本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発ビルド"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version de développement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwicklungs-Build"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilación de desarrollo"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilação de desenvolvimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сборка для разработки"
+          }
+        }
+      }
+    },
+    "Automatic updates are disabled in development builds. To test the update flow, use the make update-test-* lab.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发构建已禁用自动更新。如需测试更新流程，请使用 make update-test-* 实验链路。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開發建置已停用自動更新。如需測試更新流程，請使用 make update-test-* 實驗鏈路。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発ビルドでは自動更新が無効になっています。更新フローをテストするには、make update-test-* のラボを使用してください。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mises à jour automatiques sont désactivées dans les versions de développement. Pour tester le flux de mise à jour, utilisez le banc d'essai make update-test-*."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatische Updates sind in Entwicklungs-Builds deaktiviert. Um den Update-Ablauf zu testen, verwende das make update-test-*-Labor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las actualizaciones automáticas están deshabilitadas en las compilaciones de desarrollo. Para probar el flujo de actualización, usa el laboratorio make update-test-*."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As atualizações automáticas estão desativadas em compilações de desenvolvimento. Para testar o fluxo de atualização, use o laboratório make update-test-*."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматические обновления отключены в сборках для разработки. Чтобы протестировать процесс обновления, используйте лабораторию make update-test-*."
+          }
+        }
+      }
     }
   }
 }

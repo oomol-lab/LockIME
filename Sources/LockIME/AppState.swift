@@ -465,6 +465,12 @@ final class AppState {
             alert.alertStyle = .warning
             alert.messageText = loc("Update failed")
             alert.informativeText = loc(failure.messageKey)
+        #if DEBUG
+        case .disabledInDevelopment:
+            alert.alertStyle = .informational
+            alert.messageText = loc("Development build")
+            alert.informativeText = loc("Automatic updates are disabled in development builds. To test the update flow, use the make update-test-* lab.")
+        #endif
         }
         alert.addButton(withTitle: loc("OK"))
         NSApp.activate(ignoringOtherApps: true)

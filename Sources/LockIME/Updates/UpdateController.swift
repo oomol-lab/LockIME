@@ -7,6 +7,11 @@ import Sparkle
 enum UpdateCheckOutcome {
     case upToDate
     case failed(UpdateFailure)
+    #if DEBUG
+    /// A bare `make run` dev build declined to contact the real production feed
+    /// (see `UpdateController.updatesDisabledForDevelopment`).
+    case disabledInDevelopment
+    #endif
 }
 
 /// Owns the Sparkle updater wired to our custom user driver.
@@ -40,6 +45,20 @@ final class UpdateController {
 
     private(set) var canCheckForUpdates = false
 
+    #if DEBUG
+    /// A bare `make run` dev build must never reach the real production feed or
+    /// install a stable release over the local build: its version is always
+    /// `0.0.0-development`, so every check would "find" the newest stable and
+    /// could replace the build under test. The update lab (`make update-test-*`)
+    /// is the one exception — it redirects the feed to a loopback server via
+    /// `LOCKIME_UPDATE_FEED` and deliberately exercises real download/install,
+    /// so the presence of that env var is exactly what tells the lab apart from
+    /// a plain run. Release builds never reach this property (compiled out).
+    private var updatesDisabledForDevelopment: Bool {
+        (ProcessInfo.processInfo.environment["LOCKIME_UPDATE_FEED"] ?? "").isEmpty
+    }
+    #endif
+
     init() {
         driver = LockIMEUserDriver(model: model)
         driver.onUpdateAvailable = { [weak self] in
@@ -56,6 +75,16 @@ final class UpdateController {
     /// Build and start the updater. Fails gracefully if `SUPublicEDKey` is
     /// missing/invalid (updates simply stay unavailable).
     func start() {
+        #if DEBUG
+        if updatesDisabledForDevelopment {
+            // Never start Sparkle in a plain dev build: no scheduled check can
+            // fire and the production feed is never contacted. The manual
+            // "Check for Updates…" button stays enabled and surfaces a
+            // "disabled in development" notice instead (see `checkForUpdates`).
+            canCheckForUpdates = true
+            return
+        }
+        #endif
         let updater = SPUUpdater(
             hostBundle: .main,
             applicationBundle: .main,
@@ -86,6 +115,12 @@ final class UpdateController {
     /// check — nothing is shown until the result is known (an available update
     /// opens the window; "up to date"/errors surface as a native alert).
     func checkForUpdates() {
+        #if DEBUG
+        if updatesDisabledForDevelopment {
+            onCheckOutcome?(.disabledInDevelopment)
+            return
+        }
+        #endif
         if pendingUpdateVersion != nil {
             onPresentUpdateWindow?()
         } else {
