@@ -497,4 +497,66 @@ struct LockEngineReasonTests {
         #expect(events.last?.matchedHost == "translate.google.com")
         #expect(events.last?.inputSource == pinyin)
     }
+
+    // Editing a URL rule while already locked is a config edit — the trigger is
+    // the edit, not a navigation — so it keeps .configChanged and carries the
+    // URL provenance in ruleSource rather than masquerading as .urlMatched.
+    @Test("an apply-driven URL resolution keeps its reason, not urlMatched")
+    func applyReasonOutranksURLMatch() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let urls = MockBrowserURLProvider(url: "https://github.com/x")
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.apple.Safari"),
+            urlProvider: urls
+        )
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: abc)]
+        ), reason: .startupApplied)
+        #expect(provider.current == abc)
+
+        // Re-point the github rule while locked (a config edit, already enabled).
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: pinyin)]
+        ), reason: .configChanged)
+        #expect(provider.current == pinyin)
+        #expect(events.last?.reason == .configChanged) // not .urlMatched
+        #expect(events.last?.ruleSource == .urlRule)   // provenance kept
+        #expect(events.last?.matchedHost == "github.com")
+    }
+
+    // Turning the lock off must never force a switch: if the source has drifted
+    // off target, disabling should leave it where the user put it, not yank it
+    // back one last time. Enabling while already on target sets no settle
+    // window, so the disable path is the only thing that could force here.
+    @Test("disabling the lock is side-effect free")
+    func disablingForcesNothing() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let engine = LockEngine(provider: provider, appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"))
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.start()
+        engine.apply(LockConfiguration(isEnabled: true, defaultSourceID: abc), reason: .lockEngaged)
+        #expect(events.isEmpty) // already on target → locked without forcing
+
+        provider.current = us // the source drifts off target
+        engine.apply(LockConfiguration(isEnabled: false, defaultSourceID: abc), reason: .lockEngaged)
+        #expect(events.isEmpty)         // disabling forced nothing
+        #expect(provider.current == us) // left where the user put it
+    }
 }

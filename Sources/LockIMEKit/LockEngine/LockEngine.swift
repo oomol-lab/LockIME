@@ -92,8 +92,18 @@ public final class LockEngine {
     /// since whichever fires is the one that emits the activation event.
     public func apply(_ config: LockConfiguration, reason: ActivationReason = .configChanged) {
         self.config = config
-        reevaluate(reason: reason)                      // set target (no enforce while disabled)
-        controller.setEnabled(config.isEnabled, reason: reason) // enforce if just enabled
+        // Order matters so disabling is side-effect free. When enabling (or
+        // re-applying while on), set the target first, then enforce. When
+        // disabling, stop enforcing *first* — otherwise reevaluate could force
+        // one last switch under the still-enabled state before the lock turns
+        // off (e.g. the source has drifted off target and the revert is pending).
+        if config.isEnabled {
+            reevaluate(reason: reason)                       // set target
+            controller.setEnabled(true, reason: reason)      // then enforce on enable
+        } else {
+            controller.setEnabled(false, reason: reason)     // stop enforcing first
+            reevaluate(reason: reason)                       // update cached target only
+        }
         updateURLPolling()
         notifyCurrent()
     }
@@ -144,11 +154,20 @@ public final class LockEngine {
         let urlMatch = enhancedURLMatch()
         switch RuleResolver.resolve(config: config, frontmostBundleID: effectiveBundleID, urlMatch: urlMatch?.id) {
         case .lock(let id, let ruleSource):
-            // A matched URL rule outranks the passed reason (it's the *why*);
-            // otherwise keep the trigger's reason (app switch, poll, …).
+            // A URL match outranks a *trigger* reason (app switch, launcher,
+            // poll) — the URL is the why, so log .urlMatched. But an apply-driven
+            // reason (lock engaged / settings changed / startup restore) is the
+            // why itself; keep it, with the URL provenance carried by ruleSource.
+            let effectiveReason: ActivationReason
+            switch reason {
+            case .startupApplied, .lockEngaged, .configChanged:
+                effectiveReason = reason
+            default:
+                effectiveReason = ruleSource == .urlRule ? .urlMatched : reason
+            }
             controller.setTarget(
                 id,
-                reason: ruleSource == .urlRule ? .urlMatched : reason,
+                reason: effectiveReason,
                 bundleID: effectiveBundleID,
                 ruleSource: ruleSource,
                 matchedHost: ruleSource == .urlRule ? urlMatch?.host : nil
