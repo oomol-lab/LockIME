@@ -62,7 +62,14 @@ public final class FloatingAppMonitor: FloatingAppMonitoring {
 
     public func refresh() {
         guard onChange != nil else { return }
-        attachAll()   // pick up launchers we couldn't attach before the grant
+        if AXIsProcessTrusted() {
+            attachAll()   // (re)attach to running launchers now that we can
+        } else {
+            // Trust was revoked: existing observers are dead and won't fire even
+            // if access is re-granted, so detach them (a later refresh recreates
+            // fresh ones). evaluate() then clears any stale launcher attribution.
+            for pid in Array(observers.keys) { detach(pid) }
+        }
         evaluate()
     }
 

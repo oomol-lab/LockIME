@@ -328,16 +328,24 @@ final class AppState {
         commit()
     }
 
-    /// Reconcile the cached flag with the live trust state. This is the recovery
-    /// path: the user may grant while the polling watcher is stopped (e.g. after
-    /// closing the window mid-flow) or entirely out-of-band in System Settings,
-    /// so a refresh that observes a *new* grant must run the same completion the
-    /// watcher would have. Also flips the flag back on revoke.
+    /// Reconcile the cached flag with the live trust state, reacting to either
+    /// transition. The user may grant while the polling watcher is stopped (e.g.
+    /// after closing the window mid-flow) or entirely out-of-band in System
+    /// Settings, so a refresh that observes a *new* grant must run the same
+    /// completion the watcher would have. A *revoke* is just as important: the
+    /// launcher-overlay observers are now dead, so the engine must detach them
+    /// and clear any stale overlay attribution (otherwise re-granting later
+    /// wouldn't re-attach, and rules could keep resolving against a launcher).
     func refreshAccessibilityStatus() {
         let trusted = AXIsProcessTrusted()
-        let newlyGranted = trusted && !accessibilityGranted
+        let wasGranted = accessibilityGranted
         accessibilityGranted = trusted
-        if newlyGranted { handleAccessibilityGranted() }
+        guard trusted != wasGranted else { return }
+        if trusted {
+            handleAccessibilityGranted()
+        } else {
+            engine?.accessibilityDidChange()
+        }
     }
 
     /// Open System Settings with the floating drag helper, then start watching

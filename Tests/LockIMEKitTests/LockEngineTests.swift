@@ -285,6 +285,25 @@ struct LockEngineLauncherTests {
         engine.accessibilityDidChange()
         #expect(floating.refreshCount == 1)
     }
+
+    @Test("revoking Accessibility clears a stale launcher attribution")
+    func revokeClearsLauncherAttribution() {
+        let (engine, provider, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc)]
+        ))
+        floating.setLauncher(spotlight)
+        #expect(provider.current == abc) // overlay attributed to Spotlight's rule
+
+        // Revoking access refreshes the monitor; with trust gone it can no longer
+        // read focus, so it reports "no launcher" — the engine must revert to the
+        // frontmost app rather than stay pinned to the stale overlay.
+        floating.refreshClearsLauncher = true
+        engine.accessibilityDidChange()
+        #expect(provider.current == us) // reverted to foo's default
+    }
 }
 
 /// A URL provider that, like the real Accessibility reader, only yields a URL
