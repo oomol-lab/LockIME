@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 
 @testable import LockIMEKit
@@ -14,6 +15,33 @@ struct LogStoreTests {
             reason: .revertedSwitch,
             durationMs: 1.5
         )
+    }
+
+    @Test("the from-source, app, and rule context round-trips into a stored row")
+    func recordsContextFields() throws {
+        let store = LogStore(inMemory: true)
+        store.record(
+            ActivationEvent(
+                timestamp: .now,
+                inputSource: "com.apple.keylayout.US",
+                inputSourceName: "U.S.",
+                reason: .revertedSwitch,
+                durationMs: 2.0,
+                fromSourceName: "Pinyin",
+                triggeringBundleID: "com.apple.Safari",
+                ruleSource: .appRule,
+                matchedHost: nil
+            ),
+            triggeringAppName: "Safari"
+        )
+
+        let rows = try store.container.mainContext.fetch(FetchDescriptor<ActivationLogEntry>())
+        let row = try #require(rows.first)
+        #expect(row.fromSourceName == "Pinyin")
+        #expect(row.triggeringBundleID == "com.apple.Safari")
+        #expect(row.triggeringAppName == "Safari")
+        #expect(row.ruleSource == .appRule)
+        #expect(row.reason == .revertedSwitch)
     }
 
     @Test("records persist")

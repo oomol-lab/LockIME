@@ -400,3 +400,101 @@ struct LockEngineSurfaceTests {
         #expect(engine.selectableSources().map(\.id) == [us, abc])
     }
 }
+
+@MainActor
+@Suite("LockEngine activation reasons")
+struct LockEngineReasonTests {
+    private let us: InputSourceID = "com.apple.keylayout.US"
+    private let abc: InputSourceID = "com.apple.keylayout.ABC"
+    private let pinyin: InputSourceID = "com.apple.inputmethod.SCIM.ITABC"
+    private let spotlight = "com.apple.Spotlight"
+
+    @Test("a frontmost-app switch is logged as appActivated with the app's context")
+    func appActivatedContext() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.foo.App")
+        let engine = LockEngine(provider: provider, appMonitor: monitor)
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .locked, lockedSourceID: abc)]
+        ), reason: .startupApplied)
+
+        monitor.activate("com.apple.Terminal")
+        #expect(events.last?.reason == .appActivated)
+        #expect(events.last?.ruleSource == .appRule)
+        #expect(events.last?.triggeringBundleID == "com.apple.Terminal")
+        #expect(events.last?.inputSource == abc)
+    }
+
+    @Test("a launcher overlay is logged focused, then dismissed")
+    func launcherReasons() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let floating = MockFloatingMonitor()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            floatingAppMonitor: floating
+        )
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc)]
+        ))
+
+        floating.setLauncher(spotlight)
+        #expect(events.last?.reason == .launcherFocused)
+        #expect(events.last?.triggeringBundleID == spotlight)
+
+        floating.setLauncher(nil)
+        #expect(events.last?.reason == .launcherDismissed)
+    }
+
+    // The enabling force at apply() time is attributed to the apply reason (the
+    // lock engaging), with the URL provenance carried by `ruleSource`. The
+    // dedicated `.urlMatched` reason fires only once already locked, when a URL
+    // change re-resolves the target — the trigger *is* the URL.
+    @Test("a URL change re-resolved while locked is logged as urlMatched with the host")
+    func urlMatchedHost() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let urls = MockBrowserURLProvider(url: "https://github.com/x")
+        let monitor = MockFrontmostMonitor(bundleID: "com.apple.Safari")
+        let engine = LockEngine(provider: provider, appMonitor: monitor, urlProvider: urls)
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            enhancedModeEnabled: true,
+            urlRules: [
+                URLRule(hostPattern: "github.com", lockedSourceID: abc),
+                URLRule(hostPattern: "translate.google.com", lockedSourceID: pinyin),
+            ]
+        ), reason: .startupApplied)
+        #expect(provider.current == abc) // enabling forced the github rule
+
+        // Navigate to the google rule and re-activate while already locked.
+        urls.url = "https://translate.google.com/?sl=en"
+        monitor.activate("com.apple.Safari")
+        #expect(events.last?.reason == .urlMatched)
+        #expect(events.last?.ruleSource == .urlRule)
+        #expect(events.last?.matchedHost == "translate.google.com")
+        #expect(events.last?.inputSource == pinyin)
+    }
+}

@@ -55,6 +55,18 @@ struct URLMatcherTests {
         #expect(URLMatcher.match(host: "x.com", rules: []) == nil)
     }
 
+    @Test("matchedRule surfaces the winning rule (host pattern + source)")
+    func matchedRuleReturnsRule() {
+        let rules = [
+            URLRule(hostPattern: "docs.github.com", lockedSourceID: pinyin),
+            URLRule(hostPattern: "github.com", lockedSourceID: us),
+        ]
+        #expect(URLMatcher.matchedRule(host: "docs.github.com", rules: rules)?.hostPattern == "docs.github.com")
+        #expect(URLMatcher.matchedRule(host: "api.github.com", rules: rules)?.hostPattern == "github.com")
+        #expect(URLMatcher.matchedRule(host: "example.com", rules: rules) == nil)
+        #expect(URLMatcher.matchedRule(host: nil, rules: rules) == nil)
+    }
+
     @Test("browser bundle detection (Safari + Chromium; Firefox excluded)")
     func browsers() {
         #expect(BrowserBundleIDs.isBrowser("com.apple.Safari"))

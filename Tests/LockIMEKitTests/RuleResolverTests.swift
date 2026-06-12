@@ -12,7 +12,7 @@ struct RuleResolverTests {
     @Test("global default applies when no app rule matches")
     func globalDefault() {
         let config = LockConfiguration(isEnabled: true, defaultSourceID: us, appRules: [])
-        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.Bar") == .lock(us))
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.Bar") == .lock(us, .globalDefault))
     }
 
     @Test("no default and no rule yields noTarget")
@@ -29,9 +29,9 @@ struct RuleResolverTests {
             defaultSourceID: us,
             appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .locked, lockedSourceID: abc)]
         )
-        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Terminal") == .lock(abc))
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Terminal") == .lock(abc, .appRule))
         // a different app still uses the default
-        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.other.App") == .lock(us))
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.other.App") == .lock(us, .globalDefault))
     }
 
     @Test("an ignored app rule disables locking for that app")
@@ -51,7 +51,7 @@ struct RuleResolverTests {
             defaultSourceID: us,
             appRules: [AppRule(bundleID: "com.foo.App", mode: .useDefault)]
         )
-        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us))
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us, .globalDefault))
     }
 
     @Test("locked rule with no source set falls back to the default")
@@ -61,7 +61,7 @@ struct RuleResolverTests {
             defaultSourceID: us,
             appRules: [AppRule(bundleID: "com.foo.App", mode: .locked, lockedSourceID: nil)]
         )
-        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us))
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us, .globalDefault))
     }
 
     @Test("an enhanced URL match wins over everything")
@@ -73,7 +73,7 @@ struct RuleResolverTests {
         )
         #expect(
             RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", urlMatch: pinyin)
-                == .lock(pinyin)
+                == .lock(pinyin, .urlRule)
         )
     }
 }

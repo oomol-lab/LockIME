@@ -35,8 +35,11 @@ public final class LogStore {
         }
     }
 
-    public func record(_ event: ActivationEvent) {
-        container.mainContext.insert(ActivationLogEntry(event))
+    /// Persist an event. `triggeringAppName` is the display name the caller
+    /// resolved from `event.triggeringBundleID` (resolution needs `NSWorkspace`,
+    /// which the non-UI kit avoids).
+    public func record(_ event: ActivationEvent, triggeringAppName: String? = nil) {
+        container.mainContext.insert(ActivationLogEntry(event, triggeringAppName: triggeringAppName))
         do {
             try container.mainContext.save()
         } catch {

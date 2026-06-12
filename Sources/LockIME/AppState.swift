@@ -118,7 +118,13 @@ final class AppState {
         engine.onActivation = { [weak self] event in
             guard let self else { return }
             self.activationCount = self.activationStore.increment()
-            self.logStore.record(event)
+            // Resolve the triggering app's display name here (AppKit lives in
+            // the app, not the kit) so the log row keeps it even after that app
+            // quits. App names are proper nouns shown verbatim — the same
+            // treatment as the rules UI (AppRow) and the input-source column —
+            // not catalog strings, so they bypass the in-app language override.
+            let appName = event.triggeringBundleID.map(AppDisplay.name(for:))
+            self.logStore.record(event, triggeringAppName: appName)
         }
         engine.onCurrentSourceChange = { [weak self] name in
             self?.currentSourceName = name
@@ -138,7 +144,7 @@ final class AppState {
         if config.defaultSourceID == nil, let current = engine.currentSourceID() {
             config.defaultSourceID = current
         }
-        engine.apply(config)
+        engine.apply(config, reason: .startupApplied)
         store.save(config)
 
         loginItemState = loginItem.state
@@ -233,7 +239,7 @@ final class AppState {
 
     func setMasterEnabled(_ on: Bool) {
         config.isEnabled = on
-        commit()
+        commit(reason: .lockEngaged)
     }
 
     func setDefaultSource(_ id: InputSourceID?) {
@@ -247,7 +253,7 @@ final class AppState {
     func lockToSource(_ id: InputSourceID) {
         config.defaultSourceID = id
         config.isEnabled = true
-        commit()
+        commit(reason: .lockEngaged)
     }
 
     // MARK: - Shortcut-driven source cycling
@@ -263,7 +269,7 @@ final class AppState {
         ) else { return }
         config.defaultSourceID = next
         config.isEnabled = true
-        commit()
+        commit(reason: .lockEngaged)
     }
 
     /// Lock the *frontmost app's* rule to the previous/next input source,
@@ -430,8 +436,11 @@ final class AppState {
         if let engine { availableSources = engine.selectableSources() }
     }
 
-    private func commit() {
-        engine?.apply(config)
+    /// Persist + re-apply the config. `reason` attributes any resulting forced
+    /// switch in the activation log: a config edit (the default) vs the master
+    /// lock being engaged (menu toggle / lock-to-source / hotkey cycling).
+    private func commit(reason: ActivationReason = .configChanged) {
+        engine?.apply(config, reason: reason)
         store.save(config)
     }
 

@@ -27,6 +27,13 @@ public final class LockController {
 
     private var settleUntil: TimeInterval = 0
 
+    /// Context describing where the current `target` came from, set alongside it
+    /// by `setTarget` and attached to every event the target produces (including
+    /// later reverts), so a log row can name the app and rule behind the lock.
+    private var targetBundleID: String?
+    private var targetRuleSource: RuleSource?
+    private var targetMatchedHost: String?
+
     public init(
         provider: any InputSourceProviding,
         isEnabled: Bool = false,
@@ -42,17 +49,30 @@ public final class LockController {
     // MARK: - Public commands
 
     /// Engage or disengage locking. Engaging while mismatched forces immediately.
-    public func setEnabled(_ on: Bool) {
+    /// `reason` lets the caller attribute the engaging force (e.g. a master
+    /// toggle vs a startup restore), since `setTarget`'s force may be suppressed
+    /// while still disabled and this is what actually enforces on enable.
+    public func setEnabled(_ on: Bool, reason: ActivationReason = .lockEngaged) {
         isEnabled = on
         guard on else { return }
-        enforceIfNeeded(reason: .lockEngaged)
+        enforceIfNeeded(reason: reason)
     }
 
-    /// Set (or clear) the locked target. A non-nil target that differs from the
-    /// current source is enforced immediately.
-    public func setTarget(_ id: InputSourceID?, reason: ActivationReason = .lockEngaged) {
+    /// Set (or clear) the locked target, plus the context describing where it
+    /// came from. A non-nil target that differs from the current source is
+    /// enforced immediately.
+    public func setTarget(
+        _ id: InputSourceID?,
+        reason: ActivationReason = .lockEngaged,
+        bundleID: String? = nil,
+        ruleSource: RuleSource? = nil,
+        matchedHost: String? = nil
+    ) {
         let changed = id != target
         target = id
+        targetBundleID = bundleID
+        targetRuleSource = ruleSource
+        targetMatchedHost = matchedHost
         // A genuinely new target supersedes any in-flight suppression window
         // (which only guarded re-forcing the *previous* target), so enforce now.
         if changed { settleUntil = 0 }
@@ -69,13 +89,15 @@ public final class LockController {
     private func enforceIfNeeded(reason: ActivationReason) {
         guard isEnabled, let target else { return }
         guard let current = provider.currentSourceID() else { return }
-        if current == target { return }       // (1) idempotent — absorbs our echo
-        if uptime() < settleUntil { return }  // (2) recent force still settling
-        force(target, reason: reason)          // (3) verified mismatch → re-force
+        if current == target { return }        // (1) idempotent — absorbs our echo
+        if uptime() < settleUntil { return }   // (2) recent force still settling
+        force(target, reason: reason, from: current) // (3) verified mismatch → re-force
     }
 
-    private func force(_ id: InputSourceID, reason: ActivationReason) {
+    private func force(_ id: InputSourceID, reason: ActivationReason, from: InputSourceID?) {
         let start = uptime()
+        // Resolve the source we're leaving *before* the switch takes effect.
+        let fromName = from.flatMap { provider.source(for: $0)?.localizedName ?? $0.rawValue }
         let ok = provider.select(id)
         settleUntil = uptime() + Self.suppressionWindow
         guard ok else { return }
@@ -88,7 +110,11 @@ public final class LockController {
                 inputSource: id,
                 inputSourceName: name,
                 reason: reason,
-                durationMs: durationMs
+                durationMs: durationMs,
+                fromSourceName: fromName,
+                triggeringBundleID: targetBundleID,
+                ruleSource: targetRuleSource,
+                matchedHost: targetMatchedHost
             )
         )
     }

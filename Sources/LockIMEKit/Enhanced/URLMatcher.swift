@@ -49,10 +49,15 @@ public enum URLMatcher {
         return host?.lowercased()
     }
 
+    /// The first rule whose pattern matches `host`, or `nil`.
+    public static func matchedRule(host: String?, rules: [URLRule]) -> URLRule? {
+        guard let host = host?.lowercased(), !host.isEmpty else { return nil }
+        return rules.first { matches(host: host, pattern: $0.hostPattern) }
+    }
+
     /// The locked source of the first rule whose pattern matches `host`.
     public static func match(host: String?, rules: [URLRule]) -> InputSourceID? {
-        guard let host = host?.lowercased(), !host.isEmpty else { return nil }
-        return rules.first { matches(host: host, pattern: $0.hostPattern) }?.lockedSourceID
+        matchedRule(host: host, rules: rules)?.lockedSourceID
     }
 
     /// A pattern matches a host if equal, a parent domain, or a `*.` wildcard.

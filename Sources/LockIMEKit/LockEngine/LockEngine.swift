@@ -84,10 +84,16 @@ public final class LockEngine {
 
     /// Apply a configuration: update rules/default, set master enable, and
     /// re-resolve + enforce the appropriate target for the frontmost app.
-    public func apply(_ config: LockConfiguration) {
+    ///
+    /// `reason` attributes the enforcing force to its cause — a config edit
+    /// (`.configChanged`, the default), turning the master toggle on
+    /// (`.lockEngaged`), or the launch/restore apply (`.startupApplied`). It
+    /// flows into both the target re-resolution and the enable-time enforce,
+    /// since whichever fires is the one that emits the activation event.
+    public func apply(_ config: LockConfiguration, reason: ActivationReason = .configChanged) {
         self.config = config
-        reevaluate(reason: .lockEngaged)        // set target (no enforce while disabled)
-        controller.setEnabled(config.isEnabled) // enforce if just enabled
+        reevaluate(reason: reason)                      // set target (no enforce while disabled)
+        controller.setEnabled(config.isEnabled, reason: reason) // enforce if just enabled
         updateURLPolling()
         notifyCurrent()
     }
@@ -129,26 +135,37 @@ public final class LockEngine {
     private func handleLauncherChange(_ bundleID: String?) {
         launcherBundleID = bundleID
         onFrontmostChange?(effectiveBundleID)
-        reevaluate(reason: .appActivated)
+        reevaluate(reason: bundleID != nil ? .launcherFocused : .launcherDismissed)
         updateURLPolling()
         notifyCurrent()
     }
 
     private func reevaluate(reason: ActivationReason) {
         let urlMatch = enhancedURLMatch()
-        switch RuleResolver.resolve(config: config, frontmostBundleID: effectiveBundleID, urlMatch: urlMatch) {
-        case .lock(let id):
-            controller.setTarget(id, reason: urlMatch != nil ? .urlMatched : reason)
+        switch RuleResolver.resolve(config: config, frontmostBundleID: effectiveBundleID, urlMatch: urlMatch?.id) {
+        case .lock(let id, let ruleSource):
+            // A matched URL rule outranks the passed reason (it's the *why*);
+            // otherwise keep the trigger's reason (app switch, poll, …).
+            controller.setTarget(
+                id,
+                reason: ruleSource == .urlRule ? .urlMatched : reason,
+                bundleID: effectiveBundleID,
+                ruleSource: ruleSource,
+                matchedHost: ruleSource == .urlRule ? urlMatch?.host : nil
+            )
         case .ignore, .noTarget:
             controller.setTarget(nil)
         }
     }
 
-    /// The locked source from a matching URL rule, when enhanced mode is on.
-    private func enhancedURLMatch() -> InputSourceID? {
+    /// The locked source and matched host from a URL rule, when enhanced mode is
+    /// on and the current page matches one.
+    private func enhancedURLMatch() -> (id: InputSourceID, host: String)? {
         guard config.enhancedModeEnabled, let urlProvider, !config.urlRules.isEmpty else { return nil }
         let urlString = urlProvider.currentURL(forBundleID: effectiveBundleID) ?? ""
-        return URLMatcher.match(host: URLMatcher.host(from: urlString), rules: config.urlRules)
+        guard let rule = URLMatcher.matchedRule(host: URLMatcher.host(from: urlString), rules: config.urlRules)
+        else { return nil }
+        return (rule.lockedSourceID, rule.hostPattern)
     }
 
     /// Poll the URL only while a browser is frontmost and enhanced mode is on,
@@ -167,8 +184,9 @@ public final class LockEngine {
                 if Task.isCancelled { break }
                 guard let self else { break }
                 // reevaluate() upgrades the reason to .urlMatched when a URL
-                // rule actually matches; otherwise an app/default rule applied.
-                self.reevaluate(reason: .appActivated)
+                // rule actually matches; otherwise this is a periodic re-check
+                // of the app/default rule, not an app switch.
+                self.reevaluate(reason: .urlPolled)
             }
         }
     }

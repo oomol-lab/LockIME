@@ -164,6 +164,41 @@ struct LockControllerTests {
         #expect((events.first?.durationMs ?? -1) >= 0)
     }
 
+    @Test("setEnabled attributes the engaging force with the given reason")
+    func setEnabledReason() {
+        let (controller, _, _) = make(current: abc, enabled: false)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        controller.setTarget(us) // disabled → no force yet
+        #expect(events.isEmpty)
+        controller.setEnabled(true, reason: .startupApplied)
+        #expect(events.first?.reason == .startupApplied)
+    }
+
+    @Test("events carry the from-source and the target's app/rule context")
+    func emitsContextFields() {
+        let (controller, provider, uptime) = make(current: abc, enabled: true)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+
+        // Forcing abc → us records where it came from and the target's context.
+        controller.setTarget(us, reason: .appActivated, bundleID: "com.foo.Bar", ruleSource: .appRule)
+        #expect(events.count == 1)
+        #expect(events.first?.fromSourceName == abc.rawValue) // stub name == id
+        #expect(events.first?.triggeringBundleID == "com.foo.Bar")
+        #expect(events.first?.ruleSource == .appRule)
+
+        // A later revert keeps the target's context but carries its own reason
+        // and the source it drifted to as the from-source.
+        provider.current = pinyin
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()
+        #expect(events.count == 2)
+        #expect(events.last?.reason == .revertedSwitch)
+        #expect(events.last?.triggeringBundleID == "com.foo.Bar")
+        #expect(events.last?.fromSourceName == pinyin.rawValue)
+    }
+
     @Test("a failed select does not count as an activation")
     func failedSelectNotCounted() {
         let (controller, provider, _) = make(current: abc, enabled: true)

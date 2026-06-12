@@ -30,10 +30,33 @@ struct ActivationLogPane: View {
                             .monospacedDigit()
                     }
                     TableColumn("Input source") { entry in
-                        Text(entry.inputSourceName)
+                        // Show "from → to" when the prior source is known and
+                        // differs; the arrow is a verbatim glyph, never localized.
+                        if let from = entry.fromSourceName, from != entry.inputSourceName {
+                            Text(verbatim: "\(from) → \(entry.inputSourceName)")
+                        } else {
+                            Text(entry.inputSourceName)
+                        }
+                    }
+                    TableColumn("App") { entry in
+                        // App/bundle names are identifiers, shown verbatim.
+                        Text(verbatim: entry.triggeringAppName ?? entry.triggeringBundleID ?? "—")
+                            .foregroundStyle(.secondary)
                     }
                     TableColumn("Reason") { entry in
-                        Text(Self.reasonLabel(entry.reasonRaw))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(Self.reasonLabel(entry.reasonRaw))
+                            Group {
+                                if entry.reason == .urlMatched, let host = entry.matchedHost {
+                                    Text(verbatim: host)
+                                } else if let raw = entry.ruleSourceRaw,
+                                          let label = Self.ruleSourceLabel(raw) {
+                                    Text(label)
+                                }
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
                     }
                     TableColumn("Duration") { entry in
                         // " ms" stays verbatim (a unit, never localized); the
@@ -54,9 +77,25 @@ struct ActivationLogPane: View {
         switch ActivationReason(rawValue: raw) {
         case .revertedSwitch: "Reverted switch"
         case .appActivated: "App activated"
+        case .launcherFocused: "Launcher opened"
+        case .launcherDismissed: "Launcher closed"
+        case .urlPolled: "URL re-checked"
         case .urlMatched: "URL matched"
         case .lockEngaged: "Lock engaged"
+        case .configChanged: "Settings changed"
+        case .startupApplied: "Lock restored"
         case nil: LocalizedStringKey(raw)
+        }
+    }
+
+    /// The rule branch behind a forced switch, shown as a dimmed subtitle.
+    /// `nil` for an unrecognized raw value (e.g. a legacy row with no branch).
+    static func ruleSourceLabel(_ raw: String) -> LocalizedStringKey? {
+        switch RuleSource(rawValue: raw) {
+        case .appRule: return "App rule"
+        case .globalDefault: return "Default rule"
+        case .urlRule: return "URL rule"
+        case nil: return nil
         }
     }
 }
