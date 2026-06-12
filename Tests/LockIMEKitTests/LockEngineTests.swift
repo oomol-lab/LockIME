@@ -143,3 +143,82 @@ struct LockEngineTests {
         #expect(provider.current == us)
     }
 }
+
+@MainActor
+@Suite("LockEngine accessors & lifecycle")
+struct LockEngineSurfaceTests {
+    private let us: InputSourceID = "com.apple.keylayout.US"
+    private let abc: InputSourceID = "com.apple.keylayout.ABC"
+
+    @Test("activationCount counts forced switches")
+    func activationCount() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let engine = LockEngine(provider: provider, appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"))
+        engine.start()
+        #expect(engine.activationCount == 0)
+
+        engine.apply(LockConfiguration(isEnabled: true, defaultSourceID: us))
+        #expect(provider.current == us)
+        #expect(engine.activationCount == 1)
+    }
+
+    @Test("stop detaches the frontmost monitor so later activations are ignored")
+    func stopDetaches() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.foo.App")
+        let engine = LockEngine(provider: provider, appMonitor: monitor)
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .locked, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // foo → default
+        let callsBeforeStop = provider.selectCalls.count
+
+        engine.stop()
+        monitor.activate("com.apple.Terminal") // would retarget to abc if still attached
+
+        #expect(provider.current == us) // unchanged: the monitor was detached
+        #expect(provider.selectCalls.count == callsBeforeStop)
+    }
+
+    @Test("currentSourceName prefers the localized name, then the raw id, then a dash")
+    func currentSourceName() {
+        // Localized name present.
+        let named = MockInputSourceProvider(
+            current: us,
+            sources: [InputSource(id: us, localizedName: "U.S.", isSelectCapable: true, isEnabled: true, isCJKV: false)]
+        )
+        let namedEngine = LockEngine(provider: named, appMonitor: MockFrontmostMonitor())
+        #expect(namedEngine.currentSourceName() == "U.S.")
+
+        // Current id not among the known sources → fall back to the raw id.
+        let unknown = MockInputSourceProvider(current: "com.unknown.X", sources: [.stub(us.rawValue)])
+        let unknownEngine = LockEngine(provider: unknown, appMonitor: MockFrontmostMonitor())
+        #expect(unknownEngine.currentSourceName() == "com.unknown.X")
+
+        // No current source → em dash.
+        let none = MockInputSourceProvider(current: nil, sources: [])
+        let noneEngine = LockEngine(provider: none, appMonitor: MockFrontmostMonitor())
+        #expect(noneEngine.currentSourceName() == "—")
+    }
+
+    @Test("selectableSources and currentSourceID delegate to the provider")
+    func delegatesToProvider() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let engine = LockEngine(provider: provider, appMonitor: MockFrontmostMonitor())
+        #expect(engine.currentSourceID() == abc)
+        #expect(engine.selectableSources() == provider.selectableSources())
+        #expect(engine.selectableSources().map(\.id) == [us, abc])
+    }
+}

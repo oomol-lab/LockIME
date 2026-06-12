@@ -22,6 +22,13 @@ public enum LoginItemState: Equatable, Sendable {
     public var isActive: Bool { self == .enabled }
 }
 
+/// The registration change implied by a desired enable state and the current
+/// service status. Pure decision logic, kept separate from the `SMAppService`
+/// calls so it can be unit-tested without registering a real login item.
+enum LoginItemAction: Equatable {
+    case register, unregister, noChange
+}
+
 /// Launch-at-login via `SMAppService.mainApp` (no helper bundle).
 @MainActor
 public final class LoginItemController {
@@ -32,14 +39,24 @@ public final class LoginItemController {
 
     public var isEnabled: Bool { state.isActive }
 
+    /// What `setEnabled` should do given the desired state and the live status.
+    /// Registering is idempotent-by-intent: only act when the status disagrees.
+    static func action(desiredEnabled: Bool, current status: SMAppService.Status) -> LoginItemAction {
+        if desiredEnabled {
+            return status == .enabled ? .noChange : .register
+        } else {
+            return status == .enabled ? .unregister : .noChange
+        }
+    }
+
     @discardableResult
     public func setEnabled(_ enabled: Bool) -> Result<Void, Error> {
         let service = SMAppService.mainApp
         do {
-            if enabled {
-                if service.status != .enabled { try service.register() }
-            } else {
-                if service.status == .enabled { try service.unregister() }
+            switch Self.action(desiredEnabled: enabled, current: service.status) {
+            case .register: try service.register()
+            case .unregister: try service.unregister()
+            case .noChange: break
             }
             return .success(())
         } catch {

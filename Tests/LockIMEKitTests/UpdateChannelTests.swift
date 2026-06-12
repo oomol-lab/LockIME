@@ -19,4 +19,13 @@ struct UpdateChannelTests {
         #expect(UpdateChannel.from(usesBeta: true) == .beta)
         #expect(UpdateChannel.from(usesBeta: false) == .stable)
     }
+
+    @Test("id is the raw channel name")
+    func id() {
+        #expect(UpdateChannel.stable.id == "stable")
+        #expect(UpdateChannel.beta.id == "beta")
+        for channel in UpdateChannel.allCases {
+            #expect(channel.id == channel.rawValue)
+        }
+    }
 }

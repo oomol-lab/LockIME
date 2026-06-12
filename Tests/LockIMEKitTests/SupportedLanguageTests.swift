@@ -61,3 +61,36 @@ struct SupportedLanguageTests {
         #expect(SupportedLanguage.russian.preferredLocalization(from: ["en", "de"]) == nil)
     }
 }
+
+@Suite("SupportedLanguage identity & endonyms")
+struct SupportedLanguageIdentityTests {
+    @Test("id and localeIdentifier are the raw locale code")
+    func identifiers() {
+        for language in SupportedLanguage.allCases {
+            #expect(language.id == language.rawValue)
+            #expect(language.localeIdentifier == language.rawValue)
+        }
+    }
+
+    @Test("nativeName is the language's own endonym", arguments: [
+        (SupportedLanguage.english, "English"),
+        (.simplifiedChinese, "简体中文"),
+        (.traditionalChinese, "繁體中文"),
+        (.japanese, "日本語"),
+        (.french, "Français"),
+        (.german, "Deutsch"),
+        (.spanish, "Español"),
+        (.portuguese, "Português"),
+        (.russian, "Русский"),
+    ])
+    func nativeName(language: SupportedLanguage, expected: String) {
+        #expect(language.nativeName == expected)
+    }
+
+    @Test("every case has a distinct, non-empty endonym")
+    func endonymsAreDistinct() {
+        let names = SupportedLanguage.allCases.map(\.nativeName)
+        #expect(names.allSatisfy { !$0.isEmpty })
+        #expect(Set(names).count == names.count)
+    }
+}

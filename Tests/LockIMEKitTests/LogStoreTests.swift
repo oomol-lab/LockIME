@@ -46,6 +46,28 @@ struct LogStoreTests {
         #expect(store.count() == 1)
     }
 
+    @Test("an unusable directory falls back to a working in-memory store")
+    func fallsBackWhenDiskStoreFails() throws {
+        // A regular file standing where the store directory should be: the
+        // on-disk ModelContainer can't be created beneath it, so init must
+        // take the in-memory fallback branch.
+        let badPath = FileManager.default.temporaryDirectory
+            .appending(path: "lockime-badstore-\(UUID().uuidString)")
+        try Data("not a directory".utf8).write(to: badPath)
+        defer { try? FileManager.default.removeItem(at: badPath) }
+
+        let store = LogStore(directoryOverride: badPath)
+        #expect(store.count() == 0)            // usable despite the bad path
+        store.record(event(ageHours: 0, now: .now))
+        #expect(store.count() == 1)            // records work (in-memory)
+
+        // A second store over the same bad path does NOT see the first's
+        // record — proof the fallback is a fresh in-memory store, not a
+        // shared on-disk one.
+        let second = LogStore(directoryOverride: badPath)
+        #expect(second.count() == 0)
+    }
+
     @Test("disk store persists across container instances")
     func diskPersists() {
         let directory = FileManager.default.temporaryDirectory
