@@ -145,6 +145,165 @@ struct LockEngineTests {
 }
 
 @MainActor
+@Suite("LockEngine launcher overlays")
+struct LockEngineLauncherTests {
+    private let us: InputSourceID = "com.apple.keylayout.US"
+    private let abc: InputSourceID = "com.apple.keylayout.ABC"
+    private let pinyin: InputSourceID = "com.apple.inputmethod.SCIM.ITABC"
+    private let spotlight = "com.apple.Spotlight"
+
+    private func makeEngine(
+        current: InputSourceID,
+        frontmost: String?
+    ) -> (LockEngine, MockInputSourceProvider, MockFloatingMonitor) {
+        let provider = MockInputSourceProvider(
+            current: current,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let floating = MockFloatingMonitor()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: frontmost),
+            floatingAppMonitor: floating
+        )
+        engine.start()
+        return (engine, provider, floating)
+    }
+
+    @Test("a launcher overlay retargets to its own rule, and dismissing it reverts")
+    func launcherRetargetsAndReverts() {
+        let (engine, provider, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // foo app → default
+
+        floating.setLauncher(spotlight)
+        #expect(provider.current == abc) // Spotlight's own rule applies
+
+        floating.setLauncher(nil)
+        #expect(provider.current == us) // dismissed → back to foo's default
+    }
+
+    // The reported bug (issue #9): with the overlay focused, `NSWorkspace`
+    // still reports the underlying app, so its CJKV lock used to leak into the
+    // search field. The overlay must resolve as *itself* — no Spotlight rule
+    // means the global default, not the underlying app's pinyin lock.
+    @Test("a launcher overlay does not inherit the underlying app's lock")
+    func launcherDoesNotInheritUnderlyingLock() {
+        let (engine, provider, floating) = makeEngine(current: pinyin, frontmost: "com.cjkv.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.cjkv.App", mode: .locked, lockedSourceID: pinyin)]
+        ))
+        #expect(provider.current == pinyin) // the CJKV app is pinned to pinyin
+
+        floating.setLauncher(spotlight)
+        #expect(provider.current == us) // Spotlight → global default, NOT pinyin
+
+        floating.setLauncher(nil)
+        #expect(provider.current == pinyin) // dismissed → underlying lock returns
+    }
+
+    @Test("a launcher rule wins even when the underlying app is ignored")
+    func launcherRuleBeatsIgnoredUnderlyingApp() {
+        let (engine, provider, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [
+                AppRule(bundleID: "com.foo.App", mode: .ignored),
+                AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc),
+            ]
+        ))
+        #expect(provider.selectCalls.isEmpty) // foo is ignored → nothing forced
+        #expect(provider.current == us)
+
+        floating.setLauncher(spotlight)
+        #expect(provider.current == abc) // Spotlight's lock applies over the overlay
+    }
+
+    @Test("an ignored launcher overlay enforces nothing")
+    func ignoredLauncherDisengages() {
+        // Underlying app is also ignored, so nothing is forced up front; the
+        // contrast with `launcherRuleBeatsIgnoredUnderlyingApp` (same setup, a
+        // *locked* overlay forces abc) isolates the overlay's own ignore.
+        let (engine, provider, floating) = makeEngine(current: abc, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [
+                AppRule(bundleID: "com.foo.App", mode: .ignored),
+                AppRule(bundleID: spotlight, mode: .ignored),
+            ]
+        ))
+        #expect(provider.selectCalls.isEmpty) // foo ignored → nothing forced
+        #expect(provider.current == abc)
+
+        floating.setLauncher(spotlight)
+        #expect(provider.selectCalls.isEmpty) // ignored overlay → still nothing forced
+        #expect(provider.current == abc)
+    }
+
+    @Test("a launcher overlay over a browser drops the URL-rule context")
+    func launcherDropsBrowserURLContext() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let floating = MockFloatingMonitor()
+        let urls = BundleAwareURLProvider(url: "https://github.com/x", forBundleID: "com.apple.Safari")
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.apple.Safari"),
+            floatingAppMonitor: floating,
+            urlProvider: urls
+        )
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: pinyin)]
+        ))
+        #expect(provider.current == pinyin) // Safari on github → URL rule
+
+        floating.setLauncher(spotlight)
+        #expect(provider.current == us) // overlay isn't the browser → default, not the URL rule
+
+        floating.setLauncher(nil)
+        #expect(provider.current == pinyin) // dismissed → URL rule applies again
+    }
+
+    @Test("accessibilityDidChange asks the floating monitor to re-attach")
+    func accessibilityRefreshesMonitor() {
+        let (engine, _, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        #expect(floating.refreshCount == 0)
+        engine.accessibilityDidChange()
+        #expect(floating.refreshCount == 1)
+    }
+}
+
+/// A URL provider that, like the real Accessibility reader, only yields a URL
+/// for the matching browser bundle — so a launcher overlay (a different bundle)
+/// reads no URL.
+@MainActor
+private final class BundleAwareURLProvider: BrowserURLProviding {
+    let url: String
+    let bundleID: String
+    init(url: String, forBundleID bundleID: String) {
+        self.url = url
+        self.bundleID = bundleID
+    }
+    func currentURL(forBundleID bundleID: String?) -> String? {
+        bundleID == self.bundleID ? url : nil
+    }
+}
+
+@MainActor
 @Suite("LockEngine accessors & lifecycle")
 struct LockEngineSurfaceTests {
     private let us: InputSourceID = "com.apple.keylayout.US"

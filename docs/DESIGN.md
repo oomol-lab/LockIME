@@ -162,10 +162,14 @@ Keep `.keyboardShortcut` hints. Zero custom color — NSMenu supplies everything
 (Active-scope `.badge` is a nice-to-have — verify it renders on the real macOS 26
 build before relying on it.)
 
-### 4.2 Settings window — top 6-tab `TabView`, widened
+### 4.2 Settings window — top 7-tab `TabView`, widened
 No sidebar (`.sidebarAdaptable` breaks `ToolbarSpacer` on macOS). Frame
 `minWidth 680, idealWidth 700, minHeight 460`, growable. `.scenePadding()` at
-window level; panes own internal insets — verify no double-padding.
+window level; panes own internal insets — verify no double-padding. Tab
+selection is bound to `AppState.settingsTab` (so a feature pane can route the
+user to **Permissions** for the single Accessibility grant); the root view's
+`onDisappear` (window close, not a tab switch) is the abandon signal that stops
+the grant watcher.
 
 - **General:** master toggle (`withAnimation(DS.Motion.toggle)` +
   `.contentTransition(.symbolEffect(.replace))` on the lock label), current source
@@ -179,6 +183,13 @@ window level; panes own internal insets — verify no double-padding.
   frontmost app's rule). Recorder titles must be `LocalizedStringKey(...)`, not a
   bare `String` literal, or the label renders in the system language (see the
   i18n guards in CLAUDE.md).
+- **Permissions:** the single home for the optional Accessibility grant
+  (`AXIsProcessTrusted`), which unlocks two features — per-URL rules and
+  launcher-overlay detection (Spotlight/Raycast/…). One `GrantAccessibilityButton`
+  (shared in `Components.swift`) lives **only** here; App Rules and URL Rules show
+  a passive `AccessibilityRequiredNote` that routes here, so the permission reads
+  as one capability with a single grant, never a prompt duplicated per feature.
+  The core lock stays permission-free.
 - **Updates:** `LabeledContent` "Last checked: …" ("Never" fallback), Check
   button, inline up-to-date/error result (see 4.6), badge the tab when an update
   is available.
@@ -226,7 +237,7 @@ Reduce Transparency). Replace with:
 | Question | Decision |
 |---|---|
 | Toast | Delete; NSAlert + inline Updates result + "Last checked" |
-| Settings nav | Keep 6-tab top TabView, widen to 680 |
+| Settings nav | Keep top TabView (7 tabs incl. Permissions), widen to 680 |
 | Icon format | `.appiconset` PNG set, full-bleed source, pre-masked shipped PNGs |
 | Accent delivery | Asset-catalog `AccentColor` as Global Accent |
 | Update header art | Real app icon, not lock SF Symbol |

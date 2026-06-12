@@ -1,3 +1,4 @@
+import AppKit
 import LockIMEKit
 import SwiftUI
 
@@ -39,6 +40,13 @@ struct AppRulesSettingsPane: View {
                 } label: {
                     Label("Add App…", systemImage: "plus")
                 }
+
+                // Launcher overlays (Spotlight, Raycast, …) are the only app
+                // rules that need Accessibility — show the routing note only
+                // when one is configured but access isn't granted yet.
+                if hasLauncherRule, !state.accessibilityGranted {
+                    AccessibilityRequiredNote("Detecting launchers like Spotlight requires Accessibility")
+                }
             } header: {
                 Text("Per-app rules")
             } footer: {
@@ -47,6 +55,10 @@ struct AppRulesSettingsPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle(state.loc("App Rules"))
+        .onAppear { state.refreshAccessibilityStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            state.refreshAccessibilityStatus()
+        }
         .sheet(isPresented: $isPickingApp) {
             AppPickerSheet { app in
                 withAnimation(DS.Motion.list) {
@@ -56,6 +68,12 @@ struct AppRulesSettingsPane: View {
                 }
             }
         }
+    }
+
+    /// Whether any configured rule targets a launcher overlay — the only app
+    /// rules whose enforcement depends on Accessibility.
+    private var hasLauncherRule: Bool {
+        state.config.appRules.contains { LauncherOverlayCatalog.isLauncher($0.bundleID) }
     }
 
     private var emptyState: some View {

@@ -23,7 +23,7 @@ struct URLRulesSettingsPane: View {
                     .disabled(!state.accessibilityGranted)
 
                 if !state.accessibilityGranted {
-                    GrantAccessibilityButton()
+                    AccessibilityRequiredNote("Enhanced mode requires Accessibility")
                 }
             } header: {
                 Text("Enhanced mode")
@@ -59,8 +59,9 @@ struct URLRulesSettingsPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle(state.loc("URL Rules"))
+        // The grant button (and its watcher lifecycle) now lives in General; this
+        // pane only reflects the shared status, refreshing to catch a revoke.
         .onAppear { state.refreshAccessibilityStatus() }
-        .onDisappear { state.stopAccessibilityWatch() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             state.refreshAccessibilityStatus()
         }
@@ -103,32 +104,6 @@ struct URLRulesSettingsPane: View {
                     || (newSourceID == nil && state.config.defaultSourceID == nil)
             )
         }
-    }
-}
-
-/// Opens the Accessibility privacy pane with the floating drag helper. The
-/// grant is detected by `AppState`, which closes the helper and enables the
-/// toggle the instant access is allowed (the system sends no notification).
-private struct GrantAccessibilityButton: View {
-    @Environment(AppState.self) private var state
-    @Environment(\.locale) private var locale
-
-    var body: some View {
-        Button {
-            state.requestAccessibilityAccess(
-                localeIdentifier: locale.identifier,
-                suggestedAppURLs: [Bundle.main.bundleURL],
-                sourceFrame: Self.clickSourceFrame()
-            )
-        } label: {
-            Label("Grant Accessibility Access", systemImage: "arrow.right.circle.fill")
-        }
-    }
-
-    /// Uses the click location so the helper panel flies out from the button.
-    private static func clickSourceFrame() -> CGRect {
-        let mouse = NSEvent.mouseLocation
-        return CGRect(x: mouse.x - 16, y: mouse.y - 16, width: 32, height: 32)
     }
 }
 
