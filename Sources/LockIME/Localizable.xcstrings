@@ -366,54 +366,54 @@
         }
       }
     },
-    "Per-URL rules work in Safari and Chromium-based browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox is not supported, because it does not expose the active tab's URL through the macOS Accessibility API.": {
+    "Per-URL rules work in Safari, Firefox, and Chromium-based browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera).": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按网址的规则仅适用于 Safari 和基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera）。不支持 Firefox，因为它不会通过 macOS 辅助功能（Accessibility）API 暴露当前标签页的网址。"
+            "value": "按网址的规则适用于 Safari、Firefox 以及基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera）。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "依網址的規則僅適用於 Safari 與基於 Chromium 的瀏覽器（Chrome、Edge、Brave、Arc、Vivaldi、Opera）。不支援 Firefox，因為它不會透過 macOS 輔助使用（Accessibility）API 提供目前分頁的網址。"
+            "value": "依網址的規則適用於 Safari、Firefox 以及基於 Chromium 的瀏覽器（Chrome、Edge、Brave、Arc、Vivaldi、Opera）。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "URLごとのルールは Safari と Chromium 系ブラウザ（Chrome、Edge、Brave、Arc、Vivaldi、Opera）で動作します。Firefox は macOS のアクセシビリティ API でアクティブなタブの URL を公開しないため、サポートされません。"
+            "value": "URLごとのルールは Safari、Firefox、および Chromium 系ブラウザ（Chrome、Edge、Brave、Arc、Vivaldi、Opera）で動作します。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les règles par URL fonctionnent dans Safari et les navigateurs basés sur Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox n’est pas pris en charge, car il n’expose pas l’URL de l’onglet actif via l’API d’accessibilité de macOS."
+            "value": "Les règles par URL fonctionnent dans Safari, Firefox et les navigateurs basés sur Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera)."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "URL-Regeln funktionieren in Safari und Chromium-basierten Browsern (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox wird nicht unterstützt, da es die URL des aktiven Tabs nicht über die Accessibility-API von macOS bereitstellt."
+            "value": "URL-Regeln funktionieren in Safari, Firefox und Chromium-basierten Browsern (Chrome, Edge, Brave, Arc, Vivaldi, Opera)."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las reglas por URL funcionan en Safari y en navegadores basados en Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox no es compatible, porque no expone la URL de la pestaña activa a través de la API de Accesibilidad de macOS."
+            "value": "Las reglas por URL funcionan en Safari, Firefox y navegadores basados en Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera)."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "As regras por URL funcionam no Safari e em navegadores baseados em Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera). O Firefox não é compatível, pois não expõe o URL da aba ativa pela API de Acessibilidade do macOS."
+            "value": "As regras por URL funcionam no Safari, no Firefox e em navegadores baseados em Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera)."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Правила для отдельных URL работают в Safari и браузерах на базе Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox не поддерживается, так как не предоставляет URL активной вкладки через API универсального доступа (Accessibility) macOS."
+            "value": "Правила для отдельных URL работают в Safari, Firefox и браузерах на базе Chromium (Chrome, Edge, Brave, Arc, Vivaldi, Opera)."
           }
         }
       }

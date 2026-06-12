@@ -24,11 +24,18 @@ public final class AccessibilityBrowserURLReader: BrowserURLProviding {
 
         let axApp = AXUIElementCreateApplication(app.processIdentifier)
 
-        // Chromium browsers build their accessibility tree lazily; setting
-        // `AXManualAccessibility` makes them expose the `AXWebArea`/`AXURL` for
-        // non-VoiceOver clients like us. Safari needs no such opt-in.
+        // Chromium and Gecko build their accessibility tree lazily; Safari keeps
+        // it live and needs no opt-in. Each lazy engine exposes the
+        // `AXWebArea`/`AXURL` only after the right wake signal is set on the app
+        // element.
         if BrowserBundleIDs.isChromium(bundleID) {
             AXUIElementSetAttributeValue(axApp, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+        } else if BrowserBundleIDs.isGecko(bundleID) {
+            // Gecko (Firefox and forks) wakes on `AXEnhancedUserInterface` and
+            // does not implement `AXManualAccessibility`. The set is idempotent;
+            // the tree is built asynchronously, so the first read after a cold
+            // wake can be nil — the engine's URL poll retries on its next tick.
+            AXUIElementSetAttributeValue(axApp, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
         }
 
         guard let window = element(axApp, kAXFocusedWindowAttribute) else { return nil }

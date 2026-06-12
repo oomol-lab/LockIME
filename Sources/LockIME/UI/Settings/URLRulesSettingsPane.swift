@@ -54,7 +54,7 @@ struct URLRulesSettingsPane: View {
             } header: {
                 Text("URL rules")
             } footer: {
-                SectionFooter("Per-URL rules work in Safari and Chromium-based browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera). Firefox is not supported, because it does not expose the active tab's URL through the macOS Accessibility API.")
+                SectionFooter("Per-URL rules work in Safari, Firefox, and Chromium-based browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera).")
             }
         }
         .formStyle(.grouped)

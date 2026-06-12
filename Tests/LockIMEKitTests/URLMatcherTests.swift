@@ -16,10 +16,16 @@ struct URLMatcherTests {
         #expect(URLMatcher.host(from: url) == expected)
     }
 
-    @Test("empty / invalid URLs have no host")
+    @Test("empty / invalid / authority-less URLs have no host")
     func noHost() {
         #expect(URLMatcher.host(from: "") == nil)
         #expect(URLMatcher.host(from: "not a url") == nil)
+        // Browser placeholder pages carry no authority, so a per-URL rule can
+        // never false-match them — a Firefox new tab surfaces as about:newtab,
+        // not a real host. (We rely on a nil host here rather than normalizing
+        // these scheme-by-scheme.)
+        #expect(URLMatcher.host(from: "about:newtab") == nil)
+        #expect(URLMatcher.host(from: "about:blank") == nil)
     }
 
     @Test("exact and subdomain matches")
@@ -67,15 +73,15 @@ struct URLMatcherTests {
         #expect(URLMatcher.matchedRule(host: nil, rules: rules) == nil)
     }
 
-    @Test("browser bundle detection (Safari + Chromium; Firefox excluded)")
+    @Test("browser bundle detection (Safari + Chromium + Gecko)")
     func browsers() {
         #expect(BrowserBundleIDs.isBrowser("com.apple.Safari"))
         #expect(BrowserBundleIDs.isBrowser("com.google.Chrome"))
         #expect(BrowserBundleIDs.isBrowser("com.microsoft.edgemac"))
+        #expect(BrowserBundleIDs.isBrowser("org.mozilla.firefox"))
+        #expect(BrowserBundleIDs.isBrowser("app.zen-browser.zen"))
         #expect(!BrowserBundleIDs.isBrowser("com.apple.Terminal"))
         #expect(!BrowserBundleIDs.isBrowser(nil))
-        // Firefox is intentionally unsupported: no tab URL over the AX API.
-        #expect(!BrowserBundleIDs.isBrowser("org.mozilla.firefox"))
     }
 
     @Test("Chromium detection (needs AXManualAccessibility opt-in)")
@@ -87,5 +93,22 @@ struct URLMatcherTests {
         #expect(!BrowserBundleIDs.isChromium("com.apple.Safari"))
         #expect(!BrowserBundleIDs.isChromium("org.mozilla.firefox"))
         #expect(!BrowserBundleIDs.isChromium(nil))
+    }
+
+    @Test("Gecko detection (needs AXEnhancedUserInterface opt-in)")
+    func gecko() {
+        #expect(BrowserBundleIDs.isGecko("org.mozilla.firefox"))
+        #expect(BrowserBundleIDs.isGecko("org.mozilla.firefoxdeveloperedition"))
+        #expect(BrowserBundleIDs.isGecko("app.zen-browser.zen"))
+        #expect(BrowserBundleIDs.isGecko("app.floorp.Floorp"))
+        #expect(BrowserBundleIDs.isGecko("net.waterfox.waterfox"))
+        #expect(BrowserBundleIDs.isGecko("io.gitlab.librewolf-community.librewolf"))
+        #expect(BrowserBundleIDs.isGecko("org.torproject.torbrowser"))
+        #expect(BrowserBundleIDs.isGecko("net.mullvad.mullvadbrowser"))
+        // Gecko and Chromium are disjoint; Safari is neither.
+        #expect(!BrowserBundleIDs.isGecko("com.google.Chrome"))
+        #expect(!BrowserBundleIDs.isChromium("org.mozilla.firefox"))
+        #expect(!BrowserBundleIDs.isGecko("com.apple.Safari"))
+        #expect(!BrowserBundleIDs.isGecko(nil))
     }
 }

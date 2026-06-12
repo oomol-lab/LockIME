@@ -2,13 +2,17 @@ import Foundation
 
 /// Known browser bundle identifiers, used to decide when to read a URL.
 ///
-/// URL reading is **Accessibility-based** and therefore browser-dependent:
-/// - **Safari** exposes the active tab's URL on its `AXWebArea` (`AXURL`).
-/// - **Chromium** browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera) expose it
-///   too, but only after their accessibility tree is enabled via the
-///   `AXManualAccessibility` attribute (they build it lazily). See `chromium`.
-/// - **Firefox is not supported**: it does not expose the tab URL through the
-///   macOS Accessibility API at all.
+/// URL reading is **Accessibility-based** and therefore browser-dependent. Each
+/// supported engine exposes the active tab's URL as `AXURL` on its `AXWebArea`;
+/// they differ only in how that tree is brought up for a non-VoiceOver client:
+/// - **Safari** keeps its accessibility tree live — no opt-in needed.
+/// - **Chromium** browsers (Chrome, Edge, Brave, Arc, Vivaldi, Opera) build it
+///   lazily and expose it once `AXManualAccessibility` is set on the app
+///   element. See `chromium`.
+/// - **Gecko** browsers (Firefox and forks such as Zen) also build it lazily,
+///   but honor a different wake signal — `AXEnhancedUserInterface` on the app
+///   element — and do not implement `AXManualAccessibility`. The tree is built
+///   asynchronously after the wake, so the first read may be empty. See `gecko`.
 public enum BrowserBundleIDs {
     /// Chromium-based browsers. These need `AXManualAccessibility` set on the
     /// app element before `AXURL` becomes readable.
@@ -22,9 +26,28 @@ public enum BrowserBundleIDs {
         "com.vivaldi.Vivaldi",
     ]
 
-    /// Browsers whose URL we can read via Accessibility (Safari + Chromium).
-    /// Firefox is intentionally excluded — it exposes no tab URL over AX.
-    public static let all: Set<String> = chromium.union([
+    /// Gecko-based browsers (Firefox and current-Firefox forks such as Zen,
+    /// Floorp, and Waterfox). These need `AXEnhancedUserInterface` set on the
+    /// app element to wake their lazily-built accessibility tree before `AXURL`
+    /// becomes readable; they do not implement Chromium's `AXManualAccessibility`.
+    public static let gecko: Set<String> = [
+        "org.mozilla.firefox",
+        "org.mozilla.firefoxdeveloperedition",
+        "org.mozilla.nightly",
+        "app.zen-browser.zen",
+        "app.floorp.Floorp",
+        "net.waterfox.waterfox",
+        // Privacy/anonymity-focused Firefox forks. Same current-Gecko engine, so
+        // the `AXEnhancedUserInterface` wake applies; reading their URL requires
+        // waking accessibility, which these users may not expect — included here
+        // deliberately so per-URL rules can cover them.
+        "io.gitlab.librewolf-community.librewolf",
+        "org.torproject.torbrowser",
+        "net.mullvad.mullvadbrowser",
+    ]
+
+    /// Browsers whose URL we can read via Accessibility (Safari + Chromium + Gecko).
+    public static let all: Set<String> = chromium.union(gecko).union([
         "com.apple.Safari",
         "com.apple.SafariTechnologyPreview",
     ])
@@ -37,6 +60,11 @@ public enum BrowserBundleIDs {
     public static func isChromium(_ bundleID: String?) -> Bool {
         guard let bundleID else { return false }
         return chromium.contains(bundleID)
+    }
+
+    public static func isGecko(_ bundleID: String?) -> Bool {
+        guard let bundleID else { return false }
+        return gecko.contains(bundleID)
     }
 }
 
