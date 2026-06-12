@@ -5,10 +5,13 @@
 #
 #   ./scripts/make-appicon.sh
 #
-# Normalizes the master to a 1024 full-bleed square, downscales with sips into
-# the 7 unique pixel sizes the macOS .appiconset needs
-# (16/32/64/128/256/512/1024), then applies the rounded-rect alpha mask that
-# older Launchpad/Finder surfaces do not apply for us. Contents.json
+# Normalizes the master to a 1024 full-bleed square, composes the macOS-grid
+# app icon once at 1024 (insets the art onto the standard ~824px rounded body
+# with the system's transparent margin and a soft drop shadow — see
+# scripts/icon-tools/ComposeAppIcon.swift), then downscales that single composed
+# 1024 into the 7 unique pixel sizes the macOS .appiconset needs
+# (16/32/64/128/256/512/1024). Composing once and downscaling keeps the rounded
+# body, margin, and shadow identical across every size. Contents.json
 # (committed) maps those files into the 10 required @1x/@2x slots.
 #
 # If the raster master is absent, falls back to rendering the legacy SwiftUI
@@ -19,7 +22,7 @@ cd "$(dirname "$0")/.."
 SET="Sources/LockIME/Assets.xcassets/AppIcon.appiconset"
 TMP="/tmp/lockime-icon"
 MASTER="scripts/appicon-master.png"
-MASK="scripts/icon-tools/MaskAppIcon.swift"
+COMPOSE="scripts/icon-tools/ComposeAppIcon.swift"
 
 mkdir -p "$TMP"
 if [[ -f "$MASTER" ]]; then
@@ -30,16 +33,14 @@ else
   swift scripts/MakeIcon.swift
 fi
 
-echo "→ downscaling into ${SET}…"
+echo "→ composing grid-correct 1024 icon…"
 mkdir -p "$SET"
-mask_args=()
+swift "$COMPOSE" "$TMP/master.png" "$SET/icon_1024.png"
+
+echo "→ downscaling into ${SET}…"
 for sz in 16 32 64 128 256 512; do
-  raw="$TMP/icon_${sz}-raw.png"
-  sips -s format png -z "$sz" "$sz" "$TMP/master.png" --out "$raw" >/dev/null
-  mask_args+=("$raw" "$SET/icon_${sz}.png")
+  sips -s format png -z "$sz" "$sz" "$SET/icon_1024.png" --out "$SET/icon_${sz}.png" >/dev/null
 done
-mask_args+=("$TMP/master.png" "$SET/icon_1024.png")
-swift "$MASK" "${mask_args[@]}"
 
 echo "✓ appiconset updated:"
 ls -1 "$SET" | sed 's/^/   /'

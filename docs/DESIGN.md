@@ -80,26 +80,40 @@ One signature moment only: `.contentTransition(.symbolEffect(.replace))` on
 ## 3. App icon — `Assets.xcassets/AppIcon.appiconset` (full PNG set)
 
 Classic 10-image macOS `.appiconset`, **not** Icon Composer `.icon` (headless/CI
-friendly). The source master stays full-bleed, but the shipped appicon PNGs carry
-a rounded-rect alpha mask so macOS 14/15 Launchpad and Finder never expose raw
-square corners. `.icon` deferred as future polish.
+friendly). The source master stays full-bleed, but the shipped appicon PNGs are
+composed onto the **standard macOS icon grid** — an ~824px rounded body inset on
+a transparent margin (the central ~80.5% of the 1024 canvas) with a soft system
+drop shadow — so the icon renders the same size as every native app and never
+exposes raw square corners. A full-bleed PNG renders ~24% larger than its
+neighbours on older Launchpad/Finder surfaces that draw the resource verbatim.
+macOS 26 (Tahoe) instead **re-normalizes** legacy icons — it scales the opaque
+art to its own uniform grid and re-masks — so it caps the old full-bleed PNG to
+the right size at draw time but renders an *under*-filled body too small; the fix
+is to match Apple's own on-disk geometry exactly (body 824, opaque bbox ≈842/1024
+incl. shadow, measured from `/System/Applications/*.app`), which then tracks the
+system icons on **both** the verbatim (≤15) and normalizing (26) paths. Verified
+on Tahoe: the composed icon renders at the same 844px/82.4% as Calculator.
+`.icon` (Icon Composer / full Liquid Glass) deferred as future polish.
 
 - **Master 1024×1024, PNG-24, sRGB, opaque, FULL-BLEED source art.** Do **not**
-  add a gutter, gloss, bevel, or shadow. Glyph within ~10% safe inset (central
-  ~820²). The appiconset generator applies the rounded-rect alpha mask to the
-  shipped PNGs (`cornerRadius ~= side * 0.2237`).
+  add a gutter, gloss, bevel, or shadow — the generator adds the margin, mask,
+  and shadow. Glyph within ~10% safe inset (central ~820²). The shipped body is
+  inset to `824/1024` of the canvas (margins matched empirically to
+  `/System/Applications/*.app`) and rounded at `cornerRadius ~= body * 0.225`.
 - Required 10 images (idiom=mac): 16, 32(16@2x), 32, 64(32@2x), 128, 256(128@2x),
   256, 512(256@2x), 512, 1024(512@2x). **All ten** — one PNG → empty plist → grey
   generic icon.
 - Pipeline: `scripts/MakeIcon.swift` (SwiftUI `ImageRenderer`) renders the 1024
-  master when the committed raster master is absent; `sips` downscales;
-  `scripts/icon-tools/MaskAppIcon.swift` applies the alpha mask; hand-written
-  `Contents.json`. Cache-bust when verifying:
+  master when the committed raster master is absent;
+  `scripts/icon-tools/ComposeAppIcon.swift` composes the grid-correct 1024 (inset
+  body + mask + shadow); `sips` downscales that single 1024 into every size;
+  hand-written `Contents.json`. Cache-bust when verifying:
   `sudo rm -rf /Library/Caches/com.apple.iconservices.store; killall Dock`.
 - **Visual:** opaque diagonal indigo→blue (`#2A5BE0`→`#1840B4`); near-white
   `#F5F7FF` closed padlock with a subtle IME affordance (文/A monogram or caret);
-  flat/clean, at most a faint top inner highlight. Keep the blue art edge-to-edge
-  inside the mask; do not bake new-system glass into the PNG.
+  flat/clean, at most a faint top inner highlight. Keep the blue art full-bleed
+  in the *master*; the generator insets it onto the icon body. Do not bake the
+  margin, shadow, or new-system glass into the master PNG.
 - Wiring: `project.yml` → target `resources: - path: Sources/LockIME/Assets.xcassets`
   and `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`. **Do not** add
   `CFBundleIconName`/`CFBundleIconFile` to Info.plist — actool injects them.
