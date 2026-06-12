@@ -23,9 +23,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>LockIME</string>
+	<string>$(LOCKIME_BUNDLE_DISPLAY_NAME)</string>
 	<key>CFBundleDisplayName</key>
-	<string>LockIME</string>
+	<string>$(LOCKIME_BUNDLE_DISPLAY_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>LSApplicationCategoryType</key>

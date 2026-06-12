@@ -15,19 +15,21 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LAB_DIR="$REPO_ROOT/build/update-lab"
-APP_SRC="${UPDATE_LAB_APP:-$REPO_ROOT/build/DerivedData/Build/Products/Debug/LockIME.app}"
+APP_SRC="${UPDATE_LAB_APP:-$REPO_ROOT/build/DerivedData/Build/Products/Debug/LockIME Dev.app}"
 PORT="${UPDATE_LAB_PORT:-8767}"
-BUNDLE_ID="com.oomol.LockIME"
+PLISTBUDDY=/usr/libexec/PlistBuddy
+APP_NAME="${UPDATE_LAB_APP_NAME:-LockIME Dev}"
+BUNDLE_ID="${UPDATE_LAB_BUNDLE_ID:-com.oomol.LockIME.dev}"
+EXECUTABLE_NAME="${UPDATE_LAB_EXECUTABLE_NAME:-$APP_NAME}"
 NEW_SHORT="99.0.0"
 NEW_BUILD="209901010101"
 # ~4 MB/s so the in-app download progress UI is actually visible.
 THROTTLE_BPS=4194304
 
 SERVE_DIR="$LAB_DIR/serve"
-RUN_APP="$LAB_DIR/run/LockIME.app"
+RUN_APP="$LAB_DIR/run/$APP_NAME.app"
 PID_FILE="$LAB_DIR/server.pid"
 SEED_FILE="$LAB_DIR/dev-ed25519.seed"
-PLISTBUDDY=/usr/libexec/PlistBuddy
 
 usage() { echo "usage: $(basename "$0") <none|download-fail|extract-fail|success|stop>" >&2; exit 2; }
 [[ $# -eq 1 ]] || usage
@@ -35,9 +37,8 @@ SCENARIO="$1"
 
 clear_skip_keys() {
     # Sparkle 2's persisted skip keys (SUConstants.m). A "Skip This Version"
-    # click in the lab window writes SUSkippedVersion=209901010101 into the
-    # *shared* production defaults domain, which would silently suppress every
-    # real scheduled update — always clear them, including on stop.
+    # click in the lab window writes SUSkippedVersion=209901010101 into the app's
+    # defaults domain, so always clear them, including on stop.
     local key
     for key in SUSkippedVersion SUSkippedMajorVersion SUSkippedMajorSubreleaseVersion; do
         defaults delete "$BUNDLE_ID" "$key" 2>/dev/null || true
@@ -55,9 +56,9 @@ stop_lab() {
         rm -f "$PID_FILE"
     fi
     pkill -f "update-lab/server.py" 2>/dev/null || true
-    pkill -x LockIME 2>/dev/null || true
+    pkill -x "$EXECUTABLE_NAME" 2>/dev/null || true
     local i=0
-    while pgrep -x LockIME >/dev/null && [[ $i -lt 50 ]]; do sleep 0.1; i=$((i + 1)); done
+    while pgrep -x "$EXECUTABLE_NAME" >/dev/null && [[ $i -lt 50 ]]; do sleep 0.1; i=$((i + 1)); done
     clear_skip_keys
 }
 
@@ -74,6 +75,10 @@ case "$SCENARIO" in
 esac
 
 [[ -d "$APP_SRC" ]] || { echo "error: $APP_SRC not found — run 'make build' first" >&2; exit 1; }
+APP_NAME="$(basename "$APP_SRC" .app)"
+BUNDLE_ID="$("$PLISTBUDDY" -c "Print :CFBundleIdentifier" "$APP_SRC/Contents/Info.plist")"
+EXECUTABLE_NAME="$("$PLISTBUDDY" -c "Print :CFBundleExecutable" "$APP_SRC/Contents/Info.plist")"
+RUN_APP="$LAB_DIR/run/$APP_NAME.app"
 
 # The lab hooks are #if DEBUG; a Release binary would silently ignore the
 # loopback feed and poll production with the swapped dev key instead.
@@ -103,7 +108,7 @@ CUR_BUILD="$("$PLISTBUDDY" -c "Print :CFBundleVersion" "$RUN_APP/Contents/Info.p
 sign_archive() { "$SIGN_UPDATE" --ed-key-file - -p "$1" < "$SEED_FILE"; }
 
 build_payload_zip() { # <zip-path> — the "new version" app, zipped like CI does
-    local zip="$1" payload="$LAB_DIR/payload/LockIME.app"
+    local zip="$1" payload="$LAB_DIR/payload/$APP_NAME.app"
     mkdir -p "$LAB_DIR/payload"
     ditto "$APP_SRC" "$payload"
     "$PLISTBUDDY" -c "Set :SUPublicEDKey $DEV_PUBKEY" "$payload/Contents/Info.plist"
@@ -212,7 +217,7 @@ curl -sf -o /dev/null "http://localhost:$PORT/appcast.xml" || {
 LOCKIME_UPDATE_FEED="http://localhost:$PORT/appcast.xml" \
 LOCKIME_UPDATE_CHECK_ON_LAUNCH=1 \
 LOCKIME_UPDATE_AUTO_INSTALL="${UPDATE_LAB_AUTO:-0}" \
-    "$RUN_APP/Contents/MacOS/LockIME" > "$LAB_DIR/app.log" 2>&1 &
+    "$RUN_APP/Contents/MacOS/$EXECUTABLE_NAME" > "$LAB_DIR/app.log" 2>&1 &
 disown
 
 INSTALL_STEP="click Install —"

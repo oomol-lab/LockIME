@@ -118,4 +118,15 @@ struct LogStoreTests {
         let reopened = LogStore(directoryOverride: directory)
         #expect(reopened.count() == 2)
     }
+
+    @Test("default disk directory preserves release storage and isolates dev builds")
+    func defaultDirectoryUsesBundleIdentity() {
+        let support = URL.applicationSupportDirectory
+        let releaseDirectory = support.appending(path: "LockIME", directoryHint: .isDirectory).path
+        let devDirectory = support.appending(path: "com.oomol.LockIME.dev", directoryHint: .isDirectory).path
+
+        #expect(LogStore.defaultDirectory(for: "com.oomol.LockIME").path == releaseDirectory)
+        #expect(LogStore.defaultDirectory(for: "com.oomol.LockIME.dev").path == devDirectory)
+        #expect(LogStore.defaultDirectory(for: nil).path == releaseDirectory)
+    }
 }

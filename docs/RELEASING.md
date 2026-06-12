@@ -11,6 +11,10 @@ versions, and the workflows create them — you never push a tag by hand.
   `MARKETING_VERSION`). Real versions exist only in CI, which overrides
   `MARKETING_VERSION` at archive time with a value computed from git tags by
   `scripts/ci/compute_version.sh`.
+- **Debug builds are a separate local app**: `LockIME Dev.app` with bundle
+  identifier `com.oomol.LockIME.dev`. Release archives and published builds stay
+  `LockIME.app` / `com.oomol.LockIME`, so local development has independent
+  TCC permissions, defaults, and app-support storage.
 - **Stable** versions are `X.Y.Z`; **beta** versions are
   `X.Y.Z-beta.N`, where `X.Y.Z` is the latest stable tag and `N` continues
   from the highest existing `-beta.*` tag for that base.

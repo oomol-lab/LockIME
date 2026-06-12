@@ -13,7 +13,7 @@ make update-test-stop           # tear down (server, app under test, lab copies)
 
 Each scenario builds Debug, then:
 
-1. Copies the app to `build/update-lab/run/LockIME.app`, swaps `SUPublicEDKey`
+1. Copies the app to `build/update-lab/run/LockIME Dev.app`, swaps `SUPublicEDKey`
    for a throwaway dev key (file-backed via CryptoKit — never the keychain),
    and re-signs ad-hoc. The DerivedData product is never mutated.
 2. Shapes `appcast.xml` for the scenario and signs archives with Sparkle's own
@@ -35,15 +35,14 @@ that copy would silently poll the production feed with the dev key instead).
 
 Notes:
 
-- Scenarios kill any running LockIME (like `make run`), reset Sparkle's
+- Scenarios kill any running Debug app (like `make run`), reset Sparkle's
   skipped-version defaults, and clear its download cache for determinism.
-- The app under test shares the real `com.oomol.LockIME` defaults domain; the
-  lab touches only Sparkle's skipped-version keys (`SUSkippedVersion`,
+- The app under test uses the Debug app's `com.oomol.LockIME.dev` defaults
+  domain, separate from the released `com.oomol.LockIME` app. The lab touches
+  only Sparkle's skipped-version keys (`SUSkippedVersion`,
   `SUSkippedMajorVersion`, `SUSkippedMajorSubreleaseVersion`) and
-  `SULastCheckTime`. Clicking "Skip This Version" in a lab window writes the
-  fake 99.0.0 into that shared domain — which would silently suppress real
-  scheduled updates — so both scenario start *and* `update-test-stop` clear
-  the skip keys.
+  `SULastCheckTime`, and both scenario start *and* `update-test-stop` clear the
+  skip keys for determinism.
 - Expected error copy: download failure → "couldn't be downloaded";
   extraction failure lands in Sparkle's 3000s (signature/unarchive) bucket →
   "couldn't be verified" (see `UpdateFailure`).

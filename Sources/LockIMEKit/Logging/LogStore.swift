@@ -8,6 +8,15 @@ public final class LogStore {
     public static let retention: TimeInterval = 24 * 60 * 60
 
     private static let log = Logger(subsystem: "com.oomol.LockIME", category: "LogStore")
+    static func defaultDirectory(for bundleIdentifier: String?) -> URL {
+        if bundleIdentifier == "com.oomol.LockIME" {
+            return URL.applicationSupportDirectory.appending(path: "LockIME", directoryHint: .isDirectory)
+        }
+        if let bundleID = bundleIdentifier, !bundleID.isEmpty {
+            return URL.applicationSupportDirectory.appending(path: bundleID, directoryHint: .isDirectory)
+        }
+        return URL.applicationSupportDirectory.appending(path: "LockIME", directoryHint: .isDirectory)
+    }
 
     public let container: ModelContainer
 
@@ -18,9 +27,7 @@ public final class LogStore {
         } else {
             // Use a dedicated subdirectory — the default store lands directly in
             // ~/Library/Application Support and would collide across apps.
-            let directory = directoryOverride ?? URL.applicationSupportDirectory.appending(
-                path: "LockIME", directoryHint: .isDirectory
-            )
+            let directory = directoryOverride ?? Self.defaultDirectory(for: Bundle.main.bundleIdentifier)
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             configuration = ModelConfiguration(url: directory.appending(path: "ActivationLog.store"))
         }

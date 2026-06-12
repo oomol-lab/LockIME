@@ -78,7 +78,9 @@ targets:
     settings:
       base:
         PRODUCT_NAME: LockIME
+        PRODUCT_MODULE_NAME: LockIME
         PRODUCT_BUNDLE_IDENTIFIER: com.oomol.LockIME
+        LOCKIME_BUNDLE_DISPLAY_NAME: LockIME
         INFOPLIST_FILE: Sources/LockIME/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sources/LockIME/LockIME.entitlements
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -89,6 +91,9 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
       configs:
         Debug:
+          PRODUCT_NAME: LockIME Dev
+          PRODUCT_BUNDLE_IDENTIFIER: com.oomol.LockIME.dev
+          LOCKIME_BUNDLE_DISPLAY_NAME: LockIME Dev
           CODE_SIGN_IDENTITY: "-"
           DEVELOPMENT_TEAM: ""
           ENABLE_HARDENED_RUNTIME: NO
