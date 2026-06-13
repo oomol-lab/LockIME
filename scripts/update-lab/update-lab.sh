@@ -35,6 +35,30 @@ usage() { echo "usage: $(basename "$0") <none|download-fail|extract-fail|success
 [[ $# -eq 1 ]] || usage
 SCENARIO="$1"
 
+load_app_identity() {
+    local app="$1" bundle_id executable_name
+    [[ -d "$app" ]] || return 1
+    bundle_id="$("$PLISTBUDDY" -c "Print :CFBundleIdentifier" "$app/Contents/Info.plist" 2>/dev/null)" || return 1
+    executable_name="$("$PLISTBUDDY" -c "Print :CFBundleExecutable" "$app/Contents/Info.plist" 2>/dev/null)" || return 1
+
+    APP_NAME="$(basename "$app" .app)"
+    BUNDLE_ID="$bundle_id"
+    EXECUTABLE_NAME="$executable_name"
+    RUN_APP="$LAB_DIR/run/$APP_NAME.app"
+}
+
+load_run_copy_identity() {
+    local app
+    shopt -s nullglob
+    local apps=("$LAB_DIR"/run/*.app)
+    shopt -u nullglob
+
+    for app in "${apps[@]}"; do
+        load_app_identity "$app" && return 0
+    done
+    return 1
+}
+
 clear_skip_keys() {
     # Sparkle 2's persisted skip keys (SUConstants.m). A "Skip This Version"
     # click in the lab window writes SUSkippedVersion=209901010101 into the app's
@@ -63,6 +87,7 @@ stop_lab() {
 }
 
 if [[ "$SCENARIO" == "stop" ]]; then
+    load_run_copy_identity || true
     stop_lab
     rm -rf "$LAB_DIR/run" "$LAB_DIR/payload" "$SERVE_DIR"
     echo "[update-lab] stopped."
@@ -75,10 +100,7 @@ case "$SCENARIO" in
 esac
 
 [[ -d "$APP_SRC" ]] || { echo "error: $APP_SRC not found — run 'make build' first" >&2; exit 1; }
-APP_NAME="$(basename "$APP_SRC" .app)"
-BUNDLE_ID="$("$PLISTBUDDY" -c "Print :CFBundleIdentifier" "$APP_SRC/Contents/Info.plist")"
-EXECUTABLE_NAME="$("$PLISTBUDDY" -c "Print :CFBundleExecutable" "$APP_SRC/Contents/Info.plist")"
-RUN_APP="$LAB_DIR/run/$APP_NAME.app"
+load_app_identity "$APP_SRC" || { echo "error: $APP_SRC has an unreadable Info.plist" >&2; exit 1; }
 
 # The lab hooks are #if DEBUG; a Release binary would silently ignore the
 # loopback feed and poll production with the swapped dev key instead.
