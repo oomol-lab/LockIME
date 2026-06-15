@@ -57,7 +57,9 @@ brew install --cask oomol-lab/tap/lockime
 - **淺色 / 深色模式**——統一的、系統原生的設計語言，自動適應淺色與深色外觀，並配有專屬應用程式圖示。參見 [docs/DESIGN.md](../DESIGN.md)。
 - **即時語言切換**——在 9 種語言間即時切換，無需重新啟動：English、简体中文、繁體中文、日本語、Français、Deutsch、Español、Português、Русский。
 - **24 小時觸發記錄**——回顧切換了什麼、為什麼、持續了多久。
+- **設定備份**——把依應用程式與依 URL 的規則匯出為 `.lockime` 檔案，再匯入回來；匯入前會有一個預覽步驟，先列出新增、衝突與移除項，確認後再套用。
 - **透過 Sparkle 自動更新**——stable 與 beta 兩個頻道，配有自訂更新視窗。
+- **超小體積**——整個應用程式打包成不到 3 MB 的 `.dmg`。
 - **核心鎖定無需系統權限**——可選的、由 Accessibility 把關的增強模式可解鎖更細緻的依 URL / 聚焦欄位規則。
 
 ## Design
@@ -93,7 +95,7 @@ Xcode 專案由 `project.yml` 產生，不納入版本控制。
 ## Architecture
 
 - **LockIMEKit**（靜態程式庫）——純粹的、經過完整單元測試的邏輯，僅使用系統框架：鎖定引擎、應用程式監視器、規則、增強（Accessibility）觀察器、記錄模型、在地化。
-- **LockIME**（應用程式）——`@main`、SwiftUI UI、設計系統，以及面向 Sparkle、KeyboardShortcuts、PermissionFlow 和 MarkdownUI 的輕量整合介面層。
+- **LockIME**（應用程式）——`@main`、SwiftUI UI、設計系統，以及面向 Sparkle、KeyboardShortcuts 和 PermissionFlow 的輕量整合介面層。
 
 ## License
 

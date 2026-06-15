@@ -61,7 +61,9 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 - **Modo claro e escuro** — uma linguagem de design unificada e nativa do sistema, que se adapta às aparências clara e escura, além de um ícone de app sob medida. Veja [docs/DESIGN.md](../DESIGN.md).
 - **Troca de idioma ao vivo** — alterne instantaneamente entre 9 idiomas, sem reiniciar: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.
 - **Registro de ativações de 24 horas** — veja o que foi trocado, por quê e por quanto tempo.
+- **Backup da configuração** — exporte suas regras por app e por URL para um arquivo `.lockime` e importe-as de volta, com uma etapa de prévia que lista adições, conflitos e remoções antes de aplicar qualquer coisa.
 - **Atualização automática** — canais stable e beta via Sparkle, com uma janela de atualização personalizada.
+- **Download minúsculo** — o app inteiro cabe em um `.dmg` com menos de 3 MB.
 - **Sem permissões do sistema para o bloqueio básico** — um modo aprimorado opcional, condicionado à permissão de Accessibility, libera regras mais finas por URL e por campo em foco.
 
 ## Design
@@ -97,7 +99,7 @@ Lançamentos Developer ID notarizados e acionados por dispatch, com atualizaçã
 ## Architecture
 
 - **LockIMEKit** (biblioteca estática) — lógica pura, totalmente coberta por testes unitários, usando apenas frameworks do sistema: motor de bloqueio, monitor de apps, regras, observador aprimorado (Accessibility), modelo de registro, localização.
-- **LockIME** (app) — `@main`, a interface SwiftUI, o sistema de design e as finas camadas de integração para Sparkle, KeyboardShortcuts, PermissionFlow e MarkdownUI.
+- **LockIME** (app) — `@main`, a interface SwiftUI, o sistema de design e as finas camadas de integração para Sparkle, KeyboardShortcuts e PermissionFlow.
 
 ## License
 

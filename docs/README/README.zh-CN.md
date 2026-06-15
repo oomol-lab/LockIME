@@ -60,7 +60,9 @@ Mac 匹配的 `.dmg`（Apple silicon 选 `-arm64`，Intel 选 `-x86_64`）。
 - **浅色 / 深色模式**——统一的、系统原生的设计语言，自动适配浅色与深色外观，并配有定制应用图标。参见 [docs/DESIGN.md](../DESIGN.md)。
 - **实时语言切换**——在 9 种语言间即时切换，无需重启：English、简体中文、繁體中文、日本語、Français、Deutsch、Español、Português、Русский。
 - **24 小时激活日志**——回顾切换了什么、为什么、持续了多久。
+- **配置备份**——把按应用和按 URL 的规则导出为 `.lockime` 文件，再导入回来；导入前会有一个预览步骤，先列出新增、冲突与移除项，确认后再应用。
 - **通过 Sparkle 自动更新**——stable 与 beta 两个通道，配有自定义更新窗口。
+- **超小体积**——整个应用打包成不到 3 MB 的 `.dmg`。
 - **核心锁定无需系统权限**——可选的、受 Accessibility 把关的增强模式可解锁更细粒度的按 URL / 聚焦字段规则。
 
 ## Design
@@ -96,7 +98,7 @@ Xcode 项目由 `project.yml` 生成，不纳入版本控制。
 ## Architecture
 
 - **LockIMEKit**（静态库）——纯粹的、经过完整单元测试的逻辑，仅使用系统框架：锁定引擎、应用监视器、规则、增强（Accessibility）观察器、日志模型、本地化。
-- **LockIME**（应用）——`@main`、SwiftUI UI、设计系统，以及面向 Sparkle、KeyboardShortcuts、PermissionFlow 和 MarkdownUI 的轻量集成适配层。
+- **LockIME**（应用）——`@main`、SwiftUI UI、设计系统，以及面向 Sparkle、KeyboardShortcuts 和 PermissionFlow 的轻量集成适配层。
 
 ## License
 

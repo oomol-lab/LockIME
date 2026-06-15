@@ -57,7 +57,9 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 - **Heller & dunkler Modus** — eine einheitliche, systemnative Designsprache, die sich an helles und dunkles Erscheinungsbild anpasst, plus ein maßgeschneidertes App-Symbol. Siehe [docs/DESIGN.md](../DESIGN.md).
 - **Sprachwechsel zur Laufzeit** — wechsle sofort zwischen 9 Sprachen, ohne Neustart: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.
 - **24-Stunden-Aktivitätsprotokoll** — sieh nach, was warum und wie lange zurückgeschaltet wurde.
+- **Konfigurations-Backup** — exportiere deine Regeln pro App und pro URL in eine `.lockime`-Datei und importiere sie wieder, mit einem Vorschau-Schritt, der Ergänzungen, Konflikte und Entfernungen auflistet, bevor etwas angewendet wird.
 - **Automatische Updates** — Stable- und Beta-Kanal via Sparkle, mit einem eigenen Update-Fenster.
+- **Winziger Download** — die gesamte App steckt in einer `.dmg` unter 3 MB.
 - **Keine Systemberechtigungen für das Kern-Sperren** — ein optionaler, über Accessibility freigeschalteter erweiterter Modus ermöglicht feinere Regeln pro URL und pro fokussiertem Feld.
 
 ## Design
@@ -93,7 +95,7 @@ Dispatch-gesteuerte, notarisierte Developer-ID-Releases mit Sparkle-Auto-Update 
 ## Architecture
 
 - **LockIMEKit** (statische Bibliothek) — reine, vollständig unit-getestete Logik, die nur Systemframeworks nutzt: Sperr-Engine, App-Monitor, Regeln, erweiterter (Accessibility-)Beobachter, Protokollmodell, Lokalisierung.
-- **LockIME** (App) — `@main`, die SwiftUI-Oberfläche, das Designsystem und die dünnen Integrationsschichten für Sparkle, KeyboardShortcuts, PermissionFlow und MarkdownUI.
+- **LockIME** (App) — `@main`, die SwiftUI-Oberfläche, das Designsystem und die dünnen Integrationsschichten für Sparkle, KeyboardShortcuts und PermissionFlow.
 
 ## License
 

@@ -74,8 +74,12 @@ Either way, the app keeps itself up to date via Sparkle.
   restart: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español,
   Português, Русский.
 - **24-hour activation log** — review what was switched, why, and for how long.
+- **Config backup** — export your per-app and per-URL rules to a `.lockime`
+  file and import them back, with a review step that previews additions,
+  conflicts, and removals before anything is applied.
 - **Auto-update** — stable and beta channels via Sparkle, with a custom update
   window.
+- **Tiny download** — the whole app ships in a `.dmg` under 3 MB.
 - **No system permissions for core locking** — an optional Accessibility-gated
   enhanced mode unlocks finer-grained per-URL and focused-field rules.
 
@@ -128,7 +132,7 @@ each on its own update feed (no universal binary, no cross-arch updates). See
   frameworks: lock engine, app monitor, rules, enhanced (Accessibility) observer,
   logging model, localization.
 - **LockIME** (app) — `@main`, SwiftUI UI, the design system, and the thin
-  integration shims for Sparkle, KeyboardShortcuts, PermissionFlow, and MarkdownUI.
+  integration shims for Sparkle, KeyboardShortcuts, and PermissionFlow.
 
 ## License
 
