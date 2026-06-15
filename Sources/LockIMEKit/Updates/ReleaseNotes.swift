@@ -116,7 +116,10 @@ public enum ReleaseNotes {
 
     /// `#N` for a pull/issue URL, the bare ref range for a compare URL, else nil.
     private static func compactGitHubLabel(for url: URL) -> String? {
-        guard url.host?.hasSuffix("github.com") == true else { return nil }
+        guard
+            let host = url.host?.lowercased(),
+            host == "github.com" || host.hasSuffix(".github.com")
+        else { return nil }
         let parts = url.path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
         guard parts.count >= 4 else { return nil }
         switch parts[2] {

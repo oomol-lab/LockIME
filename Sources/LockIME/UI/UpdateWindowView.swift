@@ -59,11 +59,12 @@ struct UpdateWindowView: View {
                     if !model.availableVersion.isEmpty {
                         notesHeadline
                     }
-                    if model.releaseNotesMarkdown.isEmpty {
+                    let notes = model.releaseNotesMarkdown.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if notes.isEmpty {
                         Text("No release notes.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ReleaseNotesView(markdown: model.releaseNotesMarkdown)
+                        ReleaseNotesView(markdown: notes)
                     }
                 }
                 .padding(DS.Spacing.xl)
