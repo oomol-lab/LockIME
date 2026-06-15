@@ -30,11 +30,20 @@ ln -s /Applications "$STAGE/Applications"
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT"
 
+# ULFO (LZFSE) over the historical UDZO (zlib): squeezes the Mach-O binary and
+# the embedded Sparkle framework harder (the .car app-icon bitmaps are already
+# lzfse and barely move). LZFSE is Apple's own codec, decoded in userspace by
+# the host OS's DiskImages helper (a universal binary) — so mountability tracks
+# the host macOS version, never the contained app's CPU arch: the x86_64 image
+# mounts exactly the same. ULFO mounts on every macOS ≥ 10.11 (our floor is
+# 14.0). The .dmg is the manual-download convenience only — Sparkle updates ship
+# the zip (see docs/RELEASING.md) — and CI signs/notarizes/staples it afterward,
+# all compression-format-agnostic.
 hdiutil create \
 	-volname "$VOL" \
 	-srcfolder "$STAGE" \
 	-fs HFS+ \
-	-format UDZO \
+	-format ULFO \
 	-ov -quiet \
 	"$OUT"
 
