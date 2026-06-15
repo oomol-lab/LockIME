@@ -162,15 +162,17 @@ public extension ConfigBackup {
     /// category to a catalog key (see the i18n rules), the same shape as
     /// `UpdateFailure`.
     static func read(_ data: Data) -> Result<ConfigBackup, BackupReadError> {
-        // 1) Must be a JSON object.
+        // 1) Must be a JSON object. (Bytes that don't parse aren't one of ours;
+        //    a genuine I/O failure to *read* the file is `.unreadable`, raised by
+        //    the caller before it ever gets here.)
         guard let object = try? JSONSerialization.jsonObject(with: data),
               let top = object as? [String: Any]
         else {
-            return .failure(.unreadable)
+            return .failure(.notABackup)
         }
         // 2) Must carry our format identifier.
         guard let format = top["format"] as? String, format == formatIdentifier else {
-            return .failure(.unreadable)
+            return .failure(.notABackup)
         }
         // 3) Version gate, reading only the envelope fields. A missing/invalid
         //    `minReader` is treated as the writer minimum (lenient — these are
@@ -194,8 +196,12 @@ public extension ConfigBackup {
 /// render time, so the message follows the in-app language override instead of
 /// leaking a system-localized `error.localizedDescription`.
 public enum BackupReadError: Error, Equatable, Sendable {
-    /// Not a JSON file, or not a LockIME backup at all (wrong/absent format).
+    /// The file's bytes couldn't be read at all (I/O, permissions). Raised by the
+    /// caller that loads the file, not by `read(_:)`.
     case unreadable
+    /// The bytes were read fine, but it isn't a LockIME backup — not JSON, or
+    /// missing/wrong format identifier.
+    case notABackup
     /// A LockIME backup whose contents are structurally broken.
     case damaged
     /// Written by a newer LockIME than this build can read. Carries the

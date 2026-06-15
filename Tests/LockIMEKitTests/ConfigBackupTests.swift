@@ -75,17 +75,17 @@ struct ConfigBackupTests {
         #expect(!text.contains("\\/"))
     }
 
-    @Test("read() rejects non-JSON bytes as unreadable")
+    @Test("read() rejects non-JSON bytes as not-a-backup")
     func readsNonJSON() {
-        #expect(ConfigBackup.read(Data("not json".utf8)) == .failure(.unreadable))
+        #expect(ConfigBackup.read(Data("not json".utf8)) == .failure(.notABackup))
     }
 
     @Test("read() rejects valid JSON that isn't a LockIME backup")
     func readsWrongFormat() {
         let json = #"{"format": "com.someone.else", "payload": {}}"#
-        #expect(ConfigBackup.read(Data(json.utf8)) == .failure(.unreadable))
+        #expect(ConfigBackup.read(Data(json.utf8)) == .failure(.notABackup))
         // Also a JSON object with no format at all.
-        #expect(ConfigBackup.read(Data("{}".utf8)) == .failure(.unreadable))
+        #expect(ConfigBackup.read(Data("{}".utf8)) == .failure(.notABackup))
     }
 
     @Test("read() rejects a file whose minReader exceeds this build")

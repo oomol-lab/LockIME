@@ -87,8 +87,9 @@ struct BackupSettingsPane: View {
             try state.makeBackup().encoded().write(to: url, options: .atomic)
         } catch {
             // Never surface a system-localized message; log the original, show a
-            // semantic note instead.
-            Self.log.error("Backup export failed: \(String(describing: error), privacy: .public)")
+            // semantic note instead. Keep the error private (it can embed the
+            // user's file path) — hashed so identical failures still correlate.
+            Self.log.error("Backup export failed: \(String(describing: error), privacy: .private(mask: .hash))")
             exportFailed = true
         }
     }
@@ -124,6 +125,8 @@ struct BackupSettingsPane: View {
         let icon = "exclamationmark.triangle"
         switch error {
         case .unreadable:
+            inlineNote("Couldn't read the selected file. Check permissions and try again.", systemImage: icon, tint: DS.Palette.warning)
+        case .notABackup:
             inlineNote("This file isn't a LockIME backup.", systemImage: icon, tint: DS.Palette.warning)
         case .damaged:
             inlineNote("This backup file is damaged and can't be read.", systemImage: icon, tint: DS.Palette.warning)
