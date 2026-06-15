@@ -178,12 +178,19 @@ update_item() { # <enclosure-url> <length> <signature>
       <sparkle:version>$NEW_BUILD</sparkle:version>
       <sparkle:shortVersionString>$NEW_SHORT</sparkle:shortVersionString>
       <description><![CDATA[
-## LockIME $NEW_SHORT — update lab
+## What's Changed
 
-A simulated release served from \`localhost:$PORT\` (scenario: **$SCENARIO**).
+A simulated release served from \`localhost:$PORT\` (scenario: **$SCENARIO**) — safe to install: it is this very build, re-versioned as $NEW_SHORT. The bullets below carry real GitHub-style \`@mention\` and pull-request links so the update window's native renderer can be eyeballed.
 
-- Exercises the real Sparkle pipeline: download, EdDSA verify, extract, install
-- Safe to install: it is this very build, re-versioned
+* Render release notes natively, dropping \`MarkdownUI\` by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/18
+* Shrink the arm64 download with an ULFO disk image by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/17
+* Exercise the real Sparkle pipeline: download, EdDSA verify, extract, install by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/10
+
+## New Contributors
+
+* @octocat made their first contribution in https://github.com/oomol-lab/LockIME/pull/1
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.2.1...v$NEW_SHORT
       ]]></description>
       <enclosure url="$1" length="$2" type="application/octet-stream" sparkle:edSignature="$3"/>
     </item>

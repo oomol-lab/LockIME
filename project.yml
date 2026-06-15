@@ -47,9 +47,6 @@ packages:
   PermissionFlow:
     url: https://github.com/jaywcjlove/PermissionFlow.git
     from: "2.5.0"
-  MarkdownUI:
-    url: https://github.com/gonzalezreal/swift-markdown-ui.git
-    from: "2.4.1"
 
 targets:
   LockIMEKit:
@@ -74,7 +71,6 @@ targets:
       - package: Sparkle
       - package: KeyboardShortcuts
       - package: PermissionFlow
-      - package: MarkdownUI
     settings:
       base:
         PRODUCT_NAME: LockIME

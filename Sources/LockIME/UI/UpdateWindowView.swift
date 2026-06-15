@@ -1,5 +1,4 @@
 import AppKit
-import MarkdownUI
 import SwiftUI
 
 /// Custom Sparkle update window in the style of Apple Software Update: app icon +
@@ -60,9 +59,12 @@ struct UpdateWindowView: View {
                     if !model.availableVersion.isEmpty {
                         notesHeadline
                     }
-                    Markdown(model.releaseNotesMarkdown.isEmpty ? "_No release notes._" : model.releaseNotesMarkdown)
-                        .markdownTheme(.releaseNotes)
-                        .textSelection(.enabled)
+                    if model.releaseNotesMarkdown.isEmpty {
+                        Text("No release notes.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ReleaseNotesView(markdown: model.releaseNotesMarkdown)
+                    }
                 }
                 .padding(DS.Spacing.xl)
                 .frame(maxWidth: .infinity, alignment: .leading)
