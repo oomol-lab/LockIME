@@ -50,7 +50,7 @@ struct AppRulesSettingsPane: View {
             } header: {
                 Text("Per-app rules")
             } footer: {
-                SectionFooter("Pin a specific app to its own input source, ignore it, or fall back to the global default.")
+                SectionFooter("Lock an app to its own input source, switch to one on activation, ignore it, or fall back to the global default.")
             }
         }
         .formStyle(.grouped)
@@ -100,13 +100,14 @@ private struct AppRuleRow: View {
 
             Picker("", selection: modeBinding) {
                 Text("Lock to").tag(AppRuleMode.locked)
+                Text("Switch to").tag(AppRuleMode.switched)
                 Text("Ignore").tag(AppRuleMode.ignored)
                 Text("Use default").tag(AppRuleMode.useDefault)
             }
             .labelsHidden()
             .fixedSize()
 
-            if rule.mode == .locked {
+            if rule.mode.pinsSource {
                 Picker("", selection: sourceBinding) {
                     Text("Default").tag(InputSourceID?.none)
                     ForEach(state.availableSources) { source in

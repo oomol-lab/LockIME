@@ -50,6 +50,7 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 ## Features
 
 - **Sofortiges Wieder-Sperren** — schaltet die aktive Eingabequelle in dem Moment zurück, in dem du (oder eine andere App) sie wechselst, global oder pro App.
+- **Sperren oder wechseln** — Regeln pro App und pro URL können eine Eingabequelle *sperren* (bei jeder Abweichung erneut angewendet) oder einmalig dorthin *wechseln*, sobald du die App oder Seite aktivierst, und dich danach frei wählen lassen.
 - **Steuerung über die Menüleiste** — aktivieren/deaktivieren, die gesperrte Eingabequelle wechseln, die aktuelle Eingabequelle einsehen und die Auslösungen direkt in der Menüleiste verfolgen.
 - **Tastatur-Kurzbefehle** — konfigurierbare globale Kurzbefehle zum Ein- und Ausschalten der Sperre und zum Durchschalten der gesperrten Eingabequelle sowie App-spezifische Kurzbefehle, um die Regel der vordersten App durchzuschalten oder zu entfernen.
 - **Start bei Anmeldung** — startet automatisch beim Anmelden (standardmäßig aus).

@@ -420,29 +420,52 @@ struct ImportReviewSheet: View {
         }
     }
 
-    /// The file-side binding as composable `Text`: a source name (a verbatim
-    /// proper noun) or the localized app-rule mode word when no source is pinned.
-    /// Returning `Text` keeps it usable inside `HStack`s and recolorable, while
-    /// still resolving catalog keys against the injected `\.locale`.
+    /// The file-side binding as composable `Text`. A source-pinning rule reads as
+    /// "Lock to %@" / "Switch to %@" so lock and switch are visibly parallel (and
+    /// a same-source lock-vs-switch conflict is distinguishable); a non-pinning
+    /// app mode reads as its mode word; the global default (always a lock, no
+    /// ambiguity) and a sourceless binding read as the bare name / "Default".
+    /// Returning `Text` keeps it recolorable inside `HStack`s while resolving
+    /// catalog keys against the injected `\.locale`.
     private func fileBindingText(_ item: ImportItem) -> Text {
-        if case .app = item.subject, let mode = item.fileMode, mode != .locked {
-            return Text(modeKey(mode))
-        }
-        if let source = item.fileSource { return Text(verbatim: model.displayName(for: source)) }
-        return Text("Default")
+        bindingText(subject: item.subject, mode: item.fileMode, action: item.fileAction, source: item.fileSource)
     }
 
     private func localBindingText(_ item: ImportItem) -> Text {
-        if case .app = item.subject, let mode = item.localMode, mode != .locked {
-            return Text(modeKey(mode))
+        bindingText(subject: item.subject, mode: item.localMode, action: item.localAction, source: item.localSource)
+    }
+
+    private func bindingText(
+        subject: ImportItem.Subject,
+        mode: AppRuleMode?,
+        action: RuleAction?,
+        source: InputSourceID?
+    ) -> Text {
+        switch subject {
+        case .globalDefault:
+            if let source { return Text(verbatim: model.displayName(for: source)) }
+            return Text("Default")
+        case .app:
+            if let mode, !mode.pinsSource { return Text(modeKey(mode)) } // ignore / use default
+            guard let source else { return Text("Default") }
+            return pinnedBindingText(isSwitch: mode == .switched, source: source)
+        case .url:
+            guard let source else { return Text("Default") }
+            return pinnedBindingText(isSwitch: action == .switchOnce, source: source)
         }
-        if let source = item.localSource { return Text(verbatim: model.displayName(for: source)) }
-        return Text("Default")
+    }
+
+    /// A source-pinning binding: the localized "Lock to %@" / "Switch to %@"
+    /// phrase with the source name interpolated (a verbatim proper noun).
+    private func pinnedBindingText(isSwitch: Bool, source: InputSourceID) -> Text {
+        let name = model.displayName(for: source)
+        return Text(isSwitch ? "Switch to \(name)" : "Lock to \(name)")
     }
 
     private func modeKey(_ mode: AppRuleMode) -> LocalizedStringKey {
         switch mode {
         case .locked: "Lock to"
+        case .switched: "Switch to"
         case .ignored: "Ignore"
         case .useDefault: "Use default"
         }

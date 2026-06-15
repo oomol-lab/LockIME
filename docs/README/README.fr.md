@@ -50,6 +50,7 @@ Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silic
 ## Features
 
 - **Reverrouillage instantané** — rebascule la source de saisie active dès que vous (ou une autre application) la changez, globalement ou par application.
+- **Verrouiller ou basculer** — les règles par application et par URL peuvent *verrouiller* une source de saisie (réappliquée dès qu'elle dévie) ou simplement y *basculer* une fois lorsque vous activez l'application ou la page, puis vous laisser libre de la changer.
 - **Contrôle depuis la barre de menus** — activer/désactiver, changer la source de saisie verrouillée, voir la source actuelle et suivre le nombre d'activations depuis la barre de menus.
 - **Raccourcis clavier** — des raccourcis globaux configurables pour activer/désactiver le verrouillage et faire défiler la source de saisie verrouillée, ainsi que des raccourcis par application pour faire défiler ou supprimer la règle de l’application au premier plan.
 - **Lancement à la connexion** — démarre automatiquement à l'ouverture de session (désactivé par défaut).

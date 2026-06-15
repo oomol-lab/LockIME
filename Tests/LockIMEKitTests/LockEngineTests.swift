@@ -560,3 +560,276 @@ struct LockEngineReasonTests {
         #expect(provider.current == us) // left where the user put it
     }
 }
+
+@MainActor
+@Suite("LockEngine switch action")
+struct LockEngineSwitchTests {
+    private let us: InputSourceID = "com.apple.keylayout.US"
+    private let abc: InputSourceID = "com.apple.keylayout.ABC"
+    private let pinyin: InputSourceID = "com.apple.inputmethod.SCIM.ITABC"
+    private let spotlight = "com.apple.Spotlight"
+
+    private func makeEngine(
+        current: InputSourceID,
+        frontmost: String?
+    ) -> (LockEngine, MockInputSourceProvider, MockFrontmostMonitor, MockFloatingMonitor) {
+        let provider = MockInputSourceProvider(
+            current: current,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: frontmost)
+        let floating = MockFloatingMonitor()
+        let engine = LockEngine(provider: provider, appMonitor: monitor, floatingAppMonitor: floating)
+        engine.start()
+        return (engine, provider, monitor, floating)
+    }
+
+    @Test("a switch app rule switches once on activation, installing no standing lock")
+    func switchAppFiresOnce() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // foo → default lock
+
+        monitor.activate("com.apple.Terminal")
+        #expect(provider.current == abc)              // switched once
+        #expect(provider.selectCalls == [abc])
+    }
+
+    @Test("a switch is not re-fired on re-activation, so a manual switch-away sticks")
+    func switchNotReFiredOnReactivation() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.apple.Terminal")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == abc) // switched on startup-apply
+
+        // User manually switches away.
+        provider.current = us
+        // Re-activating the SAME app must NOT re-switch (same SwitchKey).
+        monitor.activate("com.apple.Terminal")
+        #expect(provider.current == us)  // left where the user put it
+        #expect(provider.selectCalls == [abc]) // no second select
+    }
+
+    @Test("leaving a switch app and returning re-arms the one-shot")
+    func switchReArmsAfterLeaving() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ))
+        monitor.activate("com.apple.Terminal")
+        #expect(provider.current == abc) // switched
+
+        provider.current = us            // user switches away
+        monitor.activate("com.foo.App")  // leave to a default-lock app → re-arm
+        #expect(provider.current == us)
+        monitor.activate("com.apple.Terminal") // return → genuine re-entry
+        #expect(provider.current == abc) // switched again
+    }
+
+    @Test("the master toggle gates the switch (off = no switch)")
+    func masterOffGatesSwitch() {
+        let (engine, provider, _, _) = makeEngine(current: us, frontmost: "com.apple.Terminal")
+        engine.apply(LockConfiguration(
+            isEnabled: false,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.selectCalls.isEmpty)
+        #expect(provider.current == us)
+    }
+
+    @Test("toggling the lock OFF then ON re-fires the one-shot; two ON applies do not")
+    func offOnReFiresButRepeatOnDoesNot() {
+        let (engine, provider, _, _) = makeEngine(current: us, frontmost: "com.apple.Terminal")
+        let on = LockConfiguration(
+            isEnabled: true, defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        )
+        var off = on; off.isEnabled = false
+
+        engine.apply(on, reason: .lockEngaged)
+        #expect(provider.current == abc)       // first switch
+        #expect(provider.selectCalls.count == 1)
+
+        // Same enabled config re-applied (e.g. a config edit): no re-fire.
+        provider.current = us
+        engine.apply(on, reason: .configChanged)
+        #expect(provider.current == us)
+        #expect(provider.selectCalls.count == 1) // key intact → not re-fired
+
+        // OFF clears the key; ON is then a genuine re-entry → re-fires.
+        engine.apply(off, reason: .lockEngaged)
+        engine.apply(on, reason: .lockEngaged)
+        #expect(provider.current == abc)
+        #expect(provider.selectCalls.count == 2)
+    }
+
+    // THE BLOCKER (issue-#9-shaped): a launcher overlay shadows the frontmost
+    // app, flipping effectiveBundleID to the launcher. The non-switch resolution
+    // it lands on must NOT re-arm the one-shot, or dismissing the overlay would
+    // yank a user who had manually switched away back to the switch target.
+    @Test("a launcher overlay over an already-switched app does not re-fire on dismiss")
+    func launcherOverlayDoesNotReFireSwitch() {
+        let (engine, provider, _, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == abc) // foo switched once on apply
+
+        provider.current = us            // user manually switches away
+        floating.setLauncher(spotlight)  // overlay → resolves to default lock (us)
+        #expect(provider.current == us)
+        floating.setLauncher(nil)        // dismiss → back to foo
+        #expect(provider.current == us)  // NOT re-yanked to abc — the fix
+    }
+
+    @Test("the launcher-excursion guard holds even with no global default")
+    func launcherOverlayNoDefaultDoesNotReFire() {
+        let (engine, provider, _, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: nil, // launcher resolves to .noTarget, not .lock
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == abc)
+
+        provider.current = us
+        floating.setLauncher(spotlight) // .noTarget arm — must also preserve the key
+        floating.setLauncher(nil)
+        #expect(provider.current == us) // still not re-yanked
+    }
+
+    @Test("a switch rule keyed to the launcher itself fires on focus")
+    func launcherOwnSwitchRuleFires() {
+        let (engine, provider, _, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // foo → default; overlay not up yet
+
+        floating.setLauncher(spotlight)
+        #expect(provider.current == abc) // the launcher's own switch fired
+    }
+
+    // A launcher whose OWN rule is .switched must not clobber the underlying
+    // app's one-shot memory: its switch fires on focus, but on dismiss the
+    // underlying (already-switched, manually-changed-away) app must NOT re-fire.
+    // The launcher excursion uses a separate dedup slot for exactly this reason.
+    @Test("a launcher with its own switch rule does not re-yank the underlying app on dismiss")
+    func launcherOwnSwitchRuleDoesNotReYankUnderlying() {
+        let (engine, provider, _, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [
+                AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: abc),
+                AppRule(bundleID: spotlight, mode: .switched, lockedSourceID: pinyin),
+            ]
+        ))
+        #expect(provider.current == abc) // foo switched once on apply
+
+        provider.current = us             // user manually switches away
+        floating.setLauncher(spotlight)   // the launcher's OWN switch fires…
+        #expect(provider.current == pinyin)
+        provider.current = us             // …user switches away again
+        floating.setLauncher(nil)         // dismiss → back to foo
+        #expect(provider.current == us)   // NOT re-yanked to abc — separate slots
+    }
+
+    @Test("switch and lock apps coexist; leaving to a lock re-arms the switch")
+    func switchThenLockThenSwitch() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.switch.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [
+                AppRule(bundleID: "com.switch.App", mode: .switched, lockedSourceID: abc),
+                AppRule(bundleID: "com.lock.App", mode: .locked, lockedSourceID: pinyin),
+            ]
+        ))
+        #expect(provider.current == abc) // switched once on apply
+
+        monitor.activate("com.lock.App")
+        #expect(provider.current == pinyin) // the lock app pins its source
+
+        // Returning to the switch app is a genuine re-entry (the .lock arm
+        // re-armed the key), so the one-shot fires again — and it clears the
+        // standing lock target left by the lock app along the way.
+        monitor.activate("com.switch.App")
+        #expect(provider.current == abc)
+    }
+
+    @Test("a switch URL rule switches once; a re-resolve over the same host does not re-fire")
+    func switchURLRuleFiresOnce() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.apple.Safari")
+        let urls = MockBrowserURLProvider(url: "https://github.com/x")
+        let engine = LockEngine(provider: provider, appMonitor: monitor, urlProvider: urls)
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: pinyin, action: .switchOnce)]
+        ))
+        #expect(provider.current == pinyin) // switched once on the URL match
+
+        // User switches away; re-resolving the same host (a poll / re-activation)
+        // must not re-fire.
+        provider.current = us
+        monitor.activate("com.apple.Safari")
+        #expect(provider.current == us)
+        #expect(provider.selectCalls == [pinyin])
+    }
+
+    @Test("a switch is logged through the same funnel: app→appActivated, url→urlMatched")
+    func switchActivationReasons() {
+        // App switch on a real activation → .appActivated / .appRule.
+        let (engine, _, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
+        var events: [ActivationEvent] = []
+        engine.onActivation = { events.append($0) }
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ), reason: .startupApplied)
+        monitor.activate("com.apple.Terminal")
+        #expect(events.last?.reason == .appActivated)
+        #expect(events.last?.ruleSource == .appRule)
+        #expect(events.last?.inputSource == abc)
+
+        // URL switch resolved on a re-activation while locked → .urlMatched.
+        let provider2 = MockInputSourceProvider(
+            current: us, sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let monitor2 = MockFrontmostMonitor(bundleID: "com.apple.Safari")
+        let urls = MockBrowserURLProvider(url: "https://gist.github.com/x")
+        let engine2 = LockEngine(provider: provider2, appMonitor: monitor2, urlProvider: urls)
+        var events2: [ActivationEvent] = []
+        engine2.onActivation = { events2.append($0) }
+        engine2.start()
+        engine2.apply(LockConfiguration(
+            isEnabled: true, defaultSourceID: us, enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: pinyin, action: .switchOnce)]
+        ), reason: .startupApplied)
+        #expect(events2.last?.reason == .startupApplied) // the apply itself is the why
+        #expect(events2.last?.ruleSource == .urlRule)
+        #expect(events2.last?.matchedHost == "github.com")
+    }
+}

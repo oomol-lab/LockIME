@@ -58,6 +58,9 @@ Either way, the app keeps itself up to date via Sparkle.
 
 - **Instant re-lock** — switches the active input source back the moment you (or
   another app) change it, globally or per-app.
+- **Lock or switch** — per-app and per-URL rules can *lock* an input source
+  (re-applied whenever it drifts) or just *switch* to it once when you focus the
+  app or page, then step out of the way and let you change it freely.
 - **Menu-bar control** — activate/deactivate, switch the locked input source,
   view the current source, and track the activation count from the menu bar.
 - **Keyboard shortcuts** — configurable global shortcuts to toggle locking and

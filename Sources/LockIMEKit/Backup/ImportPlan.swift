@@ -59,9 +59,14 @@ public struct ImportItem: Identifiable, Sendable, Equatable {
     /// The file-side effective locked source (`nil` when the file binding pins
     /// no source — e.g. an app rule in `.ignored`/`.useDefault`).
     public let fileSource: InputSourceID?
+    /// File-side URL-rule action — lock vs one-shot switch (`nil` for the global
+    /// default and app rules, whose lock/switch distinction rides in the mode).
+    public let fileAction: RuleAction?
     /// Local-side mode/source, populated only for `.conflict` items.
     public let localMode: AppRuleMode?
     public let localSource: InputSourceID?
+    /// Local-side URL-rule action, populated only for URL `.conflict` items.
+    public let localAction: RuleAction?
 
     // MARK: user choices
 
@@ -82,15 +87,19 @@ public struct ImportItem: Identifiable, Sendable, Equatable {
         localSource: InputSourceID?,
         include: Bool,
         resolution: ConflictResolution,
-        missingDisposition: MissingSourceDisposition
+        missingDisposition: MissingSourceDisposition,
+        fileAction: RuleAction? = nil,
+        localAction: RuleAction? = nil
     ) {
         self.id = id
         self.subject = subject
         self.status = status
         self.fileMode = fileMode
         self.fileSource = fileSource
+        self.fileAction = fileAction
         self.localMode = localMode
         self.localSource = localSource
+        self.localAction = localAction
         self.include = include
         self.resolution = resolution
         self.missingDisposition = missingDisposition
@@ -190,9 +199,12 @@ public struct ImportPlan: Sendable, Equatable {
             current.appRules.map { ($0.bundleID, $0) }, uniquingKeysWith: { first, _ in first }
         )
         for rule in backup.payload.appRules {
-            let fileSource = rule.mode == .locked ? rule.lockedSourceID : nil
+            // Lock and switch both pin a source; only the mode (carried in full)
+            // tells them apart, so a lock-vs-switch difference falls out of the
+            // `local.mode == rule.mode` comparison as a conflict automatically.
+            let fileSource = rule.mode.pinsSource ? rule.lockedSourceID : nil
             if let local = localByBundle[rule.bundleID] {
-                let localSource = local.mode == .locked ? local.lockedSourceID : nil
+                let localSource = local.mode.pinsSource ? local.lockedSourceID : nil
                 let status: ImportItem.Status =
                     (local.mode == rule.mode && localSource == fileSource) ? .unchanged : .conflict
                 items.append(ImportItem(
@@ -216,19 +228,23 @@ public struct ImportPlan: Sendable, Equatable {
         )
         for rule in backup.payload.urlRules {
             if let local = localByHost[rule.hostPattern] {
+                // A lock-vs-switch difference on the same source is a conflict.
                 let status: ImportItem.Status =
-                    local.lockedSourceID == rule.lockedSourceID ? .unchanged : .conflict
+                    (local.lockedSourceID == rule.lockedSourceID && local.action == rule.action)
+                        ? .unchanged : .conflict
                 items.append(ImportItem(
                     id: "url:\(rule.hostPattern)", subject: .url(hostPattern: rule.hostPattern), status: status,
                     fileMode: nil, fileSource: rule.lockedSourceID,
                     localMode: nil, localSource: local.lockedSourceID,
-                    include: true, resolution: .keepLocal, missingDisposition: .keep
+                    include: true, resolution: .keepLocal, missingDisposition: .keep,
+                    fileAction: rule.action, localAction: local.action
                 ))
             } else {
                 items.append(ImportItem(
                     id: "url:\(rule.hostPattern)", subject: .url(hostPattern: rule.hostPattern), status: .new,
                     fileMode: nil, fileSource: rule.lockedSourceID, localMode: nil, localSource: nil,
-                    include: true, resolution: .keepLocal, missingDisposition: .keep
+                    include: true, resolution: .keepLocal, missingDisposition: .keep,
+                    fileAction: rule.action
                 ))
             }
         }
@@ -340,7 +356,7 @@ public struct ImportPlan: Sendable, Equatable {
                 if drop {
                     urlRules[host] = nil
                 } else if let source = item.fileSource {
-                    urlRules[host] = URLRule(hostPattern: host, lockedSourceID: source)
+                    urlRules[host] = URLRule(hostPattern: host, lockedSourceID: source, action: item.fileAction ?? .lock)
                 }
             }
         }
@@ -402,11 +418,13 @@ public struct ImportPlan: Sendable, Equatable {
         var map: [String: String] = [:]
         if let def = config.defaultSourceID { map["default"] = def.rawValue }
         for rule in config.appRules {
-            let source = rule.mode == .locked ? (rule.lockedSourceID?.rawValue ?? "") : ""
+            // The mode rawValue already separates lock from switch; only a
+            // source-pinning mode contributes a source.
+            let source = rule.mode.pinsSource ? (rule.lockedSourceID?.rawValue ?? "") : ""
             map["app:\(rule.bundleID)"] = "\(rule.mode.rawValue)|\(source)"
         }
         for rule in config.urlRules {
-            map["url:\(rule.hostPattern)"] = rule.lockedSourceID.rawValue
+            map["url:\(rule.hostPattern)"] = "\(rule.action.rawValue)|\(rule.lockedSourceID.rawValue)"
         }
         return map
     }
@@ -417,7 +435,7 @@ public struct ImportPlan: Sendable, Equatable {
     private func bindingSources(of config: LockConfiguration) -> [String: InputSourceID] {
         var map: [String: InputSourceID] = [:]
         if let def = config.defaultSourceID { map["default"] = def }
-        for rule in config.appRules where rule.mode == .locked {
+        for rule in config.appRules where rule.mode.pinsSource {
             if let source = rule.lockedSourceID { map["app:\(rule.bundleID)"] = source }
         }
         for rule in config.urlRules { map["url:\(rule.hostPattern)"] = rule.lockedSourceID }

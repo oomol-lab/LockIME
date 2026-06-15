@@ -54,6 +54,7 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 ## Features
 
 - **Rebloqueio instantâneo** — devolve a fonte de entrada ativa para a bloqueada no momento em que você (ou outro app) a troca, globalmente ou por app.
+- **Bloquear ou alternar** — as regras por app e por URL podem *bloquear* uma fonte de entrada (reaplicada sempre que ela desvia) ou apenas *alternar* para ela uma vez quando você foca o app ou a página, deixando você livre para mudá-la depois.
 - **Controle pela barra de menus** — ative/desative, troque a fonte de entrada bloqueada, veja a fonte atual e acompanhe o contador de ativações pela barra de menus.
 - **Atalhos de teclado** — atalhos globais configuráveis para ativar/desativar o bloqueio e percorrer a fonte de entrada bloqueada, além de atalhos por app para percorrer ou remover a regra do app em primeiro plano.
 - **Iniciar no login** — inicia automaticamente quando você faz login (desativado por padrão).

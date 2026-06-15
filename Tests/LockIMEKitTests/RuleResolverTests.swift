@@ -72,8 +72,35 @@ struct RuleResolverTests {
             appRules: [AppRule(bundleID: "com.apple.Safari", mode: .locked, lockedSourceID: abc)]
         )
         #expect(
-            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", urlMatch: pinyin)
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", urlMatch: (pinyin, .lock))
                 == .lock(pinyin, .urlRule)
         )
+        // A switch-action URL match yields a one-shot switch, still outranking the app lock.
+        #expect(
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", urlMatch: (pinyin, .switchOnce))
+                == .switchOnce(pinyin, .urlRule)
+        )
+    }
+
+    @Test("a switched app rule yields a one-shot switch")
+    func switchedAppRule() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        )
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Terminal") == .switchOnce(abc, .appRule))
+        // A different app still uses the (lock-only) global default.
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.other.App") == .lock(us, .globalDefault))
+    }
+
+    @Test("a switched rule with no source set falls back to the default lock")
+    func switchedWithoutSourceFallsBack() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: nil)]
+        )
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us, .globalDefault))
     }
 }

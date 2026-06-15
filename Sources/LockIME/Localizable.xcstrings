@@ -2,6 +2,162 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+    "Switch to": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换为"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切換為"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切り替え先"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basculer vers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechseln zu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternar para"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переключить на"
+          }
+        }
+      }
+    },
+    "Lock to %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锁定为 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鎖定為 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ にロック"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouiller sur %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sperren auf %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear en %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear em %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Блокировать на %@"
+          }
+        }
+      }
+    },
+    "Switch to %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换为 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切換為 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ に切り替え"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basculer vers %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechseln zu %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternar para %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переключить на %@"
+          }
+        }
+      }
+    },
     "Lock to previous input source": {
       "localizations": {
         "zh-Hans": {
@@ -5254,54 +5410,54 @@
         }
       }
     },
-    "Pin a specific app to its own input source, ignore it, or fall back to the global default.": {
+    "Lock an app to its own input source, switch to one on activation, ignore it, or fall back to the global default.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "将某个应用固定到它自己的输入法、忽略它，或回退到全局默认。"
+            "value": "将应用锁定到它自己的输入法、在激活时切换到某个输入法、忽略它，或回退到全局默认。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "將特定 App 固定到自己的輸入法、忽略它，或回退到全域預設。"
+            "value": "將 App 鎖定到自己的輸入法、在啟用時切換到某個輸入法、忽略它，或回退到全域預設。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "特定のアプリを独自の入力ソースに固定するか、無視するか、グローバルの既定値を使用します。"
+            "value": "特定のアプリを独自の入力ソースにロックする、アクティブ化時に切り替える、無視する、またはグローバルの既定値を使用します。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Épinglez une app à sa propre source de saisie, ignorez-la ou utilisez la valeur par défaut globale."
+            "value": "Verrouillez une app sur sa propre source de saisie, basculez vers une à l'activation, ignorez-la ou utilisez la valeur par défaut globale."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine bestimmte App auf eine eigene Eingabequelle festlegen, ignorieren oder auf den globalen Standard zurückfallen."
+            "value": "Eine App auf eine eigene Eingabequelle sperren, beim Aktivieren zu einer wechseln, ignorieren oder auf den globalen Standard zurückfallen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fija una app a su propia fuente de entrada, ignórala o usa el valor predeterminado global."
+            "value": "Bloquea una app en su propia fuente de entrada, cambia a una al activarse, ignórala o usa el valor predeterminado global."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixe um app à sua própria fonte de entrada, ignore-o ou use o padrão global."
+            "value": "Bloqueie um app na sua própria fonte de entrada, alterne para uma ao ativar, ignore-o ou use o padrão global."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Закрепите за приложением свой источник ввода, игнорируйте его или используйте глобальное значение по умолчанию."
+            "value": "Заблокируйте приложение на его источнике ввода, переключайтесь на него при активации, игнорируйте его или используйте глобальное значение по умолчанию."
           }
         }
       }

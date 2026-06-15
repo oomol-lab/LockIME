@@ -178,6 +178,17 @@ the grant watcher.
   `.body` + bundle ID `.caption2 .secondary`). Empty state =
   `ContentUnavailableView` with an action. Rows `.transition(.move(edge:.top)
   .combined(with:.opacity))`; wrap upsert/remove in `withAnimation(DS.Motion.list)`.
+  Each source-pinning rule carries a **lock vs switch** action: *lock* (`.locked`
+  / URL `.lock`) continuously re-applies the source while the rule is in force;
+  *switch* (`AppRuleMode.switched` / URL `RuleAction.switchOnce`) fires a one-shot
+  switch on entry and then releases, so the user may change the source and is
+  never reverted. App rules express it as a fourth mode-picker option ("Switch
+  to", beside Lock to / Ignore / Use default); URL rows carry a small Lock to /
+  Switch to picker. The **global default stays lock-only**. The one-shot's
+  fire-exactly-once-per-entry is owned by `LockEngine` (an in-memory transition
+  key, with a separate slot for a launcher overlay's own switch so an excursion
+  never re-yanks the underlying app); the kit's `LockController.switchOnce`
+  performs the switch without installing a standing target.
 - **Shortcuts:** native recorder rows in two sections — **Global** (toggle lock,
   lock to previous/next input source) and **Current app** (cycle, or remove, the
   frontmost app's rule). Recorder titles must be `LocalizedStringKey(...)`, not a

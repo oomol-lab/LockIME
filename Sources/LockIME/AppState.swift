@@ -283,7 +283,9 @@ final class AppState {
         guard let next = SourceCycler.step(
             from: reference, in: availableSources.map(\.id), direction: direction
         ) else { return }
-        rule.mode = .locked
+        // Cycling pins a source; keep a `.switched` rule a switch (don't demote
+        // it to a continuous lock), and turn a non-pinning rule into a lock.
+        if !rule.mode.pinsSource { rule.mode = .locked }
         rule.lockedSourceID = next
         upsertRule(rule)
     }

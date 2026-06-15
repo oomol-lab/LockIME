@@ -79,6 +79,35 @@ public final class LockController {
         enforceIfNeeded(reason: reason)
     }
 
+    /// Perform a **one-shot** switch to `id` without installing a standing lock.
+    ///
+    /// Unlike `setTarget`, this clears `target` (so `selectedSourceDidChange` has
+    /// nothing to revert to — the user may freely switch away afterward) and
+    /// forces the source exactly once, only if it actually differs. It deliberately
+    /// does **not** consult `isEnabled`: the engine gates the call on the *config*
+    /// being enabled, which it knows synchronously, whereas the controller's own
+    /// `isEnabled` lags during the enable path (`apply` enables only after
+    /// re-resolving). The switch is still logged and counted like any forced
+    /// switch, via the same `force` path.
+    public func switchOnce(
+        _ id: InputSourceID,
+        reason: ActivationReason = .appActivated,
+        bundleID: String? = nil,
+        ruleSource: RuleSource? = nil,
+        matchedHost: String? = nil
+    ) {
+        // A one-shot switch never holds the lock: drop any standing target so a
+        // later "source changed" notification is a no-op.
+        target = nil
+        targetBundleID = bundleID
+        targetRuleSource = ruleSource
+        targetMatchedHost = matchedHost
+        settleUntil = 0
+        guard let current = provider.currentSourceID() else { return }
+        guard current != id else { return } // already there → nothing to switch
+        force(id, reason: reason, from: current)
+    }
+
     /// Call when the system posts a "selected input source changed" notification.
     public func selectedSourceDidChange() {
         enforceIfNeeded(reason: .revertedSwitch)

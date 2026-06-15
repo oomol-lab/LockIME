@@ -517,4 +517,119 @@ struct ImportPlanTests {
         #expect(!plan.summary().hasEffect)
         #expect(plan.resolvedConfiguration() == config)
     }
+
+    // MARK: - Switch action
+
+    @Test("a new switched app rule carries its mode and source")
+    func switchedAppRuleIsNew() {
+        let plan = ImportPlan(current: .default, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "ABC")]
+        ), installedSources: installed)
+        let item = item(plan, "app:com.a")
+        #expect(item?.status == .new)
+        #expect(item?.fileMode == .switched)
+        #expect(item?.fileSource == "ABC")
+        #expect(plan.resolvedConfiguration().rule(for: "com.a")?.mode == .switched)
+    }
+
+    @Test("lock vs switch on the same app source is a conflict")
+    func lockVsSwitchAppIsConflict() {
+        let current = LockConfiguration(appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "ABC")])
+        let plan = ImportPlan(current: current, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "ABC")] // same source, different action
+        ), installedSources: installed)
+        let conflict = item(plan, "app:com.a")
+        #expect(conflict?.status == .conflict)
+        #expect(conflict?.localMode == .locked)
+        #expect(conflict?.fileMode == .switched)
+    }
+
+    @Test("a new switch URL rule carries its action; lock vs switch is a URL conflict")
+    func switchURLRuleNewAndConflict() {
+        // New switch URL rule.
+        let newPlan = ImportPlan(current: .default, backup: backup(
+            urlRules: [BackupURLRule(hostPattern: "github.com", lockedSourceID: "US", action: .switchOnce)]
+        ), installedSources: installed)
+        let newItem = item(newPlan, "url:github.com")
+        #expect(newItem?.status == .new)
+        #expect(newItem?.fileAction == .switchOnce)
+        #expect(newPlan.resolvedConfiguration().urlRules.first?.action == .switchOnce)
+
+        // Same host + same source but different action → conflict.
+        let current = LockConfiguration(urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: "US", action: .lock)])
+        let conflictPlan = ImportPlan(current: current, backup: backup(
+            urlRules: [BackupURLRule(hostPattern: "github.com", lockedSourceID: "US", action: .switchOnce)]
+        ), installedSources: installed)
+        let conflict = item(conflictPlan, "url:github.com")
+        #expect(conflict?.status == .conflict)
+        #expect(conflict?.localAction == .lock)
+        #expect(conflict?.fileAction == .switchOnce)
+    }
+
+    @Test("Replace preserves the file's switch action for app and URL rules")
+    func replacePreservesSwitchAction() {
+        let current = LockConfiguration(
+            appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "US")],
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: "US", action: .lock)]
+        )
+        var plan = ImportPlan(current: current, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "ABC")],
+            urlRules: [BackupURLRule(hostPattern: "github.com", lockedSourceID: "ABC", action: .switchOnce)]
+        ), installedSources: installed)
+        plan.mode = .replace
+        let resolved = plan.resolvedConfiguration()
+        #expect(resolved.rule(for: "com.a")?.mode == .switched)
+        #expect(resolved.rule(for: "com.a")?.lockedSourceID == "ABC")
+        #expect(resolved.urlRules.first?.action == .switchOnce)
+        #expect(resolved.urlRules.first?.lockedSourceID == "ABC")
+    }
+
+    @Test("a lock→switch change tallies as updated, not added")
+    func lockToSwitchTalliesAsUpdated() {
+        let current = LockConfiguration(
+            appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "ABC")],
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: "US", action: .lock)]
+        )
+        var plan = ImportPlan(current: current, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "ABC")],
+            urlRules: [BackupURLRule(hostPattern: "github.com", lockedSourceID: "US", action: .switchOnce)]
+        ), installedSources: installed)
+        plan.mode = .replace
+        let summary = plan.summary()
+        #expect(summary.updated == 2) // app + url rebind
+        #expect(summary.added == 0)
+    }
+
+    @Test("a missing source on a switched app rule surfaces like a lock")
+    func switchedMissingSourceSurfaces() {
+        let plan = ImportPlan(current: .default, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "Missing")]
+        ), installedSources: installed)
+        #expect(plan.missingItems.count == 1)
+        #expect(plan.summary().inactive == 1)
+    }
+
+    @Test("round-trip of a switch config is a pure no-op (action survives every path)")
+    func switchExportImportRoundTrip() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "US",
+            appRules: [AppRule(bundleID: "com.a", mode: .switched, lockedSourceID: "ABC")],
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: "US", action: .switchOnce)]
+        )
+        let exported = ConfigBackup.make(from: config, appVersion: "1", sourceNames: ["US": "U.S.", "ABC": "ABC"])
+        var plan = ImportPlan(current: config, backup: exported, installedSources: installed)
+        #expect(!plan.summary().hasEffect)
+        // Merge keeps the local rules verbatim (including the URL rule's id).
+        #expect(plan.resolvedConfiguration() == config)
+        // Replace re-asserts the file's rules; it regenerates URL ids (the runtime
+        // identity isn't portable — see BackupURLRule), so compare the portable
+        // fields rather than full equality. The switch action must survive.
+        plan.mode = .replace
+        let replaced = plan.resolvedConfiguration()
+        #expect(replaced.rule(for: "com.a")?.mode == .switched)
+        #expect(replaced.urlRules.first?.action == .switchOnce)
+        #expect(replaced.urlRules.first?.lockedSourceID == "US")
+    }
 }

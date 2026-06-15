@@ -65,6 +65,33 @@ struct ConfigBackupTests {
         #expect(try result.get() == backup)
     }
 
+    @Test("switch rules (app .switched, url .switchOnce) survive make→encode→read")
+    func switchRulesRoundTrip() throws {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: "com.apple.keylayout.ABC")],
+            enhancedModeEnabled: true,
+            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: "com.apple.inputmethod.SCIM.ITABC", action: .switchOnce)]
+        )
+        let backup = ConfigBackup.make(from: config, appVersion: "1", sourceNames: names)
+        let decoded = try ConfigBackup.read(backup.encoded()).get()
+        #expect(decoded.payload.appRules.first?.mode == .switched)
+        #expect(decoded.payload.urlRules.first?.action == .switchOnce)
+        // A switched app rule pins a source, so it is catalogued like a lock.
+        #expect(decoded.payload.sourceNames["com.apple.keylayout.ABC"] == "ABC")
+    }
+
+    @Test("a .lockime URL rule without an action decodes to .lock (lenient)")
+    func urlRuleWithoutActionDecodesAsLock() throws {
+        let json = """
+        {"format": "\(ConfigBackup.formatIdentifier)", "minReader": 1, "appVersion": "1",
+         "payload": {"urlRules": [{"hostPattern": "github.com", "lockedSourceID": "com.apple.keylayout.ABC"}]}}
+        """
+        let backup = try ConfigBackup.read(Data(json.utf8)).get()
+        #expect(backup.payload.urlRules.first?.action == .lock)
+    }
+
     @Test("encoded() is human-readable pretty JSON with unescaped slashes")
     func prettyEncoding() throws {
         let backup = ConfigBackup.make(from: sampleConfig(), appVersion: "1", sourceNames: names)

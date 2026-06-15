@@ -10,6 +10,7 @@ struct URLRulesSettingsPane: View {
 
     @State private var newHost = ""
     @State private var newSourceID: InputSourceID?
+    @State private var newAction: RuleAction = .lock
 
     var body: some View {
         let enhancedBinding = Binding(
@@ -100,6 +101,12 @@ struct URLRulesSettingsPane: View {
         HStack(spacing: DS.Spacing.md) {
             TextField("Host (e.g. github.com)", text: $newHost)
                 .textFieldStyle(.roundedBorder)
+            Picker("", selection: $newAction) {
+                Text("Lock to").tag(RuleAction.lock)
+                Text("Switch to").tag(RuleAction.switchOnce)
+            }
+            .labelsHidden()
+            .fixedSize()
             Picker("", selection: $newSourceID) {
                 Text("Default").tag(InputSourceID?.none)
                 ForEach(state.availableSources) { source in
@@ -112,10 +119,11 @@ struct URLRulesSettingsPane: View {
                 let host = newHost.trimmingCharacters(in: .whitespaces)
                 guard !host.isEmpty, let sourceID = newSourceID ?? state.config.defaultSourceID else { return }
                 withAnimation(DS.Motion.list) {
-                    state.upsertURLRule(URLRule(hostPattern: host, lockedSourceID: sourceID))
+                    state.upsertURLRule(URLRule(hostPattern: host, lockedSourceID: sourceID, action: newAction))
                 }
                 newHost = ""
                 newSourceID = nil
+                newAction = .lock
             }
             .disabled(
                 newHost.trimmingCharacters(in: .whitespaces).isEmpty
@@ -139,6 +147,12 @@ private struct URLRuleRow: View {
             Text(rule.hostPattern)
                 .foregroundStyle(active ? .primary : .secondary)
             Spacer(minLength: DS.Spacing.md)
+            Picker("", selection: actionBinding) {
+                Text("Lock to").tag(RuleAction.lock)
+                Text("Switch to").tag(RuleAction.switchOnce)
+            }
+            .labelsHidden()
+            .fixedSize()
             Picker("", selection: sourceBinding) {
                 ForEach(state.availableSources) { source in
                     Text(source.localizedName).tag(source.id)
@@ -162,7 +176,14 @@ private struct URLRuleRow: View {
     private var sourceBinding: Binding<InputSourceID> {
         Binding(
             get: { rule.lockedSourceID },
-            set: { state.upsertURLRule(URLRule(id: rule.id, hostPattern: rule.hostPattern, lockedSourceID: $0)) }
+            set: { state.upsertURLRule(URLRule(id: rule.id, hostPattern: rule.hostPattern, lockedSourceID: $0, action: rule.action)) }
+        )
+    }
+
+    private var actionBinding: Binding<RuleAction> {
+        Binding(
+            get: { rule.action },
+            set: { state.upsertURLRule(URLRule(id: rule.id, hostPattern: rule.hostPattern, lockedSourceID: rule.lockedSourceID, action: $0)) }
         )
     }
 }

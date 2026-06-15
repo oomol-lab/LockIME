@@ -11,8 +11,24 @@ struct LockConfigurationTests {
             #expect(mode.id == mode.rawValue)
         }
         #expect(AppRuleMode.locked.id == "locked")
+        #expect(AppRuleMode.switched.id == "switched")
         #expect(AppRuleMode.ignored.id == "ignored")
         #expect(AppRuleMode.useDefault.id == "useDefault")
+    }
+
+    @Test("only .locked and .switched pin a source")
+    func appRuleModePinsSource() {
+        #expect(AppRuleMode.locked.pinsSource)
+        #expect(AppRuleMode.switched.pinsSource)
+        #expect(!AppRuleMode.ignored.pinsSource)
+        #expect(!AppRuleMode.useDefault.pinsSource)
+    }
+
+    @Test("RuleAction.id is its raw value")
+    func ruleActionID() {
+        #expect(RuleAction.lock.id == "lock")
+        #expect(RuleAction.switchOnce.id == "switchOnce")
+        #expect(RuleAction.allCases.allSatisfy { $0.id == $0.rawValue })
     }
 
     @Test("AppRule.id is its bundle identifier")
@@ -79,5 +95,52 @@ struct LockConfigurationTests {
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(LockConfiguration.self, from: data)
         #expect(decoded == original)
+    }
+
+    @Test("a configuration with switch rules round-trips through Codable")
+    func roundTripsSwitch() throws {
+        let original = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            appRules: [
+                AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: "com.apple.keylayout.ABC"),
+                AppRule(bundleID: "com.apple.Safari", mode: .locked, lockedSourceID: "com.apple.keylayout.US"),
+            ],
+            enhancedModeEnabled: true,
+            urlRules: [
+                URLRule(hostPattern: "github.com", lockedSourceID: "com.apple.inputmethod.SCIM.ITABC", action: .switchOnce),
+                URLRule(hostPattern: "example.com", lockedSourceID: "com.apple.keylayout.US", action: .lock),
+            ]
+        )
+        let decoded = try JSONDecoder().decode(LockConfiguration.self, from: try JSONEncoder().encode(original))
+        #expect(decoded == original)
+        #expect(decoded.rule(for: "com.apple.Terminal")?.mode == .switched)
+        #expect(decoded.urlRules.first(where: { $0.hostPattern == "github.com" })?.action == .switchOnce)
+    }
+
+    // The killer back-compat path: a v1.x LockConfiguration blob whose appRules /
+    // urlRules ARRAYS contain elements with NO `action` key. `init(from:)` decodes
+    // each array with `decodeIfPresent`, which *propagates* a per-element throw —
+    // so without the lenient URLRule decoder a single legacy URL rule would abort
+    // the whole load and silently drop every rule (see RuleStore's `try?`).
+    @Test("legacy config whose rule arrays omit action decodes every rule as .lock")
+    func decodesLegacyArraysWithoutAction() throws {
+        let json = """
+        {"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US",
+         "appRules": [
+            {"bundleID": "com.a", "mode": "locked", "lockedSourceID": "com.apple.keylayout.ABC"},
+            {"bundleID": "com.b", "mode": "ignored"}
+         ],
+         "enhancedModeEnabled": true,
+         "urlRules": [
+            {"id": "\(UUID().uuidString)", "hostPattern": "github.com", "lockedSourceID": "com.apple.keylayout.ABC"},
+            {"id": "\(UUID().uuidString)", "hostPattern": "example.com", "lockedSourceID": "com.apple.keylayout.US"}
+         ]}
+        """
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.appRules.count == 2)            // nothing dropped
+        #expect(config.urlRules.count == 2)            // nothing dropped
+        #expect(config.urlRules.allSatisfy { $0.action == .lock })
+        #expect(config.rule(for: "com.a")?.mode == .locked)
     }
 }

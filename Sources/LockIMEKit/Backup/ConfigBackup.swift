@@ -6,10 +6,27 @@ import Foundation
 public struct BackupURLRule: Codable, Equatable, Sendable {
     public var hostPattern: String
     public var lockedSourceID: InputSourceID
+    /// Whether a matched URL locks to the source or just switches to it once.
+    public var action: RuleAction
 
-    public init(hostPattern: String, lockedSourceID: InputSourceID) {
+    public init(hostPattern: String, lockedSourceID: InputSourceID, action: RuleAction = .lock) {
         self.hostPattern = hostPattern
         self.lockedSourceID = lockedSourceID
+        self.action = action
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case hostPattern, lockedSourceID, action
+    }
+
+    // Lenient: a backup written before the lock/switch distinction (or a
+    // hand-authored file) carries no `action` → default `.lock`. Keeps reading
+    // robust even though the .lockime format itself is pre-release.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hostPattern = try container.decode(String.self, forKey: .hostPattern)
+        lockedSourceID = try container.decode(InputSourceID.self, forKey: .lockedSourceID)
+        action = try container.decodeIfPresent(RuleAction.self, forKey: .action) ?? .lock
     }
 }
 
@@ -123,9 +140,10 @@ public extension ConfigBackup {
         appVersion: String,
         sourceNames: [InputSourceID: String]
     ) -> ConfigBackup {
-        // Only locked app rules pin a source; ignore/use-default modes don't.
+        // Only source-pinning app rules (lock/switch) carry a source; the
+        // ignore/use-default modes don't.
         let appRuleSources = config.appRules.compactMap { rule in
-            rule.mode == .locked ? rule.lockedSourceID : nil
+            rule.mode.pinsSource ? rule.lockedSourceID : nil
         }
         let referenced: [InputSourceID] =
             ([config.defaultSourceID].compactMap { $0 })
@@ -140,7 +158,7 @@ public extension ConfigBackup {
         let payload = BackupPayload(
             defaultSourceID: config.defaultSourceID,
             appRules: config.appRules,
-            urlRules: config.urlRules.map { BackupURLRule(hostPattern: $0.hostPattern, lockedSourceID: $0.lockedSourceID) },
+            urlRules: config.urlRules.map { BackupURLRule(hostPattern: $0.hostPattern, lockedSourceID: $0.lockedSourceID, action: $0.action) },
             sourceNames: catalog
         )
         return ConfigBackup(appVersion: appVersion, payload: payload)

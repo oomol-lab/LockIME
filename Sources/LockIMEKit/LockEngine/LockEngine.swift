@@ -32,6 +32,33 @@ public final class LockEngine {
     /// macOS leaves the frontmost app unchanged while an overlay is up.
     private var launcherBundleID: String?
 
+    /// Identity of the one-shot switch rule currently in effect, so the engine
+    /// fires a `.switchOnce` resolution only on a *genuine transition into* the
+    /// rule — never again on a re-activation, a URL poll over the same matched
+    /// pattern, or a config edit while the user is still in that rule.
+    private struct SwitchKey: Equatable {
+        let ruleSource: RuleSource
+        /// The frontmost/launcher bundle for an app rule, or the matched host
+        /// *pattern* for a URL rule (so a single wildcard rule fires once across
+        /// all its subdomains, matching how a lock treats the whole pattern).
+        let context: String?
+        let sourceID: InputSourceID
+    }
+
+    /// In-memory only (never persisted): a fresh process re-fires the one-shot on
+    /// the first enable, which is the intended "switch me on engage" behavior.
+    private var lastSwitchKey: SwitchKey?
+
+    /// The one-shot memory for a launcher overlay's *own* switch rule, kept
+    /// separate from `lastSwitchKey` so a launcher excursion never clobbers the
+    /// frontmost app's switch memory. Without this, focusing a launcher whose own
+    /// rule is `.switched` would overwrite `lastSwitchKey`, and dismissing it
+    /// would re-fire the frontmost app's one-shot — re-yanking a user who had
+    /// switched away. Cleared whenever no launcher is up, so each excursion is a
+    /// fresh re-entry. (The `.lock`/`.ignore` arms avoid this by simply not
+    /// touching `lastSwitchKey` while a launcher is up.)
+    private var lastLauncherSwitchKey: SwitchKey?
+
     /// The app rules should resolve against right now: the focused launcher
     /// overlay when one is up, otherwise the `NSWorkspace` frontmost app.
     private var effectiveBundleID: String? { launcherBundleID ?? frontmostBundleID }
@@ -151,40 +178,102 @@ public final class LockEngine {
     }
 
     private func reevaluate(reason: ActivationReason) {
+        // A launcher excursion uses its own one-shot slot; clear it whenever no
+        // launcher is up so the next excursion is a fresh re-entry and the
+        // frontmost slot below is the only memory consulted for the real app.
+        if launcherBundleID == nil { lastLauncherSwitchKey = nil }
+
         let urlMatch = enhancedURLMatch()
-        switch RuleResolver.resolve(config: config, frontmostBundleID: effectiveBundleID, urlMatch: urlMatch?.id) {
+        switch RuleResolver.resolve(
+            config: config,
+            frontmostBundleID: effectiveBundleID,
+            urlMatch: urlMatch.map { (id: $0.id, action: $0.action) }
+        ) {
         case .lock(let id, let ruleSource):
-            // A URL match outranks a *trigger* reason (app switch, launcher,
-            // poll) — the URL is the why, so log .urlMatched. But an apply-driven
-            // reason (lock engaged / settings changed / startup restore) is the
-            // why itself; keep it, with the URL provenance carried by ruleSource.
-            let effectiveReason: ActivationReason
-            switch reason {
-            case .startupApplied, .lockEngaged, .configChanged:
-                effectiveReason = reason
-            default:
-                effectiveReason = ruleSource == .urlRule ? .urlMatched : reason
-            }
             controller.setTarget(
                 id,
-                reason: effectiveReason,
+                reason: effectiveReason(for: reason, ruleSource: ruleSource),
                 bundleID: effectiveBundleID,
                 ruleSource: ruleSource,
                 matchedHost: ruleSource == .urlRule ? urlMatch?.host : nil
             )
+            // Re-arm the one-shot for a genuine frontmost/URL state — but NOT for a
+            // launcher overlay shadowing the app (see the `.switchOnce` arm).
+            if launcherBundleID == nil { lastSwitchKey = nil }
+        case .switchOnce(let id, let ruleSource):
+            // A one-shot switch never holds the lock: clear any standing target
+            // from a prior lock rule first, unconditionally.
+            controller.setTarget(nil)
+            let context = ruleSource == .urlRule ? urlMatch?.host : effectiveBundleID
+            let key = SwitchKey(ruleSource: ruleSource, context: context, sourceID: id)
+            // Dedup against the launcher slot during an excursion, the frontmost
+            // slot otherwise — so a launcher's own `.switched` rule firing while it
+            // shadows the app never overwrites the app's memory and re-yanks the
+            // user on dismiss.
+            if launcherBundleID != nil {
+                fireSwitchOnceIfNeeded(id, ruleSource: ruleSource, reason: reason, context: context, slot: &lastLauncherSwitchKey, key: key)
+            } else {
+                fireSwitchOnceIfNeeded(id, ruleSource: ruleSource, reason: reason, context: context, slot: &lastSwitchKey, key: key)
+            }
         case .ignore, .noTarget:
             controller.setTarget(nil)
+            // Re-arm only on a genuine state, never on a launcher excursion: a
+            // Spotlight/Raycast overlay (handleLauncherChange sets launcherBundleID
+            // before this runs) over an already-switched app resolves here, and
+            // resetting the key would re-yank the user back to the switch target
+            // on dismiss. Preserving it makes the return a no-op (key unchanged).
+            if launcherBundleID == nil { lastSwitchKey = nil }
         }
     }
 
-    /// The locked source and matched host from a URL rule, when enhanced mode is
-    /// on and the current page matches one.
-    private func enhancedURLMatch() -> (id: InputSourceID, host: String)? {
+    /// Fire the one-shot switch exactly once per genuine transition, tracked in
+    /// `slot`. A disabled config nils the slot (so a later enable re-enters and
+    /// fires — the OFF→ON escape hatch); a matching key is a no-op (already
+    /// switched: a re-activation, a same-pattern poll, or a config edit).
+    private func fireSwitchOnceIfNeeded(
+        _ id: InputSourceID,
+        ruleSource: RuleSource,
+        reason: ActivationReason,
+        context: String?,
+        slot: inout SwitchKey?,
+        key: SwitchKey
+    ) {
+        if !config.isEnabled {
+            slot = nil
+        } else if key != slot {
+            controller.switchOnce(
+                id,
+                reason: effectiveReason(for: reason, ruleSource: ruleSource),
+                bundleID: effectiveBundleID,
+                ruleSource: ruleSource,
+                matchedHost: ruleSource == .urlRule ? context : nil
+            )
+            slot = key
+        }
+    }
+
+    /// The reason to attribute the resulting forced switch to. A URL match
+    /// outranks a *trigger* reason (app switch, launcher, poll) — the URL is the
+    /// why, so log `.urlMatched`. But an apply-driven reason (lock engaged /
+    /// settings changed / startup restore) is the why itself; keep it, with the
+    /// URL provenance carried by `ruleSource`. Shared by the lock and switch arms.
+    private func effectiveReason(for reason: ActivationReason, ruleSource: RuleSource) -> ActivationReason {
+        switch reason {
+        case .startupApplied, .lockEngaged, .configChanged:
+            return reason
+        default:
+            return ruleSource == .urlRule ? .urlMatched : reason
+        }
+    }
+
+    /// The targeted source, matched host, and action from a URL rule, when
+    /// enhanced mode is on and the current page matches one.
+    private func enhancedURLMatch() -> (id: InputSourceID, host: String, action: RuleAction)? {
         guard config.enhancedModeEnabled, let urlProvider, !config.urlRules.isEmpty else { return nil }
         let urlString = urlProvider.currentURL(forBundleID: effectiveBundleID) ?? ""
         guard let rule = URLMatcher.matchedRule(host: URLMatcher.host(from: urlString), rules: config.urlRules)
         else { return nil }
-        return (rule.lockedSourceID, rule.hostPattern)
+        return (rule.lockedSourceID, rule.hostPattern, rule.action)
     }
 
     /// Poll the URL only while a browser is frontmost and enhanced mode is on,
