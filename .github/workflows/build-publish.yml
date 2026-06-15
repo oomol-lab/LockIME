@@ -227,14 +227,27 @@ jobs:
             # Splice the commit bullets onto the end of the "What's Changed"
             # section: right before the next section GitHub may emit ("## New
             # Contributors") or the trailing "Full Changelog" line.
+            #
+            # GitHub's generate-notes leaves a blank-line RUN before that next
+            # section (two blanks before "Full Changelog"). Splicing naively
+            # there would strand those blanks ABOVE the commits — last PR bullet,
+            # gap, commits, gap, Full Changelog. So buffer blank lines instead of
+            # printing them as they arrive: at the splice point, drop the buffered
+            # run and emit the commits flush against the last PR bullet, then
+            # exactly one blank line before the section. Blank runs anywhere else
+            # are flushed verbatim — only the pre-splice gap is normalized.
             awk '
               NR == FNR { commits[FNR] = $0; n = FNR; next }
+              /^[[:space:]]*$/ { blanks++; next }
               !spliced && (/^## New Contributors/ || /^\*\*Full Changelog/) {
                 for (i = 1; i <= n; i++) print commits[i]
                 print ""
                 spliced = 1
+                blanks = 0
+                print
+                next
               }
-              { print }
+              { for (; blanks > 0; blanks--) print ""; print }
               END { if (!spliced) for (i = 1; i <= n; i++) print commits[i] }
             ' build/direct-commits.md build/release-notes.md > build/release-notes.md.new
             mv build/release-notes.md.new build/release-notes.md
