@@ -241,6 +241,14 @@ public final class LockEngine {
         if !config.isEnabled {
             slot = nil
         } else if key != slot {
+            // The source must be readable to switch; if it can't be resolved yet
+            // (a transient TIS failure), do NOT consume the key — leave the
+            // one-shot eligible for the next reevaluation rather than marking it
+            // fired when it never ran. When the source *is* known but already
+            // equals the target, `switchOnce` no-ops and we still consume the key
+            // (the one-shot is satisfied, and re-arming would re-yank a user who
+            // later switches away from an app they entered already on target).
+            guard provider.currentSourceID() != nil else { return }
             controller.switchOnce(
                 id,
                 reason: effectiveReason(for: reason, ruleSource: ruleSource),

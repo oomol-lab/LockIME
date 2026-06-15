@@ -814,7 +814,7 @@ struct LockEngineSwitchTests {
         #expect(events.last?.ruleSource == .appRule)
         #expect(events.last?.inputSource == abc)
 
-        // URL switch resolved on a re-activation while locked → .urlMatched.
+        // A URL switch fired by the apply itself keeps the apply reason…
         let provider2 = MockInputSourceProvider(
             current: us, sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
         )
@@ -826,10 +826,49 @@ struct LockEngineSwitchTests {
         engine2.start()
         engine2.apply(LockConfiguration(
             isEnabled: true, defaultSourceID: us, enhancedModeEnabled: true,
-            urlRules: [URLRule(hostPattern: "github.com", lockedSourceID: pinyin, action: .switchOnce)]
+            urlRules: [
+                URLRule(hostPattern: "github.com", lockedSourceID: pinyin, action: .switchOnce),
+                URLRule(hostPattern: "translate.google.com", lockedSourceID: abc, action: .switchOnce),
+            ]
         ), reason: .startupApplied)
         #expect(events2.last?.reason == .startupApplied) // the apply itself is the why
         #expect(events2.last?.ruleSource == .urlRule)
         #expect(events2.last?.matchedHost == "github.com")
+
+        // …but a URL switch fired by a navigation (a non-apply trigger) is logged
+        // as .urlMatched — the URL is the why. Navigate to the other rule's host
+        // and re-activate so the engine re-resolves to a *different* SwitchKey.
+        urls.url = "https://translate.google.com/?sl=en"
+        monitor2.activate("com.apple.Safari")
+        #expect(events2.last?.reason == .urlMatched)
+        #expect(events2.last?.ruleSource == .urlRule)
+        #expect(events2.last?.matchedHost == "translate.google.com")
+        #expect(events2.last?.inputSource == abc)
+    }
+
+    @Test("a switch is deferred (not lost) when the current source is unreadable")
+    func switchDeferredWhenCurrentUnknown() {
+        // currentSourceID() can transiently fail (TIS); the one-shot must stay
+        // eligible rather than be marked fired with no switch having happened.
+        let provider = MockInputSourceProvider(
+            current: nil, sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.apple.Terminal")
+        let engine = LockEngine(provider: provider, appMonitor: monitor)
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.selectCalls.isEmpty) // source unknown → no switch yet
+        #expect(provider.current == nil)
+
+        // The source becomes readable; the next reevaluation fires the deferred
+        // one-shot (the key was not consumed).
+        provider.current = us
+        monitor.activate("com.apple.Terminal")
+        #expect(provider.current == abc)
+        #expect(provider.selectCalls == [abc])
     }
 }
