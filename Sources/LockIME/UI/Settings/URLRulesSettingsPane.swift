@@ -25,6 +25,20 @@ struct URLRulesSettingsPane: View {
                 if !state.accessibilityGranted {
                     AccessibilityRequiredNote("Enhanced mode requires Accessibility")
                 }
+
+                // After an import, URL rules can exist while enhanced mode is
+                // still off (import never flips per-device runtime state) — a
+                // light, one-line hint, no prompt or multi-step guidance.
+                if !state.config.enhancedModeEnabled, !state.config.urlRules.isEmpty {
+                    HStack(spacing: DS.Spacing.md) {
+                        Image(systemName: "info.circle").foregroundStyle(.secondary)
+                        Text("Enhanced mode is off, so your URL rules aren't active yet. Turn it on for them to take effect.")
+                            .font(DS.Font.sectionFooter)
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, DS.Spacing.xxs)
+                }
             } header: {
                 Text("Enhanced mode")
             } footer: {
@@ -32,16 +46,17 @@ struct URLRulesSettingsPane: View {
             }
 
             Section {
-                if state.config.enhancedModeEnabled {
-                    if state.config.urlRules.isEmpty {
-                        emptyState
-                    } else {
-                        ForEach(state.config.urlRules) { rule in
-                            URLRuleRow(rule: rule)
-                                .transition(.move(edge: .top).combined(with: .opacity))
-                        }
+                // Rules stay visible — and editable/removable — even when
+                // enhanced mode is off (e.g. right after an import), just shown
+                // dimmed since they aren't active yet. Only *adding* needs the
+                // mode (and its Accessibility permission) on.
+                if !state.config.urlRules.isEmpty {
+                    ForEach(state.config.urlRules) { rule in
+                        URLRuleRow(rule: rule)
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    addRow
+                } else if state.config.enhancedModeEnabled {
+                    emptyState
                 } else {
                     HStack(spacing: DS.Spacing.md) {
                         Image(systemName: "lock")
@@ -50,6 +65,9 @@ struct URLRulesSettingsPane: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, DS.Spacing.xxs)
+                }
+                if state.config.enhancedModeEnabled {
+                    addRow
                 }
             } header: {
                 Text("URL rules")
@@ -112,10 +130,14 @@ private struct URLRuleRow: View {
     let rule: URLRule
 
     var body: some View {
-        HStack(spacing: DS.Spacing.lg) {
+        // Dim the row when enhanced mode is off — the rule exists but isn't
+        // active yet — while keeping its controls usable (modify / remove).
+        let active = state.config.enhancedModeEnabled
+        return HStack(spacing: DS.Spacing.lg) {
             Image(systemName: "globe")
                 .foregroundStyle(.secondary)
             Text(rule.hostPattern)
+                .foregroundStyle(active ? .primary : .secondary)
             Spacer(minLength: DS.Spacing.md)
             Picker("", selection: sourceBinding) {
                 ForEach(state.availableSources) { source in

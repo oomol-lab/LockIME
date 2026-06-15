@@ -444,6 +444,42 @@ final class AppState {
         store.save(config)
     }
 
+    // MARK: - Backup (export / import)
+
+    /// Snapshot the portable configuration (rules + binding intent) into a
+    /// backup envelope, capturing the current display name of every installed
+    /// source so a target machine missing one can still show a label. Per-device
+    /// runtime state (master lock, enhanced mode, language, login item) is not
+    /// included — see `ConfigBackup.make`.
+    func makeBackup() -> ConfigBackup {
+        var names: [InputSourceID: String] = [:]
+        for source in availableSources { names[source.id] = source.localizedName }
+        return ConfigBackup.make(from: config, appVersion: Bundle.main.shortVersion, sourceNames: names)
+    }
+
+    /// Read and version-gate a backup file, building an in-memory staging plan
+    /// diffed against the live configuration and installed sources. **Nothing is
+    /// persisted here** — the plan is editable and only `applyImport` commits.
+    func loadImportPlan(from url: URL) -> Result<ImportPlan, BackupReadError> {
+        guard let data = try? Data(contentsOf: url) else { return .failure(.unreadable) }
+        switch ConfigBackup.read(data) {
+        case .success(let backup):
+            return .success(ImportPlan(current: config, backup: backup, installedSources: availableSources))
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+
+    /// Commit a staging plan: fold it into the configuration, persist, and
+    /// re-apply the engine. The only state-changing step of the whole import.
+    @discardableResult
+    func applyImport(_ plan: ImportPlan) -> ImportOutcome {
+        let outcome = plan.outcome()
+        config = plan.resolvedConfiguration()
+        commit(reason: .configChanged)
+        return outcome
+    }
+
     // MARK: - Windows & update presentation
 
     /// Bring the About window to the foreground (creating it on first use).

@@ -4,7 +4,7 @@ import SwiftUI
 /// The Settings window's tabs. A stable identity lets one pane route the user to
 /// another — App Rules / URL Rules point at General's single Accessibility grant.
 enum SettingsTab: Hashable {
-    case general, appRules, urlRules, shortcuts, permissions, updates, log
+    case general, appRules, urlRules, shortcuts, permissions, updates, log, backup
 }
 
 /// Root of the Settings window — a standard multi-pane macOS settings TabView,
@@ -62,6 +62,9 @@ struct SettingsRootView: View {
             Tab("Log", systemImage: "list.bullet.rectangle", value: SettingsTab.log) {
                 ActivationLogPane()
             }
+            Tab("Backup", systemImage: "arrow.up.arrow.down.square", value: SettingsTab.backup) {
+                BackupSettingsPane()
+            }
         }
     }
 
@@ -88,6 +91,9 @@ struct SettingsRootView: View {
             ActivationLogPane()
                 .tabItem { Label("Log", systemImage: "list.bullet.rectangle") }
                 .tag(SettingsTab.log)
+            BackupSettingsPane()
+                .tabItem { Label("Backup", systemImage: "arrow.up.arrow.down.square") }
+                .tag(SettingsTab.backup)
         }
     }
 }
