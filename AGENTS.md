@@ -44,8 +44,15 @@ macOS system language is irrelevant to what the user must see. Consequences:
 
 The README ships in **every `SupportedLanguage`**. English is the authoritative
 source and lives at the repo root (`README.md` — the **only** README there);
-the translations live in `docs/README/`, kept in sync. The docs under `docs/`
-(`DESIGN.md`, `RELEASING.md`) are **English-only — do not translate them.**
+the translations live in `docs/README/`, kept in sync. The **URL Scheme API**
+reference ships in every language too: English authoritative at
+`docs/URL-Scheme-API/README.md`, translations at
+`docs/URL-Scheme-API/README.<code>.md` (same `<code>` naming and language-switcher
+convention as the README, switcher links by bare sibling filename; the H1 and all
+`##`/`###` headings stay English, and every `lockime://` token, parameter, error
+code, URL, and JSON key/value stays byte-for-byte identical). The remaining docs
+under `docs/` (`DESIGN.md`, `RELEASING.md`) are **English-only — do not translate
+them.**
 
 - **Naming:** translations are `docs/README/README.<code>.md` with **region**
   codes for Chinese (`zh-CN`, `zh-TW` — *not* the script codes

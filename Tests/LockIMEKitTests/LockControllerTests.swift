@@ -27,6 +27,67 @@ struct LockControllerTests {
         return (controller, provider, uptime)
     }
 
+    @Test("commandSwitch with no active lock takes effect and sticks")
+    func commandSwitchNoLock() {
+        let (controller, provider, _) = make(current: us) // disabled (no lock)
+        controller.commandSwitch(abc)
+        #expect(provider.current == abc)
+        #expect(controller.activationCount == 1)
+        controller.selectedSourceDidChange() // nothing reverts while disabled
+        #expect(provider.current == abc)
+    }
+
+    @Test("commandSwitch is a no-op when already on the source")
+    func commandSwitchAlreadyThere() {
+        let (controller, provider, _) = make(current: abc)
+        controller.commandSwitch(abc)
+        #expect(provider.selectCalls.isEmpty)
+        #expect(controller.activationCount == 0)
+    }
+
+    @Test("commandSwitch yields to an active lock even inside the suppression window")
+    func commandSwitchYieldsToActiveLock() {
+        let (controller, provider, uptime) = make(current: us, enabled: true)
+        controller.setTarget(abc)          // lock to abc: forces us→abc, opens the 0.30s settle window
+        #expect(provider.current == abc)
+        uptime.advance(by: 0.10)           // still inside the window
+        controller.commandSwitch(pinyin)   // transient API switch
+        #expect(provider.current == pinyin) // it took effect…
+        controller.selectedSourceDidChange() // …and the system posts the change
+        #expect(provider.current == abc)   // the lock reverted it (cleared settle window)
+        #expect(controller.target == abc)  // lock target untouched
+    }
+
+    @Test("a failed commandSwitch select changes nothing and is not counted")
+    func commandSwitchFailedSelectNotCounted() {
+        let (controller, provider, _) = make(current: us) // disabled (no lock)
+        provider.selectSucceeds[abc] = false
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        controller.commandSwitch(abc)
+        #expect(provider.selectCalls == [abc]) // attempted once…
+        #expect(provider.current == us)        // …but it did not take
+        #expect(controller.activationCount == 0)
+        #expect(events.isEmpty)                // no event on a failed switch
+    }
+
+    @Test("commandSwitch emits one .apiCommand event with from-source and no rule context")
+    func commandSwitchEmitsApiCommandEvent() {
+        let (controller, _, _) = make(current: us) // disabled (no lock)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        controller.commandSwitch(abc)
+        #expect(events.count == 1)
+        #expect(events.first?.reason == .apiCommand)
+        #expect(events.first?.inputSource == abc)
+        #expect(events.first?.fromSourceName == us.rawValue) // stub name == id
+        // A command switch belongs to no rule, so it carries no app/rule context.
+        #expect(events.first?.triggeringBundleID == nil)
+        #expect(events.first?.ruleSource == nil)
+        #expect(events.first?.matchedHost == nil)
+        #expect((events.first?.durationMs ?? -1) >= 0)
+    }
+
     @Test("disabled controller never forces a switch")
     func disabledDoesNothing() {
         let (controller, provider, _) = make(current: abc)

@@ -65,6 +65,19 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 - **Atualização automática** — canais stable e beta via Sparkle, com uma janela de atualização personalizada.
 - **Download minúsculo** — o app inteiro cabe em um `.dmg` com menos de 3 MB.
 - **Sem permissões do sistema para o bloqueio básico** — um modo aprimorado opcional, condicionado à permissão de Accessibility, libera regras mais finas por URL e por campo em foco.
+- **Automação** — um esquema de URL `lockime://` permite que outros apps, scripts e o Shortcuts controlem o LockIME (veja abaixo).
+
+## Automation
+
+O LockIME expõe um esquema de URL `lockime://` para que outros apps, scripts, o Shortcuts e launchers possam controlá-lo — ativar/desativar o bloqueio, redirecionar a fonte de entrada, gerenciar regras e ler o estado de volta com callbacks [x-callback-url](https://x-callback-url.com). Ela está desativada por padrão — ative-a em **Ajustes ▸ Geral ▸ Automação**.
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+Referência completa: **[URL Scheme API](../URL-Scheme-API/README.pt.md)**.
 
 ## Design
 

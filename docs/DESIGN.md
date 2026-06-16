@@ -164,7 +164,9 @@ build before relying on it.)
 
 ### 4.2 Settings window — top 7-tab `TabView`, widened
 No sidebar (`.sidebarAdaptable` breaks `ToolbarSpacer` on macOS). Frame
-`minWidth 680, idealWidth 700, minHeight 460`, growable. `.scenePadding()` at
+`minWidth 680, idealWidth 700, minHeight 600`, growable. (`minHeight` sized so the
+tallest pane — General, now with the **Automation** ▸ URL Scheme API toggle —
+fits without a scrollbar even at the minimum window height.) `.scenePadding()` at
 window level; panes own internal insets — verify no double-padding. Tab
 selection is bound to `AppState.settingsTab` (so a feature pane can route the
 user to **Permissions** for the single Accessibility grant); the root view's

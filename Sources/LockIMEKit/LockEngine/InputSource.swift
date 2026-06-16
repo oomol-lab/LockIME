@@ -56,6 +56,11 @@ public enum ActivationReason: String, Sendable, Codable, CaseIterable {
     /// The launch/restore apply (including after a Sparkle relaunch) enforced
     /// the locked source at startup because the live source already differed.
     case startupApplied
+    /// An external `lockime://switch-source` URL-scheme command forced a transient
+    /// switch. Logged at the moment the switch takes effect; a standing continuous
+    /// lock targeting a different source still wins and reverts it on the next
+    /// change (recorded separately as `.revertedSwitch`).
+    case apiCommand
 }
 
 /// A single enforcement event, emitted whenever the engine forces the source.

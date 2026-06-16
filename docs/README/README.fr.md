@@ -61,6 +61,19 @@ Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silic
 - **Mise à jour automatique** — canaux stable et beta via Sparkle, avec une fenêtre de mise à jour personnalisée.
 - **Téléchargement minuscule** — toute l'application tient dans un `.dmg` de moins de 3 MB.
 - **Aucune permission système pour le verrouillage de base** — un mode renforcé optionnel, soumis à l'autorisation Accessibility, débloque des règles plus fines par URL et par champ ayant le focus.
+- **Automatisation** — un schéma d'URL `lockime://` permet à d'autres applications, scripts et Shortcuts de piloter LockIME (voir ci-dessous).
+
+## Automation
+
+LockIME expose un schéma d'URL `lockime://` afin que d'autres applications, scripts, Shortcuts et lanceurs puissent le piloter — activer/désactiver le verrouillage, recibler la source de saisie, gérer les règles et relire l'état grâce aux rappels [x-callback-url](https://x-callback-url.com). Elle est désactivée par défaut — activez-la dans **Réglages ▸ Général ▸ Automatisation**.
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+Référence complète : **[URL Scheme API](../URL-Scheme-API/README.fr.md)**.
 
 ## Design
 

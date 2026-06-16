@@ -17,7 +17,7 @@ struct BackupSettingsPane: View {
     @State private var exportFailed = false
     @State private var receipt: ImportOutcome?
 
-    private static let log = Logger(subsystem: "com.oomol.LockIME", category: "backup")
+    private static let log = Logger(subsystem: LogSubsystem.current, category: "backup")
 
     var body: some View {
         Form {

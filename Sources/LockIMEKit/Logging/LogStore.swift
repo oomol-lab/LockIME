@@ -7,7 +7,7 @@ import SwiftData
 public final class LogStore {
     public static let retention: TimeInterval = 24 * 60 * 60
 
-    private static let log = Logger(subsystem: "com.oomol.LockIME", category: "LogStore")
+    private static let log = Logger(subsystem: LogSubsystem.current, category: "LogStore")
     static func defaultDirectory(for bundleIdentifier: String?) -> URL {
         if bundleIdentifier == "com.oomol.LockIME" {
             return URL.applicationSupportDirectory.appending(path: "LockIME", directoryHint: .isDirectory)
@@ -70,5 +70,22 @@ public final class LogStore {
 
     public func count() -> Int {
         (try? container.mainContext.fetchCount(FetchDescriptor<ActivationLogEntry>())) ?? 0
+    }
+
+    /// The activation entries within the retention window, newest first — the
+    /// same set the Activation Log pane shows. Used by the `lockime://list-log`
+    /// query. `limit` caps the returned count (most recent kept) when set.
+    public func recent(
+        now: Date = .now,
+        retention: TimeInterval = LogStore.retention,
+        limit: Int? = nil
+    ) -> [ActivationLogEntry] {
+        let cutoff = now.addingTimeInterval(-retention)
+        var descriptor = FetchDescriptor<ActivationLogEntry>(
+            predicate: #Predicate { $0.timestamp > cutoff },
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        if let limit { descriptor.fetchLimit = limit }
+        return (try? container.mainContext.fetch(descriptor)) ?? []
     }
 }

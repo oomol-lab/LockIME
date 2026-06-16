@@ -64,6 +64,19 @@ Mac 匹配的 `.dmg`（Apple silicon 选 `-arm64`，Intel 选 `-x86_64`）。
 - **通过 Sparkle 自动更新**——stable 与 beta 两个通道，配有自定义更新窗口。
 - **超小体积**——整个应用打包成不到 3 MB 的 `.dmg`。
 - **核心锁定无需系统权限**——可选的、受 Accessibility 把关的增强模式可解锁更细粒度的按 URL / 聚焦字段规则。
+- **自动化**——通过 `lockime://` URL scheme，其他应用、脚本和 Shortcuts 都能驱动 LockIME（详见下文）。
+
+## Automation
+
+LockIME 提供了 `lockime://` URL scheme，让其他应用、脚本、Shortcuts 和启动器都能驱动它——开关锁定、重新指定输入源、管理规则，并通过 [x-callback-url](https://x-callback-url.com) 回调读回状态。它默认关闭——请在**设置 ▸ 通用 ▸ 自动化**中开启它。
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+完整参考：**[URL Scheme API](../URL-Scheme-API/README.zh-CN.md)**。
 
 ## Design
 

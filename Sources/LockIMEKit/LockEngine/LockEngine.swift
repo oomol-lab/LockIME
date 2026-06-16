@@ -139,6 +139,11 @@ public final class LockEngine {
 
     public func currentSourceID() -> InputSourceID? { provider.currentSourceID() }
 
+    /// Perform a transient one-shot switch to `id` for an external API command,
+    /// without installing a standing lock. An active continuous lock targeting a
+    /// different source will revert it (see `LockController.commandSwitch`).
+    public func switchSourceOnce(_ id: InputSourceID) { controller.commandSwitch(id) }
+
     public func currentSourceName() -> String {
         guard let id = provider.currentSourceID() else { return "—" }
         return provider.source(for: id)?.localizedName ?? id.rawValue

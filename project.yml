@@ -77,6 +77,10 @@ targets:
         PRODUCT_MODULE_NAME: LockIME
         PRODUCT_BUNDLE_IDENTIFIER: com.oomol.LockIME
         LOCKIME_BUNDLE_DISPLAY_NAME: LockIME
+        # URL-scheme API. Release registers `lockime://`; Debug uses a distinct
+        # `lockime-dev://` (overridden below) so a local dev build never hijacks
+        # the installed release's scheme. The handler is scheme-agnostic.
+        LOCKIME_URL_SCHEME: lockime
         INFOPLIST_FILE: Sources/LockIME/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sources/LockIME/LockIME.entitlements
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -90,6 +94,7 @@ targets:
           PRODUCT_NAME: LockIME Dev
           PRODUCT_BUNDLE_IDENTIFIER: com.oomol.LockIME.dev
           LOCKIME_BUNDLE_DISPLAY_NAME: LockIME Dev
+          LOCKIME_URL_SCHEME: lockime-dev
           CODE_SIGN_IDENTITY: "-"
           DEVELOPMENT_TEAM: ""
           ENABLE_HARDENED_RUNTIME: NO

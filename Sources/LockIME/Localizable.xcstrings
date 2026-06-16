@@ -2,6 +2,106 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+    "API command": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Befehl"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comando de API"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commande API"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API コマンド"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comando de API"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Команда API"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 命令"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 指令"
+          }
+        }
+      }
+    },
+    "API documentation": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "API-Dokumentation" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Documentación de la API" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Documentation de l’API" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "API ドキュメント" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Documentação da API" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Документация API" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "API 文档" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "API 文件" } }
+      }
+    },
+    "Automation": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Automatisierung" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Automatización" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Automatisation" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "自動化" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Automação" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Автоматизация" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "自动化" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "自動化" } }
+      }
+    },
+    "URL Scheme API": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "es": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "URL Scheme API" } }
+      }
+    },
+    "When on, other apps and scripts can control LockIME with `lockime://` URL commands." : {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wenn aktiviert, können andere Apps und Skripte LockIME mit `lockime://`-URL-Befehlen steuern." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Cuando está activado, otras apps y scripts pueden controlar LockIME con comandos URL `lockime://`." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Une fois activé, les autres apps et scripts peuvent contrôler LockIME avec des commandes URL `lockime://`." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "オンにすると、他のアプリやスクリプトが `lockime://` URL コマンドで LockIME を操作できます。" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Quando ativado, outros apps e scripts podem controlar o LockIME com comandos URL `lockime://`." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Когда включено, другие приложения и скрипты могут управлять LockIME с помощью URL-команд `lockime://`." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "开启后，其他应用和脚本可以通过 `lockime://` URL 命令控制 LockIME。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟後，其他應用程式與指令稿可以透過 `lockime://` URL 指令控制 LockIME。" } }
+      }
+    },
     "Switch to": {
       "localizations": {
         "zh-Hans": {

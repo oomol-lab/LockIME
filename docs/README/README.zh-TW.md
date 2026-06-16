@@ -61,6 +61,19 @@ brew install --cask oomol-lab/tap/lockime
 - **透過 Sparkle 自動更新**——stable 與 beta 兩個頻道，配有自訂更新視窗。
 - **超小體積**——整個應用程式打包成不到 3 MB 的 `.dmg`。
 - **核心鎖定無需系統權限**——可選的、由 Accessibility 把關的增強模式可解鎖更細緻的依 URL / 聚焦欄位規則。
+- **自動化**——`lockime://` URL scheme 讓其他應用程式、指令稿與「捷徑」（Shortcuts）能驅動 LockIME（見下文）。
+
+## Automation
+
+LockIME 提供 `lockime://` URL scheme，讓其他應用程式、指令稿、「捷徑」（Shortcuts）與啟動器都能驅動它——切換鎖定、重新指定輸入法、管理規則，並透過 [x-callback-url](https://x-callback-url.com) 回呼讀回狀態。它預設為關閉——請到 **設定 ▸ 一般 ▸ 自動化** 把它開啟。
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+完整參考：**[URL Scheme API](../URL-Scheme-API/README.zh-TW.md)**。
 
 ## Design
 

@@ -7,7 +7,7 @@ import Sparkle
 /// onto our SwiftUI `UpdateViewModel`. (`SPUUserDriver` is `NS_SWIFT_UI_ACTOR`.)
 @MainActor
 final class LockIMEUserDriver: NSObject, SPUUserDriver {
-    private static let log = Logger(subsystem: "com.oomol.LockIME", category: "Updater")
+    private static let log = Logger(subsystem: LogSubsystem.current, category: "Updater")
 
     private let model: UpdateViewModel
     private var expectedLength: UInt64 = 0

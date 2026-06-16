@@ -61,6 +61,19 @@ brew install --cask oomol-lab/tap/lockime
 - **Автообновление** — каналы stable и beta через Sparkle, с собственным окном обновления.
 - **Крошечная загрузка** — всё приложение помещается в `.dmg` размером менее 3 MB.
 - **Базовая блокировка не требует системных разрешений** — дополнительный расширенный режим, защищённый разрешением Accessibility, открывает более тонкие правила для URL и поля с фокусом.
+- **Автоматизация** — URL-схема `lockime://` позволяет другим приложениям, скриптам и Shortcuts управлять LockIME (см. ниже).
+
+## Automation
+
+LockIME предоставляет URL-схему `lockime://`, чтобы другие приложения, скрипты, Shortcuts и лаунчеры могли управлять им — включать и выключать блокировку, менять источник ввода, управлять правилами и считывать состояние через колбэки [x-callback-url](https://x-callback-url.com). По умолчанию она выключена — включите её в **Настройки ▸ Основные ▸ Автоматизация**.
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+Полная справка: **[URL Scheme API](../URL-Scheme-API/README.ru.md)**.
 
 ## Design
 

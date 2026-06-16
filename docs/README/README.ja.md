@@ -61,6 +61,19 @@ brew install --cask oomol-lab/tap/lockime
 - **自動アップデート**——Sparkle による stable / beta の 2 チャンネルと、カスタムアップデートウィンドウ。
 - **小さなダウンロード**——アプリ全体が 3 MB 未満の `.dmg` に収まります。
 - **コアのロックにシステム権限は不要**——オプションの Accessibility 権限付き拡張モードで、より細かい URL ごと / フォーカス中フィールドごとのルールが使えます。
+- **自動化**——`lockime://` URL スキームにより、他のアプリ・スクリプト・ショートカットから LockIME を操作できます（下記参照）。
+
+## Automation
+
+LockIME は `lockime://` URL スキームを公開しており、他のアプリ・スクリプト・ショートカット・ランチャーから操作できます——ロックの切り替え、入力ソースの再設定、ルールの管理、そして [x-callback-url](https://x-callback-url.com) コールバックによる状態の読み取りが可能です。デフォルトではオフです——**設定 ▸ 一般 ▸ 自動化**でオンにしてください。
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+詳細なリファレンス：**[URL Scheme API](../URL-Scheme-API/README.ja.md)**。
 
 ## Design
 

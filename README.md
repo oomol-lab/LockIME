@@ -82,6 +82,24 @@ Either way, the app keeps itself up to date via Sparkle.
 - **Tiny download** — the whole app ships in a `.dmg` under 3 MB.
 - **No system permissions for core locking** — an optional Accessibility-gated
   enhanced mode unlocks finer-grained per-URL and focused-field rules.
+- **Automation** — a `lockime://` URL scheme lets other apps, scripts, and
+  Shortcuts drive LockIME (see below).
+
+## Automation
+
+LockIME exposes a `lockime://` URL scheme so other apps, scripts, Shortcuts, and
+launchers can drive it — toggle locking, retarget the input source, manage
+rules, and read state back with [x-callback-url](https://x-callback-url.com)
+callbacks. It is off by default — turn it on in **Settings ▸ General ▸
+Automation**.
+
+```sh
+open "lockime://lock"
+open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
+```
+
+Full reference: **[URL Scheme API](docs/URL-Scheme-API/README.md)**.
 
 ## Design
 

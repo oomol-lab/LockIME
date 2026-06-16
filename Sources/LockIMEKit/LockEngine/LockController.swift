@@ -108,6 +108,42 @@ public final class LockController {
         force(id, reason: reason, from: current)
     }
 
+    /// Perform a **transient** switch for an external command (the
+    /// `lockime://switch-source` URL API), independent of the standing lock.
+    ///
+    /// Unlike `switchOnce`, this does **not** clear or adopt the lock `target` or
+    /// its context. It also **clears** the suppression window (`settleUntil = 0`)
+    /// instead of extending it: if a continuous lock is active and targets a
+    /// different source, the change notification this switch raises must not be
+    /// shielded by a *prior* force's still-open settle window — otherwise the API
+    /// switch could stick. Cleared, the lock reverts it promptly and stays
+    /// authoritative (that revert is logged separately as `.revertedSwitch`).
+    /// No-ops when already on `id`. The switch itself is always logged/counted at
+    /// the moment it takes effect, even if a lock then reverts it.
+    public func commandSwitch(_ id: InputSourceID) {
+        guard let current = provider.currentSourceID(), current != id else { return }
+        let start = uptime()
+        let fromName = provider.source(for: current)?.localizedName ?? current.rawValue
+        guard provider.select(id) else { return }
+        // Clear any inherited suppression window so a standing lock's revert
+        // (driven by the change notification this select raises) is not muffled.
+        settleUntil = 0
+        activationCount += 1
+        let name = provider.source(for: id)?.localizedName ?? id.rawValue
+        let durationMs = max(0, (uptime() - start) * 1000)
+        // A command switch belongs to no rule, so it carries no app/rule context.
+        onActivation?(
+            ActivationEvent(
+                timestamp: clock(),
+                inputSource: id,
+                inputSourceName: name,
+                reason: .apiCommand,
+                durationMs: durationMs,
+                fromSourceName: fromName
+            )
+        )
+    }
+
     /// Call when the system posts a "selected input source changed" notification.
     public func selectedSourceDidChange() {
         enforceIfNeeded(reason: .revertedSwitch)

@@ -31,7 +31,7 @@ struct SettingsRootView: View {
             }
         }
         .scenePadding()
-        .frame(minWidth: 680, idealWidth: 700, minHeight: 460)
+        .frame(minWidth: 680, idealWidth: 700, minHeight: 600)
         // The Settings *window* closing (not a tab switch — this root outlives
         // those) is the "abandon" signal for an in-flight Accessibility grant.
         .onDisappear { state.stopAccessibilityWatch() }

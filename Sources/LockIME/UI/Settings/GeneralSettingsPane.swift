@@ -61,6 +61,19 @@ struct GeneralSettingsPane: View {
             } header: {
                 Text("Language")
             }
+
+            Section {
+                let apiBinding = Binding(
+                    get: { state.apiEnabled },
+                    set: { state.setAPIEnabled($0) }
+                )
+                Toggle("URL Scheme API", isOn: apiBinding)
+                Link("API documentation", destination: state.apiDocumentationURL)
+            } header: {
+                Text("Automation")
+            } footer: {
+                SectionFooter("When on, other apps and scripts can control LockIME with `lockime://` URL commands.")
+            }
         }
         .formStyle(.grouped)
         .navigationTitle(state.loc("General"))

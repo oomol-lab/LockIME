@@ -21,6 +21,14 @@ final class AppState {
     private(set) var loginItemState: LoginItemState = .unknown
     private(set) var accessibilityGranted: Bool = false
 
+    /// Whether the `lockime://` URL-scheme API is allowed to act. **Off by
+    /// default** — the user must opt in (Settings ▸ General ▸ Automation) before
+    /// any external command takes effect. Stored in its own `UserDefaults` key,
+    /// deliberately *not* part of `LockConfiguration`, so it is per-device and
+    /// never travels through config export/import.
+    private(set) var apiEnabled: Bool = false
+    @ObservationIgnored private static let apiEnabledKey = "apiEnabled"
+
     /// The configured global toggle-lock shortcut, mirrored as observable state
     /// so the menu-bar header re-renders the moment the user binds or clears it
     /// in Settings (a plain `getShortcut` read isn't tracked by `@Observable`).
@@ -93,7 +101,35 @@ final class AppState {
 
     init() {
         languagePreference = .load()
+        apiEnabled = UserDefaults.standard.bool(forKey: Self.apiEnabledKey) // absent ⇒ false (opt-in)
         ThirdPartyBundleLocalization.apply(language: languagePreference.effectiveLanguage)
+    }
+
+    /// Opt the `lockime://` URL-scheme API in or out. Persisted immediately so the
+    /// choice survives relaunch; takes effect for the next incoming command.
+    func setAPIEnabled(_ enabled: Bool) {
+        apiEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: Self.apiEnabledKey)
+    }
+
+    /// GitHub URL of the URL-scheme API reference, in the app's current language
+    /// (mirrors the `docs/URL-Scheme-API/README.<code>.md` naming). Points at
+    /// `main`, so it resolves once this work lands there.
+    var apiDocumentationURL: URL {
+        let file: String
+        switch languagePreference.effectiveLanguage {
+        case .english: file = "README.md"
+        case .simplifiedChinese: file = "README.zh-CN.md"
+        case .traditionalChinese: file = "README.zh-TW.md"
+        case .japanese: file = "README.ja.md"
+        case .french: file = "README.fr.md"
+        case .german: file = "README.de.md"
+        case .spanish: file = "README.es.md"
+        case .portuguese: file = "README.pt.md"
+        case .russian: file = "README.ru.md"
+        }
+        // A constant, URL-safe GitHub address — not user-facing copy.
+        return URL(string: "https://github.com/oomol-lab/LockIME/blob/main/docs/URL-Scheme-API/\(file)")!
     }
 
     func setLanguagePreference(_ preference: LanguagePreference) {
@@ -276,18 +312,27 @@ final class AppState {
     /// scoped to that app. Does nothing when the frontmost app has no rule of
     /// its own, and never lands on "none" (it pins the rule to a valid source).
     func cycleFrontmostAppSource(_ direction: CycleDirection) {
-        guard let bundleID = frontmostApplicationBundleID,
-              var rule = config.rule(for: bundleID)
-        else { return }
+        guard let bundleID = frontmostApplicationBundleID else { return }
+        _ = cycleAppSource(bundleID: bundleID, direction: direction)
+    }
+
+    /// Cycle a *specific* app's rule to the previous/next input source. Shared by
+    /// the frontmost-app hotkey and the `lockime://cycle-app-source` URL command.
+    /// Returns `false` (a no-op) when that app has no rule or there is nowhere to
+    /// cycle, so the API can report `rule_not_found`.
+    @discardableResult
+    func cycleAppSource(bundleID: String, direction: CycleDirection) -> Bool {
+        guard var rule = config.rule(for: bundleID) else { return false }
         let reference = rule.lockedSourceID ?? engine?.currentSourceID()
         guard let next = SourceCycler.step(
             from: reference, in: availableSources.map(\.id), direction: direction
-        ) else { return }
+        ) else { return false }
         // Cycling pins a source; keep a `.switched` rule a switch (don't demote
         // it to a continuous lock), and turn a non-pinning rule into a lock.
         if !rule.mode.pinsSource { rule.mode = .locked }
         rule.lockedSourceID = next
         upsertRule(rule)
+        return true
     }
 
     /// Remove the rule bound to the frontmost app. Does nothing when that app
@@ -335,6 +380,67 @@ final class AppState {
         config.urlRules.removeAll { $0.id == id }
         commit()
     }
+
+    // MARK: - URL-scheme API support
+
+    /// Live current input-source id (the engine's view), for status queries.
+    var currentSourceID: InputSourceID? { engine?.currentSourceID() }
+
+    /// Live launch-at-login state (read fresh from `SMAppService`, never cached),
+    /// for the `set-launch-at-login` toggle and the status query.
+    var launchAtLoginActive: Bool { loginItem.isEnabled }
+
+    /// Recent activation-log entries (newest first, within the 24h window) for
+    /// the `lockime://list-log` query.
+    func recentActivationLog(limit: Int = 200) -> [ActivationLogEntry] {
+        logStore.recent(limit: limit)
+    }
+
+    /// The bundle ID of the app the user is currently looking at, read fresh from
+    /// `NSWorkspace`. A global URL command doesn't steal focus, so this is the app
+    /// a frontmost-scoped command (`cycle-app-source`, `remove-frontmost-app-rule`)
+    /// should target — the same source the engine resolves rules against.
+    var liveFrontmostBundleID: String? { frontmostApplicationBundleID }
+
+    /// Resolve an API source selector to a canonical id, requiring it to name a
+    /// currently-installed selectable source (so the API can report
+    /// `unknown_source` rather than silently configuring an unusable target).
+    func resolveSourceID(_ selector: SourceSelector) -> InputSourceID? {
+        switch selector {
+        case .id(let id):
+            return availableSources.first { $0.id == id }?.id
+        case .name(let name):
+            return availableSources.first {
+                $0.localizedName.compare(name, options: .caseInsensitive) == .orderedSame
+            }?.id
+        }
+    }
+
+    /// The installed display name for a source id, if any.
+    func sourceDisplayName(for id: InputSourceID) -> String? {
+        availableSources.first { $0.id == id }?.localizedName
+    }
+
+    /// Perform a transient one-shot switch (no standing lock) for the
+    /// `lockime://switch-source` command. An active continuous lock still wins.
+    func switchSourceOnce(_ id: InputSourceID) {
+        engine?.switchSourceOnce(id)
+    }
+
+    /// Remove every per-app rule in one commit (`lockime://clear-app-rules`).
+    func clearAppRules() {
+        guard !config.appRules.isEmpty else { return }
+        config.appRules.removeAll()
+        commit()
+    }
+
+    /// Remove every per-URL rule in one commit (`lockime://clear-url-rules`).
+    func clearURLRules() {
+        guard !config.urlRules.isEmpty else { return }
+        config.urlRules.removeAll()
+        commit()
+    }
+
 
     /// Reconcile the cached flag with the live trust state, reacting to either
     /// transition. The user may grant while the polling watcher is stopped (e.g.
