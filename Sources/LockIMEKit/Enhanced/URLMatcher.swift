@@ -69,6 +69,12 @@ public enum BrowserBundleIDs {
 }
 
 /// Pure host extraction and pattern matching for per-URL rules.
+///
+/// Matching is **type-directed** (`URLRule.matchType`): the three domain types
+/// look only at the URL's host, while `urlRegex` matches the *whole* URL string
+/// (scheme/host/path/query/fragment) — the only type that can tell two pages of
+/// one site apart. Rules are evaluated top-to-bottom; the first that matches
+/// wins, so list order is the rule priority.
 public enum URLMatcher {
     /// The host of a URL string, lowercased (`https://Gist.GitHub.com/x` → `gist.github.com`).
     public static func host(from urlString: String) -> String? {
@@ -77,23 +83,93 @@ public enum URLMatcher {
         return host?.lowercased()
     }
 
-    /// The first rule whose pattern matches `host`, or `nil`.
-    public static func matchedRule(host: String?, rules: [URLRule]) -> URLRule? {
-        guard let host = host?.lowercased(), !host.isEmpty else { return nil }
-        return rules.first { matches(host: host, pattern: $0.hostPattern) }
+    /// The first rule (in list order) matching `urlString`, or `nil`.
+    ///
+    /// The host is derived once and shared by the domain-family types; `urlRegex`
+    /// ignores it and matches the raw URL. An empty/authority-less URL still lets
+    /// a `urlRegex` rule run (it may match `about:`-style URLs), but the domain
+    /// types short-circuit to no-match without a host.
+    public static func matchedRule(urlString: String, rules: [URLRule]) -> URLRule? {
+        let host = host(from: urlString)
+        return rules.first { matches(rule: $0, urlString: urlString, host: host) }
     }
 
-    /// The locked source of the first rule whose pattern matches `host`.
-    public static func match(host: String?, rules: [URLRule]) -> InputSourceID? {
-        matchedRule(host: host, rules: rules)?.lockedSourceID
+    /// The locked source of the first rule matching `urlString`.
+    public static func match(urlString: String, rules: [URLRule]) -> InputSourceID? {
+        matchedRule(urlString: urlString, rules: rules)?.lockedSourceID
+    }
+
+    /// Whether `rule` matches the URL, dispatching on the rule's match type.
+    /// `host` is the pre-extracted, lowercased host (or `nil` when the URL has no
+    /// authority) so callers iterating many rules extract it once.
+    static func matches(rule: URLRule, urlString: String, host: String?) -> Bool {
+        switch rule.matchType {
+        case .domainSuffix:
+            guard let host else { return false }
+            return matchesSuffix(host: host, pattern: rule.hostPattern)
+        case .domain:
+            guard let host else { return false }
+            let pattern = normalizedHostPattern(rule.hostPattern)
+            // An empty normalized pattern (a blank or `*.`-only rule) must not match
+            // an empty-host URL — fail closed, mirroring `matchesSuffix`.
+            guard !pattern.isEmpty else { return false }
+            return host == pattern
+        case .domainKeyword:
+            guard let host else { return false }
+            let keyword = rule.hostPattern.lowercased().trimmingCharacters(in: .whitespaces)
+            return !keyword.isEmpty && host.contains(keyword)
+        case .urlRegex:
+            return matchesRegex(urlString, pattern: rule.hostPattern)
+        }
     }
 
     /// A pattern matches a host if equal, a parent domain, or a `*.` wildcard.
     /// `github.com` matches `github.com` and `gist.github.com`.
-    static func matches(host: String, pattern rawPattern: String) -> Bool {
-        var pattern = rawPattern.lowercased().trimmingCharacters(in: .whitespaces)
-        if pattern.hasPrefix("*.") { pattern.removeFirst(2) }
+    static func matchesSuffix(host: String, pattern rawPattern: String) -> Bool {
+        let pattern = normalizedHostPattern(rawPattern)
         guard !pattern.isEmpty else { return false }
         return host == pattern || host.hasSuffix("." + pattern)
+    }
+
+    /// Lowercase + trim a host pattern and drop a leading `*.` so `*.google.com`
+    /// and `google.com` normalize alike.
+    private static func normalizedHostPattern(_ rawPattern: String) -> String {
+        var pattern = rawPattern.lowercased().trimmingCharacters(in: .whitespaces)
+        if pattern.hasPrefix("*.") { pattern.removeFirst(2) }
+        return pattern
+    }
+
+    /// Upper bound on the URL length a `urlRegex` rule will match against. Real
+    /// URLs are far shorter; this only caps the regex engine's worst-case
+    /// backtracking against a pathologically long input.
+    static let maxRegexURLLength = 8192
+
+    /// Whether `urlString` contains a match for `pattern` (unanchored,
+    /// case-insensitive). An empty or invalid pattern never matches — a
+    /// half-typed or broken regex must not silently match every URL.
+    ///
+    /// The match is **length-bounded**: a user-authored pattern runs against the
+    /// live browser URL synchronously on the main actor (the URL poll), so an
+    /// absurdly long URL is rejected outright (fail-closed — no match) to bound
+    /// the engine's backtracking cost. The bound counts **UTF-16 code units** —
+    /// the unit `NSRange`/the ICU engine actually scans — not graphemes, so a
+    /// short-grapheme/long-code-unit string can't slip past it. This caps the
+    /// long-input amplification vector; it is *not* full ReDoS protection — a
+    /// pathological pattern (e.g. `(a+)+$`) can still backtrack for a long time on a
+    /// *short* URL, blocking the poll's main actor. The pattern is the user's own,
+    /// so this is an accepted residual; bounding *that* would require evaluating the
+    /// match off the main actor with a wall-clock deadline.
+    static func matchesRegex(_ urlString: String, pattern: String) -> Bool {
+        guard !pattern.isEmpty, !urlString.isEmpty, urlString.utf16.count <= maxRegexURLLength,
+              let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+        else { return false }
+        let range = NSRange(urlString.startIndex..., in: urlString)
+        return regex.firstMatch(in: urlString, range: range) != nil
+    }
+
+    /// Whether `pattern` is a valid regular expression — for the editor to warn
+    /// before a `urlRegex` rule is saved (an invalid pattern matches nothing).
+    public static func isValidRegex(_ pattern: String) -> Bool {
+        (try? NSRegularExpression(pattern: pattern)) != nil
     }
 }

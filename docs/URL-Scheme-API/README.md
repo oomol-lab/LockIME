@@ -126,9 +126,26 @@ Per-URL rules require the optional Accessibility-gated **enhanced mode**.
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | Turn enhanced mode on/off (or flip it). |
-| `set-url-rule` | `host` *(req)*, `source` \| `source-name` *(req)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Create or replace a per-URL rule. `host` is a pattern like `github.com` (matches subdomains) or `*.example.com`. Without `id`, an existing rule for the same host is updated rather than duplicated. |
+| `set-url-rule` | `host` *(alias `pattern`, req)*, `source` \| `source-name` *(req)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(default `domain-suffix`)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Create or replace a per-URL rule. How the pattern is matched depends on `match-type` (see [below](#match-types)). Without `id`, an existing rule for the same pattern is updated rather than duplicated. |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | Delete a URL rule by its `id` (from `list-url-rules`) or by `host`. |
 | `clear-url-rules` | — | Remove **all** per-URL rules. |
+
+#### Match types
+
+`match-type` decides how a rule's pattern is compared to the browser's current
+URL. Rules are evaluated **top to bottom and the first match wins**, so their
+order is their priority (drag to reorder in **Settings ▸ URL Rules**).
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | a host, e.g. `github.com` | the host **and all its subdomains** (`github.com`, `gist.github.com`). A leading `*.` is tolerated. |
+| `domain` | a host, e.g. `github.com` | **only that exact host**, never a subdomain. |
+| `domain-keyword` | a substring, e.g. `google` | any host that **contains** it (`google.com`, `mail.google.com`, `googleapis.com`). |
+| `url-regex` | a regular expression | the **whole URL** (scheme · host · path · query · fragment) — case-insensitive and unanchored. The only type that can tell pages of one site apart by path or query. An uncompilable pattern is rejected with `invalid_parameter`. |
+
+`match-type` also accepts the aliases `suffix`, `keyword`, and `regex`. For a
+`url-regex` rule the pattern usually contains characters (`?`, `&`, `/`, `\`)
+that must be percent-encoded in the URL.
 
 ### App
 
@@ -152,7 +169,7 @@ Query commands return a JSON payload through the `x-success` callback (see
 | `current-source` | `{ "id": "...", "name": "..." }` of the live source. |
 | `list-sources` *(alias `sources`)* | Array of installed sources: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Array of `{ "bundleID", "mode", "source"? }`. |
-| `list-url-rules` *(alias `url-rules`)* | Array of `{ "id", "host", "action", "source" }`. |
+| `list-url-rules` *(alias `url-rules`)* | Array of `{ "id", "host", "action", "matchType", "source" }`, in priority order (first match wins). |
 | `list-log` *(aliases `log`, `recent-activations`)* | The last 24 h of forced-switch entries, newest first: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
 | `get-config` *(alias `config`)* | The full persisted configuration object. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
@@ -194,7 +211,7 @@ localized.
 | `no_command` | No command token was supplied. |
 | `unknown_command` | The command token is not recognized. |
 | `missing_parameter` | A required parameter is absent. |
-| `invalid_parameter` | A parameter value is out of range (bad `mode`, `action`, `direction`, `code`, or UUID). |
+| `invalid_parameter` | A parameter value is out of range (bad `mode`, `action`, `match-type`, `direction`, `code`, an uncompilable `url-regex` pattern, or a malformed UUID). |
 | `unknown_source` | The `id`/`name` matches no installed selectable source. |
 | `no_input_sources` | No selectable input sources are installed. |
 | `rule_not_found` | The targeted app/URL rule does not exist. |
@@ -211,6 +228,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex matches the whole URL — percent-encode the pattern (here: github\.com/.*/pull)
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 

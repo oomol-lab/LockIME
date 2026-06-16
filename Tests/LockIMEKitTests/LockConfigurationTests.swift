@@ -141,6 +141,69 @@ struct LockConfigurationTests {
         #expect(config.appRules.count == 2)            // nothing dropped
         #expect(config.urlRules.count == 2)            // nothing dropped
         #expect(config.urlRules.allSatisfy { $0.action == .lock })
+        // The same lenient path applies to the newer matchType key: a legacy URL
+        // rule that predates match types decodes to the original suffix behavior.
+        #expect(config.urlRules.allSatisfy { $0.matchType == .domainSuffix })
         #expect(config.rule(for: "com.a")?.mode == .locked)
+    }
+
+    // The forward-compat sibling of the above: a config written by a *newer* build
+    // can carry enum values this build doesn't know (a new matchType/action/mode
+    // case), e.g. after a downgrade. A non-lenient decoder would throw on the
+    // unknown value, propagate through the array decode, and silently wipe the
+    // ENTIRE config to `.default`. Each unknown value must instead degrade to its
+    // safe default while every other rule survives.
+    @Test("unknown enum values degrade to defaults instead of wiping the config")
+    func decodesUnknownEnumValuesLeniently() throws {
+        let json = """
+        {"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US",
+         "appRules": [
+            {"bundleID": "com.a", "mode": "teleport", "lockedSourceID": "com.apple.keylayout.ABC"},
+            {"bundleID": "com.b", "mode": "ignored"}
+         ],
+         "enhancedModeEnabled": true,
+         "urlRules": [
+            {"id": "\(UUID().uuidString)", "hostPattern": "github.com", "lockedSourceID": "com.apple.keylayout.ABC", "action": "warp", "matchType": "telepathy"},
+            {"id": "\(UUID().uuidString)", "hostPattern": "example.com", "lockedSourceID": "com.apple.keylayout.US", "action": "switchOnce", "matchType": "domain"}
+         ]}
+        """
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        // Nothing dropped: the unknown values did not abort the whole decode.
+        #expect(config.appRules.count == 2)
+        #expect(config.urlRules.count == 2)
+        #expect(config.defaultSourceID == "com.apple.keylayout.US")
+        // Unknown values degrade to their defaults…
+        #expect(config.rule(for: "com.a")?.mode == .locked)
+        let gh = try #require(config.urlRules.first { $0.hostPattern == "github.com" })
+        #expect(gh.action == .lock)
+        #expect(gh.matchType == .domainSuffix)
+        // …while a rule with all-known values is unaffected.
+        let ex = try #require(config.urlRules.first { $0.hostPattern == "example.com" })
+        #expect(ex.action == .switchOnce)
+        #expect(ex.matchType == .domain)
+    }
+
+    @Test("URLMatchType.id is its raw value (the stable persisted token)")
+    func urlMatchTypeID() {
+        #expect(URLMatchType.domainSuffix.rawValue == "domain-suffix")
+        #expect(URLMatchType.domain.rawValue == "domain")
+        #expect(URLMatchType.domainKeyword.rawValue == "domain-keyword")
+        #expect(URLMatchType.urlRegex.rawValue == "url-regex")
+        #expect(URLMatchType.allCases.allSatisfy { $0.id == $0.rawValue })
+    }
+
+    @Test("a configuration with non-default match types round-trips through Codable")
+    func roundTripsMatchType() throws {
+        let original = LockConfiguration(
+            enhancedModeEnabled: true,
+            urlRules: [
+                URLRule(hostPattern: "github.com", lockedSourceID: "x", matchType: .domain),
+                URLRule(hostPattern: "google", lockedSourceID: "y", matchType: .domainKeyword),
+                URLRule(hostPattern: "/pull/", lockedSourceID: "z", action: .switchOnce, matchType: .urlRegex),
+            ]
+        )
+        let decoded = try JSONDecoder().decode(LockConfiguration.self, from: try JSONEncoder().encode(original))
+        #expect(decoded == original)
+        #expect(decoded.urlRules.map(\.matchType) == [.domain, .domainKeyword, .urlRegex])
     }
 }

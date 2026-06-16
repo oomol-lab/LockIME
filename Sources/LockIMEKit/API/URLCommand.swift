@@ -55,7 +55,7 @@ public enum URLCommand: Equatable, Sendable {
 
     // Enhanced mode + per-URL rules
     case setEnhancedMode(FlagArg)
-    case setURLRule(id: UUID?, host: String, source: SourceSelector, action: RuleAction)
+    case setURLRule(id: UUID?, host: String, source: SourceSelector, action: RuleAction, matchType: URLMatchType)
     case removeURLRule(URLRuleSelector)
     case clearURLRules
 
@@ -354,13 +354,37 @@ public enum URLCommandParser {
     }
 
     private static func parseSetURLRule(_ params: [String: String]) -> Result<URLCommand, URLCommandError> {
-        guard let host = nonEmpty(params["host"]) else { return .failure(.missingParameter("host")) }
+        // The pattern rides in `host` for historical reasons; `pattern` is an
+        // alias that reads better for keyword/regex rules.
+        guard let rawHost = nonEmpty(params["host"]) ?? nonEmpty(params["pattern"]) else {
+            return .failure(.missingParameter("host"))
+        }
+        // Which param the pattern actually came from, so an error names what the
+        // caller sent (`host` wins when both are given).
+        let patternParam = nonEmpty(params["host"]) != nil ? "host" : "pattern"
+        // Trim (mirroring the editor) so a whitespace-only value can't persist a
+        // rule that normalizes to empty and silently matches nothing.
+        let host = rawHost.trimmingCharacters(in: .whitespaces)
+        guard !host.isEmpty else { return .failure(.missingParameter(patternParam)) }
         guard let selector = ruleSource(params) else { return .failure(.missingParameter("source")) }
         let action: RuleAction
         switch (params["action"] ?? "lock").lowercased() {
         case "lock": action = .lock
         case "switch", "switchonce", "switch-once": action = .switchOnce
         case let other: return .failure(.invalidParameter(name: "action", value: other))
+        }
+        let matchType: URLMatchType
+        switch (params["match-type"] ?? params["matchtype"] ?? "domain-suffix").lowercased() {
+        case "domain-suffix", "domainsuffix", "suffix": matchType = .domainSuffix
+        case "domain", "domain-exact", "exact": matchType = .domain
+        case "domain-keyword", "domainkeyword", "keyword": matchType = .domainKeyword
+        case "url-regex", "urlregex", "regex": matchType = .urlRegex
+        case let other: return .failure(.invalidParameter(name: "match-type", value: other))
+        }
+        // A regex rule whose pattern doesn't compile would silently match
+        // nothing — reject it at parse time, naming the param the caller used.
+        if matchType == .urlRegex, !URLMatcher.isValidRegex(host) {
+            return .failure(.invalidParameter(name: patternParam, value: host))
         }
         var ruleID: UUID?
         if let raw = nonEmpty(params["id"]) {
@@ -369,7 +393,7 @@ public enum URLCommandParser {
             }
             ruleID = parsed
         }
-        return .success(.setURLRule(id: ruleID, host: host, source: selector, action: action))
+        return .success(.setURLRule(id: ruleID, host: host, source: selector, action: action, matchType: matchType))
     }
 
     private static func parseRemoveURLRule(_ params: [String: String]) -> Result<URLCommand, URLCommandError> {

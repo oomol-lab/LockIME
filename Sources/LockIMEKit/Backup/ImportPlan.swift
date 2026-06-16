@@ -62,11 +62,15 @@ public struct ImportItem: Identifiable, Sendable, Equatable {
     /// File-side URL-rule action — lock vs one-shot switch (`nil` for the global
     /// default and app rules, whose lock/switch distinction rides in the mode).
     public let fileAction: RuleAction?
+    /// File-side URL-rule match type (`nil` for the global default and app rules).
+    public let fileMatchType: URLMatchType?
     /// Local-side mode/source, populated only for `.conflict` items.
     public let localMode: AppRuleMode?
     public let localSource: InputSourceID?
     /// Local-side URL-rule action, populated only for URL `.conflict` items.
     public let localAction: RuleAction?
+    /// Local-side URL-rule match type, populated only for URL `.conflict` items.
+    public let localMatchType: URLMatchType?
 
     // MARK: user choices
 
@@ -89,7 +93,9 @@ public struct ImportItem: Identifiable, Sendable, Equatable {
         resolution: ConflictResolution,
         missingDisposition: MissingSourceDisposition,
         fileAction: RuleAction? = nil,
-        localAction: RuleAction? = nil
+        localAction: RuleAction? = nil,
+        fileMatchType: URLMatchType? = nil,
+        localMatchType: URLMatchType? = nil
     ) {
         self.id = id
         self.subject = subject
@@ -97,9 +103,11 @@ public struct ImportItem: Identifiable, Sendable, Equatable {
         self.fileMode = fileMode
         self.fileSource = fileSource
         self.fileAction = fileAction
+        self.fileMatchType = fileMatchType
         self.localMode = localMode
         self.localSource = localSource
         self.localAction = localAction
+        self.localMatchType = localMatchType
         self.include = include
         self.resolution = resolution
         self.missingDisposition = missingDisposition
@@ -154,6 +162,21 @@ public struct ImportPlan: Sendable, Equatable {
     /// names take precedence, with the file's catalog filling in those it lacks
     /// (so a missing source still shows a human label).
     public let sourceNames: [InputSourceID: String]
+    /// Whether the file orders the URL rules it shares with the local config in a
+    /// different priority sequence. Order is priority (first match wins), so when
+    /// this is true the import surfaces a reviewable order choice. False when the
+    /// two agree, or share fewer than two rules.
+    public let urlOrderDiffers: Bool
+    /// The user's **Merge-only** URL-rule order choice: `true` adopt the file's
+    /// order, `false`/`nil` keep the local order (the default). Ignored under
+    /// Replace, which always adopts the file's order.
+    public var urlOrderUseFile: Bool?
+
+    /// The effective URL-rule order. Replace adopts the file's order
+    /// unconditionally — it makes the config *match* the file, order included — so
+    /// the order choice is a Merge-only affordance: Merge keeps the local order
+    /// unless the user opts into the file's.
+    public var effectiveUseFileOrder: Bool { mode == .replace ? true : (urlOrderUseFile ?? false) }
 
     public init(
         current: LockConfiguration,
@@ -222,29 +245,40 @@ public struct ImportPlan: Sendable, Equatable {
             }
         }
 
-        // URL rules (keyed by host pattern).
+        // URL rules (keyed by host pattern). The pattern is a URL rule's portable
+        // identity — `ImportItem.id`, `localByHost`, and `urlMap` all key on it —
+        // so two file rules sharing a pattern would mint colliding item ids and
+        // break the Review list's `ForEach`/`firstIndex`. De-dupe the file's rules
+        // by pattern up front (keep the first, preserve order), the same collapse
+        // the resolver applies; the editor enforces one rule per pattern locally,
+        // so this only guards a hand-authored or legacy file.
         let localByHost = Dictionary(
             current.urlRules.map { ($0.hostPattern, $0) }, uniquingKeysWith: { first, _ in first }
         )
-        for rule in backup.payload.urlRules {
+        var seenFileHosts = Set<String>()
+        let fileURLRules = backup.payload.urlRules.filter { seenFileHosts.insert($0.hostPattern).inserted }
+        for rule in fileURLRules {
             if let local = localByHost[rule.hostPattern] {
-                // A lock-vs-switch difference on the same source is a conflict.
+                // A difference in source, lock-vs-switch, or match type on the
+                // same pattern is a conflict.
                 let status: ImportItem.Status =
-                    (local.lockedSourceID == rule.lockedSourceID && local.action == rule.action)
+                    (local.lockedSourceID == rule.lockedSourceID && local.action == rule.action
+                        && local.matchType == rule.matchType)
                         ? .unchanged : .conflict
                 items.append(ImportItem(
                     id: "url:\(rule.hostPattern)", subject: .url(hostPattern: rule.hostPattern), status: status,
                     fileMode: nil, fileSource: rule.lockedSourceID,
                     localMode: nil, localSource: local.lockedSourceID,
                     include: true, resolution: .keepLocal, missingDisposition: .keep,
-                    fileAction: rule.action, localAction: local.action
+                    fileAction: rule.action, localAction: local.action,
+                    fileMatchType: rule.matchType, localMatchType: local.matchType
                 ))
             } else {
                 items.append(ImportItem(
                     id: "url:\(rule.hostPattern)", subject: .url(hostPattern: rule.hostPattern), status: .new,
                     fileMode: nil, fileSource: rule.lockedSourceID, localMode: nil, localSource: nil,
                     include: true, resolution: .keepLocal, missingDisposition: .keep,
-                    fileAction: rule.action
+                    fileAction: rule.action, fileMatchType: rule.matchType
                 ))
             }
         }
@@ -255,6 +289,14 @@ public struct ImportPlan: Sendable, Equatable {
         let fileHosts = Set(backup.payload.urlRules.map(\.hostPattern))
         self.localOnlyAppRuleCount = current.appRules.filter { !fileBundleIDs.contains($0.bundleID) }.count
         self.localOnlyURLRuleCount = current.urlRules.filter { !fileHosts.contains($0.hostPattern) }.count
+
+        // Order is priority; the order choice only matters (and is only surfaced)
+        // when file and local share rules in a different relative order.
+        self.urlOrderUseFile = nil
+        let fileOrder = fileURLRules.map(\.hostPattern)
+        let localOrder = current.urlRules.map(\.hostPattern)
+        let common = Set(fileOrder).intersection(localOrder)
+        self.urlOrderDiffers = fileOrder.filter(common.contains) != localOrder.filter(common.contains)
     }
 
     // MARK: - Derived sections (pure functions of the current choices)
@@ -315,20 +357,26 @@ public struct ImportPlan: Sendable, Equatable {
     /// base config and never imported.
     public func resolvedConfiguration() -> LockConfiguration {
         var appRules: [String: AppRule]
-        var urlRules: [String: URLRule]
         var defaultSource: InputSourceID?
+
+        // URL rules carry an explicit user-controlled priority (first match wins),
+        // so unlike app rules they are never alphabetized. `urlMap` holds the
+        // binding per pattern; the final order is computed afterwards from the
+        // order choice (`resolvedURLOrder`). (Duplicate host patterns collapse to
+        // one — the import diff keys URL rules by pattern.)
+        var urlMap: [String: URLRule]
 
         switch mode {
         case .merge:
             appRules = Dictionary(baseConfig.appRules.map { ($0.bundleID, $0) }, uniquingKeysWith: { first, _ in first })
-            urlRules = Dictionary(baseConfig.urlRules.map { ($0.hostPattern, $0) }, uniquingKeysWith: { first, _ in first })
+            urlMap = Dictionary(baseConfig.urlRules.map { ($0.hostPattern, $0) }, uniquingKeysWith: { first, _ in first })
             defaultSource = baseConfig.defaultSourceID
         case .replace:
             // Drop local-only rules. The global default is preserved unless the
             // file specifies one (a default item below) — a file without a
             // default never silently clears the user's.
             appRules = [:]
-            urlRules = [:]
+            urlMap = [:]
             defaultSource = baseConfig.defaultSourceID
         }
 
@@ -354,18 +402,52 @@ public struct ImportPlan: Sendable, Equatable {
                 }
             case .url(let host):
                 if drop {
-                    urlRules[host] = nil
+                    urlMap[host] = nil
                 } else if let source = item.fileSource {
-                    urlRules[host] = URLRule(hostPattern: host, lockedSourceID: source, action: item.fileAction ?? .lock)
+                    urlMap[host] = URLRule(
+                        hostPattern: host,
+                        lockedSourceID: source,
+                        action: item.fileAction ?? .lock,
+                        matchType: item.fileMatchType ?? .domainSuffix
+                    )
                 }
             }
         }
 
         var result = baseConfig
         result.appRules = appRules.values.sorted { $0.bundleID < $1.bundleID }
-        result.urlRules = urlRules.values.sorted { $0.hostPattern < $1.hostPattern }
+        result.urlRules = resolvedURLOrder(present: urlMap)
         result.defaultSourceID = defaultSource
         return result
+    }
+
+    /// The final URL-rule priority order over the surviving rules in `urlMap`,
+    /// honoring the order choice. Use-file → the file's order first, then any rule
+    /// present only locally (a Merge carry-over) appended in local order; keep-local
+    /// → local order first, then file-only rules appended in file order. First
+    /// occurrence wins; rules dropped from `urlMap` (missing-source removals) fall
+    /// out via the `urlMap[$0] != nil` filter.
+    private func resolvedURLOrder(present urlMap: [String: URLRule]) -> [URLRule] {
+        let fileOrder = items.compactMap { item -> String? in
+            if case .url(let host) = item.subject { return host } else { return nil }
+        }
+        let localOrder = orderedHostPatterns(baseConfig.urlRules)
+        let primary = effectiveUseFileOrder ? fileOrder : localOrder
+        let secondary = effectiveUseFileOrder ? localOrder : fileOrder
+        var seen = Set<String>()
+        return (primary + secondary)
+            .filter { urlMap[$0] != nil && seen.insert($0).inserted }
+            .compactMap { urlMap[$0] }
+    }
+
+    /// The host patterns of `rules` in order, first occurrence only.
+    private func orderedHostPatterns(_ rules: [URLRule]) -> [String] {
+        var seen = Set<String>()
+        var order: [String] = []
+        for rule in rules where seen.insert(rule.hostPattern).inserted {
+            order.append(rule.hostPattern)
+        }
+        return order
     }
 
     // MARK: - Summary
@@ -375,24 +457,30 @@ public struct ImportPlan: Sendable, Equatable {
         let resolved = resolvedConfiguration()
         let base = baseConfig
 
-        let baseKeys = bindingKeys(of: base)
-        let resolvedKeys = bindingKeys(of: resolved)
+        let baseKeys = bindingKeys(of: base, includeURLPosition: true)
+        let resolvedKeys = bindingKeys(of: resolved, includeURLPosition: true)
+        // Position-blind binding fingerprints — same keys, values without the
+        // URL-rule index — so `inactive` can ask "did this rule's *binding* change"
+        // separately from the position-aware "did anything change" that drives
+        // `updated`/`hasEffect`.
+        let baseBindings = bindingKeys(of: base, includeURLPosition: false)
+        let resolvedBindings = bindingKeys(of: resolved, includeURLPosition: false)
         let resolvedSources = bindingSources(of: resolved)
 
         var added = 0, updated = 0, removed = 0, inactive = 0
         for (key, binding) in resolvedKeys {
-            let changed: Bool
             if let was = baseKeys[key] {
-                changed = was != binding
-                if changed { updated += 1 }
+                if was != binding { updated += 1 }
             } else {
-                changed = true
                 added += 1
             }
-            // "Inactive" is scoped to what the import actually added or rebound —
-            // never a pre-existing local rule merely carried over — so the receipt
-            // ("其中 M 条…未生效") stays a true subset of the imported count.
-            if changed, let source = resolvedSources[key], !installedSourceIDs.contains(source) {
+            // "Inactive" is scoped to what the import actually added or *rebound* —
+            // never a pre-existing local rule merely carried over or merely
+            // reordered — so the receipt ("其中 M 条…未生效") stays a true subset of
+            // the imported count. A pure reorder changes priority, not a source's
+            // install status, so it tests the position-BLIND binding here.
+            let rebound = baseBindings[key] == nil || baseBindings[key] != resolvedBindings[key]
+            if rebound, let source = resolvedSources[key], !installedSourceIDs.contains(source) {
                 inactive += 1
             }
         }
@@ -414,7 +502,7 @@ public struct ImportPlan: Sendable, Equatable {
     /// A comparable per-key binding snapshot of a configuration, so the same key
     /// in two configs can be diffed for "changed". The global default is keyed
     /// `"default"`; app rules `"app:<id>"`; URL rules `"url:<host>"`.
-    private func bindingKeys(of config: LockConfiguration) -> [String: String] {
+    private func bindingKeys(of config: LockConfiguration, includeURLPosition: Bool) -> [String: String] {
         var map: [String: String] = [:]
         if let def = config.defaultSourceID { map["default"] = def.rawValue }
         for rule in config.appRules {
@@ -423,8 +511,17 @@ public struct ImportPlan: Sendable, Equatable {
             let source = rule.mode.pinsSource ? (rule.lockedSourceID?.rawValue ?? "") : ""
             map["app:\(rule.bundleID)"] = "\(rule.mode.rawValue)|\(source)"
         }
-        for rule in config.urlRules {
-            map["url:\(rule.hostPattern)"] = "\(rule.action.rawValue)|\(rule.lockedSourceID.rawValue)"
+        for (index, rule) in config.urlRules.enumerated() {
+            // Order is priority for URL rules (first match wins), so a rule's
+            // POSITION is part of its effective behavior: with `includeURLPosition`
+            // the index is folded in so a backup that only reorders the same rules
+            // reads as a change — flipping `hasEffect` on and tallying as an update
+            // (a position-blind key reported "no changes" and left Apply disabled).
+            // The position-BLIND form is used to decide `inactive`, which tracks a
+            // rule's source-install status: a reorder doesn't change that, so it
+            // must not inflate the inactive count.
+            let position = includeURLPosition ? "\(index)|" : ""
+            map["url:\(rule.hostPattern)"] = "\(position)\(rule.action.rawValue)|\(rule.matchType.rawValue)|\(rule.lockedSourceID.rawValue)"
         }
         return map
     }

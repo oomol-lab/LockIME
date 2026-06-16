@@ -154,15 +154,26 @@ struct LocalizationGuardTests {
 
     @Test("keys resolved outside SwiftUI exist in the catalog")
     func dynamicKeysExistInCatalog() throws {
-        // Keys that reach the catalog through `loc(...)`/`AppKitStrings` or a
-        // computed `messageKey` are invisible to Xcode's string extraction —
-        // a typo silently falls back to English. Every literal passed to
-        // those entry points must be a real catalog key.
+        // Keys that reach the catalog outside SwiftUI's literal extraction are
+        // invisible to Xcode's string extractor — a typo silently falls back to
+        // English. Three such entry points are scanned: `loc(...)` /
+        // `AppKitStrings.string(...)` / `.help(...)` calls; `UpdateFailure`'s bare
+        // full-line `messageKey` literals; and `LocalizedStringKey`-returning enum
+        // `switch` arms (e.g. `URLMatchType.pickerLabel`/`helpText`, the import
+        // sheet's mode/match-type labels). Every literal at those points must be a
+        // real catalog key. A `case` arm that returns a non-localized identity
+        // token (not a UI string) opts out with an `i18n-exempt` comment.
         let keys = Set(try Self.catalogStrings().keys)
         let callPattern = try Regex<(Substring, Substring)>(
-            #"(?:\bloc\(|AppKitStrings\.string\()\s*"((?:[^"\\]|\\.)+)""#
+            #"(?:\bloc\(|AppKitStrings\.string\(|\.help\()\s*"((?:[^"\\]|\\.)+)""#
         )
         let literalLinePattern = try Regex<(Substring, Substring)>(#"(?m)^\s*"((?:[^"\\]|\\.)+)"$"#)
+        // A `case <patterns>: "literal"` line — the shape of a computed property
+        // returning a `LocalizedStringKey` per enum case (the literal is the whole
+        // arm body, so the line ends in the closing quote).
+        let caseArmPattern = try Regex<(Substring, Substring)>(
+            #"^\s*case\s+\.[^:"]*:\s*"((?:[^"\\]|\\.)+)"\s*$"#
+        )
 
         for (name, text) in try Self.appSwiftFiles() {
             var referenced = text.matches(of: callPattern).map { String($0.1) }
@@ -170,8 +181,40 @@ struct LocalizationGuardTests {
                 // `messageKey` returns bare full-line literals from a switch.
                 referenced += text.matches(of: literalLinePattern).map { String($0.1) }
             }
+            for line in text.split(separator: "\n", omittingEmptySubsequences: false)
+            where !line.contains("i18n-exempt") {
+                if let match = String(line).firstMatch(of: caseArmPattern) {
+                    referenced.append(String(match.1))
+                }
+            }
             for key in referenced where !keys.contains(key) {
                 Issue.record("\(name) resolves \"\(key)\" but Localizable.xcstrings has no such key")
+            }
+        }
+    }
+
+    @Test("every .sheet re-injects the in-app locale override")
+    func sheetsReinjectLocale() throws {
+        // A `.sheet` (like `.navigationTitle`) bridges into its own AppKit window,
+        // which resets `\.locale` to the *system* language — so a sheet whose
+        // content uses string literals renders against the system locale, not the
+        // app's in-app override, producing a half-translated screen. The fix is to
+        // re-inject `.environment(\.locale, state.locale)` at the call site (see
+        // BackupSettingsPane). This guards that every sheet does so.
+        for (name, text) in try Self.appSwiftFiles() {
+            let lines = Array(text.split(separator: "\n", omittingEmptySubsequences: false))
+            for (index, line) in lines.enumerated() {
+                // Skip comments (e.g. a doc comment mentioning `.sheet(...)`).
+                let code = line.prefix(upTo: line.firstRange(of: "//")?.lowerBound ?? line.endIndex)
+                guard code.contains(".sheet(") else { continue }
+                // The re-injection lives inside the sheet's content closure, a few
+                // lines down — scan a generous window.
+                let window = lines[index..<min(index + 20, lines.count)].joined(separator: "\n")
+                if !window.contains(".environment(\\.locale") {
+                    Issue.record(
+                        "\(name):\(index + 1) presents a .sheet without re-injecting \\.locale — add .environment(\\.locale, state.locale) so it follows the in-app language override (see BackupSettingsPane)"
+                    )
+                }
             }
         }
     }

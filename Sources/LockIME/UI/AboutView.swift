@@ -61,6 +61,10 @@ struct AboutView: View {
         .background(.regularMaterial)
         .sheet(isPresented: $showingAcknowledgements) {
             AcknowledgementsView()
+                // A sheet bridges into its own AppKit window that doesn't inherit
+                // the app's in-app language override — re-inject it.
+                .environment(\.locale, state.locale)
+                .id(state.localeIdentifier)
         }
     }
 

@@ -371,13 +371,36 @@ final class AppState {
     }
 
     func upsertURLRule(_ rule: URLRule) {
-        config.urlRules.removeAll { $0.id == rule.id }
-        config.urlRules.append(rule)
+        // Insert/update in place so editing a rule's binding (match type / action /
+        // source) keeps its position — order is priority now, and an edit must not
+        // silently demote a rule to the bottom — while never minting two rules with
+        // the same pattern (the portable identity; a duplicate pair collapses on the
+        // next export→import). The `URLRuleList` helper holds both invariants and is
+        // unit-tested; the editor and the URL-scheme API reject a pattern collision
+        // before reaching here so the user/automation gets feedback.
+        config.urlRules = URLRuleList.upserting(rule, into: config.urlRules)
         commit()
     }
 
     func removeURLRule(id: UUID) {
         config.urlRules.removeAll { $0.id == id }
+        commit()
+    }
+
+    /// Commit a drag-reordered URL-rule list. Order *is* priority — rules resolve
+    /// top-to-bottom and the first match wins — so this is a meaningful edit, not
+    /// cosmetic. The live drag reorders a view-local draft (never `config`), so the
+    /// engine/disk stay untouched mid-drag — a cancelled drag persists nothing —
+    /// and this commits once when the drop lands. A no-op (saving + re-applying the
+    /// engine) when the order is unchanged, and a guard against a non-permutation
+    /// (mismatched rule set) so a stale draft can never replace the live rules.
+    func reorderURLRules(_ ordered: [URLRule]) {
+        // `URLRuleList.reordered` returns nil for a no-op (unchanged order) or a
+        // non-permutation (a stale drag-start snapshot whose id set no longer
+        // matches the live rules), and otherwise relinks to the *live* rules by id
+        // so a content edit that landed mid-drag survives the reorder.
+        guard let reordered = URLRuleList.reordered(config.urlRules, by: ordered) else { return }
+        config.urlRules = reordered
         commit()
     }
 

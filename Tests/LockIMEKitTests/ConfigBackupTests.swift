@@ -90,6 +90,50 @@ struct ConfigBackupTests {
         """
         let backup = try ConfigBackup.read(Data(json.utf8)).get()
         #expect(backup.payload.urlRules.first?.action == .lock)
+        // A backup that predates match types likewise decodes to the original
+        // suffix behavior — old .lockime files keep loading unchanged.
+        #expect(backup.payload.urlRules.first?.matchType == .domainSuffix)
+    }
+
+    @Test("a backup with an unknown matchType/action degrades it, not the whole read")
+    func unknownEnumValuesDecodeLeniently() throws {
+        // A backup from a newer LockIME may carry a matchType/action value this
+        // build doesn't know. A non-lenient decoder would throw, propagate through
+        // the urlRules array decode, and mis-report the whole file as `.damaged`.
+        // Each unknown value must degrade to its default while the rest reads fine.
+        let json = """
+        {"format": "\(ConfigBackup.formatIdentifier)", "minReader": 1, "appVersion": "9",
+         "payload": {"defaultSourceID": "com.apple.keylayout.US", "urlRules": [
+            {"hostPattern": "github.com", "lockedSourceID": "com.apple.keylayout.ABC", "action": "warp", "matchType": "telepathy"},
+            {"hostPattern": "example.com", "lockedSourceID": "com.apple.keylayout.US", "action": "switchOnce", "matchType": "domain"}
+         ]}}
+        """
+        let backup = try ConfigBackup.read(Data(json.utf8)).get()   // NOT .damaged
+        #expect(backup.payload.urlRules.count == 2)
+        #expect(backup.payload.defaultSourceID == "com.apple.keylayout.US")
+        let gh = try #require(backup.payload.urlRules.first { $0.hostPattern == "github.com" })
+        #expect(gh.action == .lock)
+        #expect(gh.matchType == .domainSuffix)
+        let ex = try #require(backup.payload.urlRules.first { $0.hostPattern == "example.com" })
+        #expect(ex.action == .switchOnce)
+        #expect(ex.matchType == .domain)
+    }
+
+    @Test("URL-rule match types survive make→encode→read")
+    func matchTypesRoundTrip() throws {
+        let config = LockConfiguration(
+            enhancedModeEnabled: true,
+            urlRules: [
+                URLRule(hostPattern: "github.com", lockedSourceID: "com.apple.keylayout.US", matchType: .domain),
+                URLRule(hostPattern: "google", lockedSourceID: "com.apple.keylayout.ABC", matchType: .domainKeyword),
+                URLRule(hostPattern: "/pull/", lockedSourceID: "com.apple.inputmethod.SCIM.ITABC", action: .switchOnce, matchType: .urlRegex),
+            ]
+        )
+        let decoded = try ConfigBackup.read(ConfigBackup.make(from: config, appVersion: "1", sourceNames: names).encoded()).get()
+        #expect(decoded.payload.urlRules.map(\.matchType) == [.domain, .domainKeyword, .urlRegex])
+        // Order is priority and must survive the round-trip (a JSON array preserves it).
+        #expect(decoded.payload.urlRules.map(\.hostPattern) == ["github.com", "google", "/pull/"])
+        #expect(decoded.payload.urlRules.last?.action == .switchOnce)
     }
 
     @Test("encoded() is human-readable pretty JSON with unescaped slashes")

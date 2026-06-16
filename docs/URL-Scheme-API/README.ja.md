@@ -126,9 +126,27 @@ URL ごとのルールには、オプションの Accessibility ゲート付き*
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | 拡張モードをオン/オフ（または反転）します。 |
-| `set-url-rule` | `host` *(req)*, `source` \| `source-name` *(req)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | URL ごとのルールを作成または置き換えます。`host` は `github.com`（サブドメインにマッチ）や `*.example.com` のようなパターンです。`id` がなければ、同じ host の既存ルールが複製されずに更新されます。 |
+| `set-url-rule` | `host` *(alias `pattern`, req)*, `source` \| `source-name` *(req)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(default `domain-suffix`)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | URL ごとのルールを作成または置き換えます。パターンがどのようにマッチされるかは `match-type` によって決まります（[下記](#match-types)を参照）。`id` がなければ、同じパターンの既存ルールが複製されずに更新されます。 |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | URL ルールを、その `id`（`list-url-rules` から）または `host` で削除します。 |
 | `clear-url-rules` | — | **すべて**の URL ごとのルールを削除します。 |
+
+#### Match types
+
+`match-type` は、ルールのパターンをブラウザの現在の URL とどのように比較するかを
+決定します。ルールは**上から下へ評価され、最初にマッチしたものが優先**されます。
+そのため並び順がそのまま優先順位になります（**設定 ▸ URL Rules** でドラッグして
+並べ替えます）。
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | host。例：`github.com` | その host **およびそのすべてのサブドメイン**（`github.com`、`gist.github.com`）。先頭の `*.` は許容されます。 |
+| `domain` | host。例：`github.com` | **その host に完全一致するもののみ**で、サブドメインにはマッチしません。 |
+| `domain-keyword` | 部分文字列。例：`google` | それを**含む**任意の host（`google.com`、`mail.google.com`、`googleapis.com`）。 |
+| `url-regex` | 正規表現 | **URL 全体**（scheme · host · path · query · fragment）——大文字小文字を区別せず、アンカーなし。パスやクエリによって同一サイトのページを区別できる唯一のタイプです。コンパイルできないパターンは `invalid_parameter` で拒否されます。 |
+
+`match-type` はエイリアス `suffix`、`keyword`、`regex` も受け付けます。`url-regex`
+ルールでは、パターンに通常 URL 内でパーセントエンコードが必要な文字（`?`、`&`、`/`、
+`\`）が含まれます。
 
 ### App
 
@@ -153,7 +171,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 | `current-source` | ライブソースの `{ "id": "...", "name": "..." }`。 |
 | `list-sources` *(alias `sources`)* | インストール済みソースの配列：`{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`。 |
 | `list-app-rules` *(alias `app-rules`)* | `{ "bundleID", "mode", "source"? }` の配列。 |
-| `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "source" }` の配列。 |
+| `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "matchType", "source" }` の配列。優先順位順（最初にマッチしたものが優先）。 |
 | `list-log` *(aliases `log`, `recent-activations`)* | 直近 24 時間の強制切り替えエントリ。新しいものから順に：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。 |
 | `get-config` *(alias `config`)* | 永続化された設定オブジェクト全体。 |
 | `version` | `{ "version": "x.y.z", "build": "n" }`。 |
@@ -194,7 +212,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 | `no_command` | コマンドトークンが指定されませんでした。 |
 | `unknown_command` | コマンドトークンが認識されませんでした。 |
 | `missing_parameter` | 必須パラメータが存在しません。 |
-| `invalid_parameter` | パラメータ値が範囲外です（不正な `mode`、`action`、`direction`、`code`、または UUID）。 |
+| `invalid_parameter` | パラメータ値が範囲外です（不正な `mode`、`action`、`match-type`、`direction`、`code`、コンパイルできない `url-regex` パターン、または不正な形式の UUID）。 |
 | `unknown_source` | `id`/`name` がインストール済みで選択可能なソースのいずれにもマッチしません。 |
 | `no_input_sources` | 選択可能な入力ソースが一つもインストールされていません。 |
 | `rule_not_found` | 対象のアプリ/URL ルールが存在しません。 |
@@ -211,6 +229,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex は URL 全体にマッチします——パターンをパーセントエンコードしてください（ここでは：github\.com/.*/pull）
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 

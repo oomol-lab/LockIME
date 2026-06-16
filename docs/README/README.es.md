@@ -55,6 +55,7 @@ En cualquier caso, la aplicación se mantiene actualizada mediante Sparkle.
 
 - **Rebloqueo instantáneo** — devuelve la fuente de entrada activa a la bloqueada en el momento en que tú (u otra aplicación) la cambias, globalmente o por aplicación.
 - **Bloquear o cambiar** — las reglas por aplicación y por URL pueden *bloquear* una fuente de entrada (se vuelve a aplicar cada vez que se desvía) o solo *cambiar* a ella una vez cuando activas la aplicación o la página, y luego dejarte cambiarla libremente.
+- **Coincidencia de URL flexible** — las reglas por URL (modo mejorado) coinciden por un dominio y sus subdominios, por un dominio exacto, por una palabra clave de dominio o por una expresión regular sobre la URL completa, y se aplican en el orden de prioridad que tú arrastras para organizar — la primera coincidencia gana.
 - **Control desde la barra de menús** — activa/desactiva, cambia la fuente de entrada bloqueada, consulta la fuente actual y sigue el contador de activaciones desde la barra de menús.
 - **Atajos de teclado** — atajos globales configurables para activar/desactivar el bloqueo y recorrer la fuente de entrada bloqueada, además de atajos por aplicación para recorrer o eliminar la regla de la aplicación en primer plano.
 - **Arranque al iniciar sesión** — se inicia automáticamente al iniciar sesión (desactivado por defecto).

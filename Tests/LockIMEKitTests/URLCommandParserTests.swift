@@ -135,14 +135,61 @@ struct URLCommandParserTests {
 
     @Test("set-url-rule parses host, source, action, and an optional id")
     func setURLRule() {
+        // Without an explicit match-type, the rule defaults to domain-suffix (the
+        // original behavior), so a caller written before this feature is unchanged.
         #expect(command("lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC")
-            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .lock))
+            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .lock, matchType: .domainSuffix))
         #expect(command("lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch")
-            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .switchOnce))
+            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .switchOnce, matchType: .domainSuffix))
 
         let uuid = UUID()
         #expect(command("lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&id=\(uuid.uuidString)")
-            == .setURLRule(id: uuid, host: "github.com", source: .id(abc), action: .lock))
+            == .setURLRule(id: uuid, host: "github.com", source: .id(abc), action: .lock, matchType: .domainSuffix))
+    }
+
+    @Test("set-url-rule parses match-type (with aliases) and the pattern alias")
+    func setURLRuleMatchType() {
+        func parsed(_ url: String) -> URLCommand? { command(url) }
+        // Canonical tokens.
+        #expect(parsed("lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain")
+            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .lock, matchType: .domain))
+        #expect(parsed("lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain-keyword")
+            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .lock, matchType: .domainKeyword))
+        // Aliases (keyword / regex) and the `pattern` alias for the pattern param.
+        #expect(parsed("lockime://set-url-rule?pattern=google&source=com.apple.keylayout.ABC&match-type=keyword")
+            == .setURLRule(id: nil, host: "google", source: .id(abc), action: .lock, matchType: .domainKeyword))
+        #expect(parsed("lockime://set-url-rule?pattern=%2Fpull%2F&source=com.apple.keylayout.ABC&match-type=regex")
+            == .setURLRule(id: nil, host: "/pull/", source: .id(abc), action: .lock, matchType: .urlRegex))
+    }
+
+    @Test("set-url-rule rejects a bad match-type and an uncompilable regex")
+    func setURLRuleMatchTypeErrors() {
+        #expect(failure("lockime://set-url-rule?host=x.com&source=com.apple.keylayout.ABC&match-type=bogus")
+            == .invalidParameter(name: "match-type", value: "bogus"))
+        // A regex rule whose pattern doesn't compile is rejected at parse time (it
+        // would otherwise silently match nothing). The pattern rides in `host`.
+        #expect(failure("lockime://set-url-rule?host=%5Bunclosed&source=com.apple.keylayout.ABC&match-type=regex")
+            == .invalidParameter(name: "host", value: "[unclosed"))
+        // A valid regex with the same brackets balanced parses fine.
+        #expect(command("lockime://set-url-rule?host=%5Ba-z%5D&source=com.apple.keylayout.ABC&match-type=regex")
+            == .setURLRule(id: nil, host: "[a-z]", source: .id(abc), action: .lock, matchType: .urlRegex))
+    }
+
+    @Test("set-url-rule trims the pattern, prefers host over pattern, and names the param it errors on")
+    func setURLRulePatternParamHandling() {
+        // A whitespace-only pattern normalizes to empty and would persist a dead
+        // rule; reject it as missing, naming the param the caller actually sent.
+        #expect(failure("lockime://set-url-rule?host=%20%20&source=com.apple.keylayout.ABC")
+            == .missingParameter("host"))
+        #expect(failure("lockime://set-url-rule?pattern=%20%20&source=com.apple.keylayout.ABC")
+            == .missingParameter("pattern"))
+        // When both are given, `host` wins (back-compat); surrounding space is trimmed.
+        #expect(command("lockime://set-url-rule?host=%20github.com%20&pattern=ignored.com&source=com.apple.keylayout.ABC")
+            == .setURLRule(id: nil, host: "github.com", source: .id(abc), action: .lock, matchType: .domainSuffix))
+        // An uncompilable regex sent via the `pattern` alias is reported against
+        // `pattern` — the param the caller used — not the historical `host`.
+        #expect(failure("lockime://set-url-rule?pattern=%5Bunclosed&source=com.apple.keylayout.ABC&match-type=regex")
+            == .invalidParameter(name: "pattern", value: "[unclosed"))
     }
 
     @Test("set-url-rule reports missing host/source and invalid id/action")

@@ -99,8 +99,8 @@ final class URLCommandHandler {
         // Enhanced mode + per-URL rules
         case .setEnhancedMode(let flag):
             state.setEnhancedMode(resolve(flag, current: state.config.enhancedModeEnabled)); return .success(nil)
-        case .setURLRule(let id, let host, let selector, let action):
-            return performSetURLRule(id: id, host: host, selector: selector, action: action)
+        case .setURLRule(let id, let host, let selector, let action, let matchType):
+            return performSetURLRule(id: id, host: host, selector: selector, action: action, matchType: matchType)
         case .removeURLRule(let selector):
             return performRemoveURLRule(selector)
         case .clearURLRules:
@@ -161,7 +161,7 @@ final class URLCommandHandler {
     }
 
     private func performSetURLRule(
-        id: UUID?, host: String, selector: SourceSelector, action: RuleAction
+        id: UUID?, host: String, selector: SourceSelector, action: RuleAction, matchType: URLMatchType
     ) -> Result<Any?, URLCommandError> {
         switch resolve(selector) {
         case .failure(let error):
@@ -172,7 +172,15 @@ final class URLCommandHandler {
             let ruleID = id
                 ?? state.config.urlRules.first { Self.sameHost($0.hostPattern, host) }?.id
                 ?? UUID()
-            state.upsertURLRule(URLRule(id: ruleID, hostPattern: host, lockedSourceID: sourceID, action: action))
+            // Refuse a write that would leave two rules sharing a pattern (the
+            // portable identity backups/import key on) — that pair collapses,
+            // losing one, on the next export→import. The no-id path resolves onto
+            // the same-host rule above (so it's never "different"); this guards an
+            // explicit id whose host belongs to *another* rule.
+            if state.config.urlRules.contains(where: { $0.id != ruleID && Self.sameHost($0.hostPattern, host) }) {
+                return .failure(.invalidParameter(name: "host", value: host))
+            }
+            state.upsertURLRule(URLRule(id: ruleID, hostPattern: host, lockedSourceID: sourceID, action: action, matchType: matchType))
             return .success(nil)
         }
     }
@@ -284,6 +292,7 @@ final class URLCommandHandler {
             "id": rule.id.uuidString,
             "host": rule.hostPattern,
             "action": rule.action.rawValue,
+            "matchType": rule.matchType.rawValue,
             "source": sourceDict(rule.lockedSourceID),
         ]
     }

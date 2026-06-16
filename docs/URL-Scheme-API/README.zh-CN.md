@@ -122,9 +122,25 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | 开启/关闭增强模式（或翻转它）。 |
-| `set-url-rule` | `host` *(req)*, `source` \| `source-name` *(req)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | 创建或替换一条按 URL 规则。`host` 是一个模式，如 `github.com`（匹配子域名）或 `*.example.com`。若不带 `id`，则更新同一 host 的现有规则，而不是新建重复项。 |
+| `set-url-rule` | `host` *(alias `pattern`, req)*, `source` \| `source-name` *(req)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(default `domain-suffix`)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | 创建或替换一条按 URL 规则。模式如何匹配取决于 `match-type`（参见[下文](#match-types)）。若不带 `id`，则更新同一模式的现有规则，而不是新建重复项。 |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | 通过 `id`（来自 `list-url-rules`）或 `host` 删除一条 URL 规则。 |
 | `clear-url-rules` | — | 移除**所有**按 URL 规则。 |
+
+#### Match types
+
+`match-type` 决定一条规则的模式如何与浏览器当前的 URL 进行比较。规则**从上到下
+逐条求值，第一个命中者胜出**，所以它们的顺序就是优先级（在 **Settings ▸ URL
+Rules** 中拖动以重排）。
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | 一个 host，如 `github.com` | 匹配该 host **及其所有子域名**（`github.com`、`gist.github.com`）。开头的 `*.` 会被容许。 |
+| `domain` | 一个 host，如 `github.com` | **仅匹配该精确 host**，绝不匹配子域名。 |
+| `domain-keyword` | 一个子串，如 `google` | 匹配任何**包含**它的 host（`google.com`、`mail.google.com`、`googleapis.com`）。 |
+| `url-regex` | 一个正则表达式 | 匹配**整个 URL**（scheme · host · path · query · fragment）——不区分大小写且不锚定。这是唯一能按 path 或 query 区分同一站点不同页面的类型。无法编译的模式会以 `invalid_parameter` 被拒绝。 |
+
+`match-type` 还接受别名 `suffix`、`keyword` 和 `regex`。对于一条 `url-regex`
+规则，模式通常会包含必须在 URL 中进行百分号编码的字符（`?`、`&`、`/`、`\`）。
 
 ### App
 
@@ -148,7 +164,7 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 | `current-source` | 实时输入源的 `{ "id": "...", "name": "..." }`。 |
 | `list-sources` *(alias `sources`)* | 已安装输入源的数组：`{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`。 |
 | `list-app-rules` *(alias `app-rules`)* | `{ "bundleID", "mode", "source"? }` 的数组。 |
-| `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "source" }` 的数组。 |
+| `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "matchType", "source" }` 的数组，按优先级排序（第一个命中者胜出）。 |
 | `list-log` *(aliases `log`, `recent-activations`)* | 最近 24 小时的强制切换记录，最新的在前：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。 |
 | `get-config` *(alias `config`)* | 完整的持久化配置对象。 |
 | `version` | `{ "version": "x.y.z", "build": "n" }`。 |
@@ -189,7 +205,7 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 | `no_command` | 未提供命令 token。 |
 | `unknown_command` | 命令 token 无法识别。 |
 | `missing_parameter` | 缺少某个必需参数。 |
-| `invalid_parameter` | 某个参数值超出范围（错误的 `mode`、`action`、`direction`、`code` 或 UUID）。 |
+| `invalid_parameter` | 某个参数值超出范围（错误的 `mode`、`action`、`match-type`、`direction`、`code`，一个无法编译的 `url-regex` 模式，或一个格式错误的 UUID）。 |
 | `unknown_source` | `id`/`name` 没有匹配到任何已安装的可选用输入源。 |
 | `no_input_sources` | 没有安装任何可选用的输入源。 |
 | `rule_not_found` | 目标的应用/URL 规则不存在。 |
@@ -206,6 +222,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex 匹配整个 URL——请对模式进行百分号编码（此处为：github\.com/.*/pull）
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 

@@ -8,25 +8,42 @@ public struct BackupURLRule: Codable, Equatable, Sendable {
     public var lockedSourceID: InputSourceID
     /// Whether a matched URL locks to the source or just switches to it once.
     public var action: RuleAction
+    /// How `hostPattern` is matched against the browser's current URL.
+    public var matchType: URLMatchType
 
-    public init(hostPattern: String, lockedSourceID: InputSourceID, action: RuleAction = .lock) {
+    public init(
+        hostPattern: String,
+        lockedSourceID: InputSourceID,
+        action: RuleAction = .lock,
+        matchType: URLMatchType = .domainSuffix
+    ) {
         self.hostPattern = hostPattern
         self.lockedSourceID = lockedSourceID
         self.action = action
+        self.matchType = matchType
     }
 
     private enum CodingKeys: String, CodingKey {
-        case hostPattern, lockedSourceID, action
+        case hostPattern, lockedSourceID, action, matchType
     }
 
-    // Lenient: a backup written before the lock/switch distinction (or a
-    // hand-authored file) carries no `action` → default `.lock`. Keeps reading
-    // robust even though the .lockime format itself is pre-release.
+    // Lenient: a backup written before the lock/switch distinction carries no
+    // `action` → default `.lock`, and one written before match types carries no
+    // `matchType` → default `.domainSuffix` (the original host-suffix behavior).
+    // `action`/`matchType` are decoded as raw *strings* and mapped, so an
+    // *unrecognized* value (a newer LockIME wrote a match type this build doesn't
+    // know) also falls back to the default rather than throwing — otherwise that
+    // throw propagates through `decodeIfPresent([BackupURLRule].self)` and the
+    // whole backup mis-reports as `.damaged`. Keeps reading robust even though the
+    // .lockime format itself is pre-release.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         hostPattern = try container.decode(String.self, forKey: .hostPattern)
         lockedSourceID = try container.decode(InputSourceID.self, forKey: .lockedSourceID)
-        action = try container.decodeIfPresent(RuleAction.self, forKey: .action) ?? .lock
+        let rawAction = try container.decodeIfPresent(String.self, forKey: .action)
+        action = rawAction.flatMap(RuleAction.init(rawValue:)) ?? .lock
+        let rawMatchType = try container.decodeIfPresent(String.self, forKey: .matchType)
+        matchType = rawMatchType.flatMap(URLMatchType.init(rawValue:)) ?? .domainSuffix
     }
 }
 
@@ -158,7 +175,7 @@ public extension ConfigBackup {
         let payload = BackupPayload(
             defaultSourceID: config.defaultSourceID,
             appRules: config.appRules,
-            urlRules: config.urlRules.map { BackupURLRule(hostPattern: $0.hostPattern, lockedSourceID: $0.lockedSourceID, action: $0.action) },
+            urlRules: config.urlRules.map { BackupURLRule(hostPattern: $0.hostPattern, lockedSourceID: $0.lockedSourceID, action: $0.action, matchType: $0.matchType) },
             sourceNames: catalog
         )
         return ConfigBackup(appVersion: appVersion, payload: payload)

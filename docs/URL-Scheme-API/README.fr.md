@@ -127,9 +127,27 @@ Les règles par URL nécessitent le **mode renforcé** optionnel, soumis à l'au
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | Activer/désactiver le mode renforcé (ou l'inverser). |
-| `set-url-rule` | `host` *(req)*, `source` \| `source-name` *(req)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Créer ou remplacer une règle par URL. `host` est un motif comme `github.com` (correspond aux sous-domaines) ou `*.example.com`. Sans `id`, une règle existante pour le même hôte est mise à jour plutôt que dupliquée. |
+| `set-url-rule` | `host` *(alias `pattern`, req)*, `source` \| `source-name` *(req)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(default `domain-suffix`)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Créer ou remplacer une règle par URL. La manière dont le motif est mis en correspondance dépend de `match-type` (voir [ci-dessous](#match-types)). Sans `id`, une règle existante pour le même motif est mise à jour plutôt que dupliquée. |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | Supprimer une règle d'URL par son `id` (issu de `list-url-rules`) ou par `host`. |
 | `clear-url-rules` | — | Supprimer **toutes** les règles par URL. |
+
+#### Match types
+
+`match-type` détermine comment le motif d'une règle est comparé à l'URL actuelle
+du navigateur. Les règles sont évaluées **de haut en bas et la première
+correspondance l'emporte** ; leur ordre est donc leur priorité (réorganisez-les
+par glisser-déposer dans **Réglages ▸ Règles par URL**).
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | un hôte, p. ex. `github.com` | l'hôte **et tous ses sous-domaines** (`github.com`, `gist.github.com`). Un `*.` en tête est toléré. |
+| `domain` | un hôte, p. ex. `github.com` | **uniquement cet hôte exact**, jamais un sous-domaine. |
+| `domain-keyword` | une sous-chaîne, p. ex. `google` | tout hôte qui la **contient** (`google.com`, `mail.google.com`, `googleapis.com`). |
+| `url-regex` | une expression régulière | l'**URL entière** (schéma · hôte · chemin · requête · fragment) — insensible à la casse et non ancrée. Le seul type capable de distinguer les pages d'un même site par le chemin ou la requête. Un motif non compilable est rejeté avec `invalid_parameter`. |
+
+`match-type` accepte aussi les alias `suffix`, `keyword` et `regex`. Pour une
+règle `url-regex`, le motif contient généralement des caractères (`?`, `&`, `/`, `\`)
+qui doivent être encodés en pourcentage dans l'URL.
 
 ### App
 
@@ -153,7 +171,7 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 | `current-source` | `{ "id": "...", "name": "..." }` de la source active. |
 | `list-sources` *(alias `sources`)* | Tableau des sources installées : `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Tableau de `{ "bundleID", "mode", "source"? }`. |
-| `list-url-rules` *(alias `url-rules`)* | Tableau de `{ "id", "host", "action", "source" }`. |
+| `list-url-rules` *(alias `url-rules`)* | Tableau de `{ "id", "host", "action", "matchType", "source" }`, par ordre de priorité (la première correspondance l'emporte). |
 | `list-log` *(aliases `log`, `recent-activations`)* | Les 24 dernières heures d'entrées de basculement forcé, du plus récent au plus ancien : `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
 | `get-config` *(alias `config`)* | L'objet de configuration persistée complet. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
@@ -195,7 +213,7 @@ vers les journaux, il n'est donc jamais localisé.
 | `no_command` | Aucun jeton de commande n'a été fourni. |
 | `unknown_command` | Le jeton de commande n'est pas reconnu. |
 | `missing_parameter` | Un paramètre requis est absent. |
-| `invalid_parameter` | Une valeur de paramètre est hors plage (mauvais `mode`, `action`, `direction`, `code`, ou UUID). |
+| `invalid_parameter` | Une valeur de paramètre est hors plage (mauvais `mode`, `action`, `match-type`, `direction`, `code`, un motif `url-regex` non compilable, ou un UUID mal formé). |
 | `unknown_source` | L'`id`/`name` ne correspond à aucune source installée et sélectionnable. |
 | `no_input_sources` | Aucune source de saisie sélectionnable n'est installée. |
 | `rule_not_found` | La règle d'application/URL ciblée n'existe pas. |
@@ -212,6 +230,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex correspond à l'URL entière — encodez le motif en pourcentage (ici : github\.com/.*/pull)
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 

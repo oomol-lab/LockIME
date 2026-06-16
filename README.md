@@ -61,6 +61,10 @@ Either way, the app keeps itself up to date via Sparkle.
 - **Lock or switch** — per-app and per-URL rules can *lock* an input source
   (re-applied whenever it drifts) or just *switch* to it once when you focus the
   app or page, then step out of the way and let you change it freely.
+- **Flexible URL matching** — per-URL rules (enhanced mode) match by a domain and
+  its subdomains, an exact domain, a domain keyword, or a regular expression over
+  the full URL, and apply in a priority order you drag to arrange — first match
+  wins.
 - **Menu-bar control** — activate/deactivate, switch the locked input source,
   view the current source, and track the activation count from the menu bar.
 - **Keyboard shortcuts** — configurable global shortcuts to toggle locking and

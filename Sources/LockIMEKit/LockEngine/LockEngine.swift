@@ -200,7 +200,7 @@ public final class LockEngine {
                 reason: effectiveReason(for: reason, ruleSource: ruleSource),
                 bundleID: effectiveBundleID,
                 ruleSource: ruleSource,
-                matchedHost: ruleSource == .urlRule ? urlMatch?.host : nil
+                matchedHost: ruleSource == .urlRule ? urlMatch?.pattern : nil
             )
             // Re-arm the one-shot for a genuine frontmost/URL state — but NOT for a
             // launcher overlay shadowing the app (see the `.switchOnce` arm).
@@ -209,7 +209,7 @@ public final class LockEngine {
             // A one-shot switch never holds the lock: clear any standing target
             // from a prior lock rule first, unconditionally.
             controller.setTarget(nil)
-            let context = ruleSource == .urlRule ? urlMatch?.host : effectiveBundleID
+            let context = ruleSource == .urlRule ? urlMatch?.pattern : effectiveBundleID
             let key = SwitchKey(ruleSource: ruleSource, context: context, sourceID: id)
             // Dedup against the launcher slot during an excursion, the frontmost
             // slot otherwise — so a launcher's own `.switched` rule firing while it
@@ -279,12 +279,15 @@ public final class LockEngine {
         }
     }
 
-    /// The targeted source, matched host, and action from a URL rule, when
-    /// enhanced mode is on and the current page matches one.
-    private func enhancedURLMatch() -> (id: InputSourceID, host: String, action: RuleAction)? {
+    /// The targeted source, matched rule pattern, and action from a URL rule,
+    /// when enhanced mode is on and the current page matches one. The whole URL
+    /// is passed to the matcher so `urlRegex` rules can see path/query/fragment;
+    /// the returned `pattern` is the matched rule's own pattern (a stable per-rule
+    /// key for the one-shot dedup and the "why" shown in the activation log).
+    private func enhancedURLMatch() -> (id: InputSourceID, pattern: String, action: RuleAction)? {
         guard config.enhancedModeEnabled, let urlProvider, !config.urlRules.isEmpty else { return nil }
         let urlString = urlProvider.currentURL(forBundleID: effectiveBundleID) ?? ""
-        guard let rule = URLMatcher.matchedRule(host: URLMatcher.host(from: urlString), rules: config.urlRules)
+        guard let rule = URLMatcher.matchedRule(urlString: urlString, rules: config.urlRules)
         else { return nil }
         return (rule.lockedSourceID, rule.hostPattern, rule.action)
     }

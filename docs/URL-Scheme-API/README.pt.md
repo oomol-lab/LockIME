@@ -132,9 +132,27 @@ permissão de Accessibility.
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | Liga/desliga o modo aprimorado (ou o inverte). |
-| `set-url-rule` | `host` *(obrigatório)*, `source` \| `source-name` *(obrigatório)*, `action` = `lock` \| `switch` *(padrão `lock`)*, `id` *(UUID opcional)* | Cria ou substitui uma regra por URL. `host` é um padrão como `github.com` (corresponde a subdomínios) ou `*.example.com`. Sem `id`, uma regra existente para o mesmo host é atualizada em vez de duplicada. |
+| `set-url-rule` | `host` *(apelido `pattern`, obrigatório)*, `source` \| `source-name` *(obrigatório)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(padrão `domain-suffix`)*, `action` = `lock` \| `switch` *(padrão `lock`)*, `id` *(UUID opcional)* | Cria ou substitui uma regra por URL. A forma como o padrão é correspondido depende de `match-type` (veja [abaixo](#match-types)). Sem `id`, uma regra existente para o mesmo padrão é atualizada em vez de duplicada. |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | Exclui uma regra de URL pelo seu `id` (de `list-url-rules`) ou pelo `host`. |
 | `clear-url-rules` | — | Remove **todas** as regras por URL. |
+
+#### Match types
+
+`match-type` decide como o padrão de uma regra é comparado com a URL atual do
+navegador. As regras são avaliadas **de cima para baixo e a primeira
+correspondência vence**, de modo que sua ordem é sua prioridade (arraste para
+reordenar em **Ajustes ▸ Regras por URL**).
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | um host, p. ex. `github.com` | o host **e todos os seus subdomínios** (`github.com`, `gist.github.com`). Um `*.` no início é tolerado. |
+| `domain` | um host, p. ex. `github.com` | **apenas esse host exato**, nunca um subdomínio. |
+| `domain-keyword` | uma substring, p. ex. `google` | qualquer host que a **contenha** (`google.com`, `mail.google.com`, `googleapis.com`). |
+| `url-regex` | uma expressão regular | a **URL inteira** (esquema · host · caminho · consulta · fragmento) — sem diferenciar maiúsculas de minúsculas e sem âncoras. O único tipo que consegue distinguir páginas de um mesmo site por caminho ou consulta. Um padrão que não compila é rejeitado com `invalid_parameter`. |
+
+`match-type` também aceita os apelidos `suffix`, `keyword` e `regex`. Para uma
+regra `url-regex`, o padrão geralmente contém caracteres (`?`, `&`, `/`, `\`)
+que devem ser codificados em percent-encode na URL.
 
 ### App
 
@@ -159,7 +177,7 @@ Os comandos de consulta retornam um payload JSON através do callback
 | `current-source` | `{ "id": "...", "name": "..." }` da fonte ao vivo. |
 | `list-sources` *(alias `sources`)* | Array das fontes instaladas: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Array de `{ "bundleID", "mode", "source"? }`. |
-| `list-url-rules` *(alias `url-rules`)* | Array de `{ "id", "host", "action", "source" }`. |
+| `list-url-rules` *(alias `url-rules`)* | Array de `{ "id", "host", "action", "matchType", "source" }`, em ordem de prioridade (a primeira correspondência vence). |
 | `list-log` *(aliases `log`, `recent-activations`)* | As últimas 24 h de entradas de troca forçada, da mais recente para a mais antiga: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
 | `get-config` *(alias `config`)* | O objeto de configuração persistida completo. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
@@ -201,7 +219,7 @@ para os logs, portanto nunca é localizado.
 | `no_command` | Nenhum token de comando foi fornecido. |
 | `unknown_command` | O token de comando não é reconhecido. |
 | `missing_parameter` | Um parâmetro obrigatório está ausente. |
-| `invalid_parameter` | O valor de um parâmetro está fora do intervalo (`mode`, `action`, `direction`, `code` inválido, ou UUID). |
+| `invalid_parameter` | O valor de um parâmetro está fora do intervalo (`mode`, `action`, `match-type`, `direction`, `code` inválido, um padrão `url-regex` que não compila, ou um UUID malformado). |
 | `unknown_source` | O `id`/`name` não corresponde a nenhuma fonte selecionável instalada. |
 | `no_input_sources` | Nenhuma fonte de entrada selecionável está instalada. |
 | `rule_not_found` | A regra de app/URL visada não existe. |
@@ -218,6 +236,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex corresponde à URL inteira — codifique o padrão em percent-encode (aqui: github\.com/.*/pull)
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 

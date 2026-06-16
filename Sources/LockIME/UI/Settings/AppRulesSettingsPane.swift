@@ -67,6 +67,10 @@ struct AppRulesSettingsPane: View {
                     )
                 }
             }
+            // A sheet bridges into its own AppKit window that doesn't inherit the
+            // app's in-app language override — re-inject it (rebuilding on change).
+            .environment(\.locale, state.locale)
+            .id(state.localeIdentifier)
         }
     }
 

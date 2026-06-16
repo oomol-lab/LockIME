@@ -51,6 +51,13 @@ final class ImportReviewModel: Identifiable {
 
     func setMode(_ newMode: ImportMode) { plan.mode = newMode }
 
+    // MARK: URL-rule order (shown only when the file's order differs)
+
+    var urlOrderDiffers: Bool { plan.urlOrderDiffers }
+    /// The effective order choice (the override, else the mode default).
+    var urlOrderUseFile: Bool { plan.effectiveUseFileOrder }
+    func setURLOrderUseFile(_ useFile: Bool) { plan.urlOrderUseFile = useFile }
+
     // MARK: New-rule inclusion
 
     func setInclude(_ itemID: String, _ on: Bool) { mutate(itemID) { $0.include = on } }
@@ -121,6 +128,9 @@ struct ImportReviewSheet: View {
             Divider()
             Form {
                 modeSection
+                // Merge-only: Replace adopts the file's order wholesale, so there's
+                // nothing to choose there.
+                if model.mode == .merge, model.urlOrderDiffers { orderSection }
                 if !model.newAppItems.isEmpty { newAppSection }
                 if !model.newURLItems.isEmpty { newURLSection }
                 if model.mode == .merge, !model.conflictItems.isEmpty { conflictSection }
@@ -175,6 +185,28 @@ struct ImportReviewSheet: View {
             }
         } header: {
             Text("How to import")
+        }
+    }
+
+    // MARK: URL-rule order
+
+    /// Shown in Merge when the file orders the shared URL rules differently (Replace
+    /// always adopts the file's order, so it offers no choice). Order is priority
+    /// (first match wins), so this is a real, reviewable choice — keep the local
+    /// arrangement or adopt the file's. Reuses the conflict picker's
+    /// "Keep Local"/"Use File" labels.
+    private var orderSection: some View {
+        Section {
+            Picker("", selection: Binding(get: { model.urlOrderUseFile }, set: { model.setURLOrderUseFile($0) })) {
+                Text("Keep Local").tag(false)
+                Text("Use File").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        } header: {
+            Text("URL rule order")
+        } footer: {
+            SectionFooter("The backup lists your URL rules in a different priority order. Order is priority — the first matching rule wins.")
         }
     }
 
@@ -428,18 +460,19 @@ struct ImportReviewSheet: View {
     /// Returning `Text` keeps it recolorable inside `HStack`s while resolving
     /// catalog keys against the injected `\.locale`.
     private func fileBindingText(_ item: ImportItem) -> Text {
-        bindingText(subject: item.subject, mode: item.fileMode, action: item.fileAction, source: item.fileSource)
+        bindingText(subject: item.subject, mode: item.fileMode, action: item.fileAction, source: item.fileSource, matchType: item.fileMatchType)
     }
 
     private func localBindingText(_ item: ImportItem) -> Text {
-        bindingText(subject: item.subject, mode: item.localMode, action: item.localAction, source: item.localSource)
+        bindingText(subject: item.subject, mode: item.localMode, action: item.localAction, source: item.localSource, matchType: item.localMatchType)
     }
 
     private func bindingText(
         subject: ImportItem.Subject,
         mode: AppRuleMode?,
         action: RuleAction?,
-        source: InputSourceID?
+        source: InputSourceID?,
+        matchType: URLMatchType?
     ) -> Text {
         switch subject {
         case .globalDefault:
@@ -451,7 +484,13 @@ struct ImportReviewSheet: View {
             return pinnedBindingText(isSwitch: mode == .switched, source: source)
         case .url:
             guard let source else { return Text("Default") }
-            return pinnedBindingText(isSwitch: action == .switchOnce, source: source)
+            let pinned = pinnedBindingText(isSwitch: action == .switchOnce, source: source)
+            // Append the match type when it isn't the default so two same-source,
+            // same-action rules that differ only by match type stay distinguishable.
+            if let matchType, matchType != .domainSuffix {
+                return pinned + Text(verbatim: " · ") + Text(matchType.importLabel)
+            }
+            return pinned
         }
     }
 
@@ -483,5 +522,19 @@ private extension ImportReviewModel {
     /// missing row is set to remove.
     var allMissingHeader: MissingSourceDisposition {
         missingItems.allSatisfy { $0.missingDisposition == .remove } && !missingItems.isEmpty ? .remove : .keep
+    }
+}
+
+private extension URLMatchType {
+    /// A compact label for the import comparison. Reuses the same catalog keys as
+    /// the URL Rules editor (the default suffix type is never labelled — it's the
+    /// unmarked, common case).
+    var importLabel: LocalizedStringKey {
+        switch self {
+        case .domainSuffix: "Domain suffix"
+        case .domain: "Exact domain"
+        case .domainKeyword: "Domain keyword"
+        case .urlRegex: "URL regex"
+        }
     }
 }

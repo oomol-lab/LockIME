@@ -632,4 +632,220 @@ struct ImportPlanTests {
         #expect(replaced.urlRules.first?.action == .switchOnce)
         #expect(replaced.urlRules.first?.lockedSourceID == "US")
     }
+
+    // MARK: - Match type
+
+    @Test("a match-type-only difference on the same pattern is a URL conflict")
+    func matchTypeConflict() {
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "github.com", lockedSourceID: "US", matchType: .domainSuffix),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(
+            urlRules: [BackupURLRule(hostPattern: "github.com", lockedSourceID: "US", matchType: .domain)]
+        ), installedSources: installed)
+        let conflict = item(plan, "url:github.com")
+        #expect(conflict?.status == .conflict)
+        #expect(conflict?.localMatchType == .domainSuffix)
+        #expect(conflict?.fileMatchType == .domain)
+        // Keep-local (the merge default) keeps the suffix; choosing the file
+        // applies the exact-domain match type.
+        #expect(plan.resolvedConfiguration().urlRules.first?.matchType == .domainSuffix)
+        if let idx = plan.items.firstIndex(where: { $0.id == "url:github.com" }) {
+            plan.items[idx].resolution = .useFile
+        }
+        #expect(plan.resolvedConfiguration().urlRules.first?.matchType == .domain)
+    }
+
+    @Test("a new URL rule carries its match type into the resolved config")
+    func newURLRuleCarriesMatchType() {
+        let plan = ImportPlan(current: .default, backup: backup(
+            urlRules: [BackupURLRule(hostPattern: "/pull/", lockedSourceID: "US", matchType: .urlRegex)]
+        ), installedSources: installed)
+        #expect(item(plan, "url:/pull/")?.fileMatchType == .urlRegex)
+        #expect(plan.resolvedConfiguration().urlRules.first?.matchType == .urlRegex)
+    }
+
+    // MARK: - Order preservation (priority survives import)
+
+    @Test("merge preserves local URL-rule order and appends new file rules after it")
+    func mergePreservesURLOrder() {
+        // Local priority is a, b. The file re-lists them as c (new), b, a — a merge
+        // must keep the LOCAL order (a, b) and append only the new rule (c).
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "b.com", lockedSourceID: "US"),
+        ])
+        let plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "c.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "b.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["a.com", "b.com", "c.com"])
+    }
+
+    @Test("replace uses the file's URL-rule order verbatim — never re-sorted")
+    func replaceUsesFileOrder() {
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "b.com", lockedSourceID: "US"),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "z.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "m.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        plan.mode = .replace
+        // The file's order is the user's chosen priority — NOT alphabetical. The
+        // old resolver sorted by hostPattern, which would have produced a, m, z.
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["z.com", "a.com", "m.com"])
+    }
+
+    // MARK: - Duplicate host patterns (the editor prevents these, but a
+    // hand-authored/legacy file could carry them)
+
+    @Test("two file rules sharing a host pattern collapse to one item — no id collision")
+    func duplicateFileHostPatternsCollapseToOneItem() {
+        // The pattern is a URL rule's portable identity (ImportItem.id, urlMap key),
+        // so two file rules with the same pattern must NOT produce two items with
+        // the same id (which would break the Review list's ForEach/firstIndex). The
+        // builder de-dupes by pattern, keeping the first.
+        let plan = ImportPlan(current: .default, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "github.com", lockedSourceID: "US", matchType: .domainSuffix),
+            BackupURLRule(hostPattern: "github.com", lockedSourceID: "ABC", matchType: .domain),
+        ]), installedSources: installed)
+        let urlItems = plan.items.filter { $0.id == "url:github.com" }
+        #expect(urlItems.count == 1)
+        // First wins, deterministically.
+        #expect(urlItems.first?.fileSource == "US")
+        #expect(urlItems.first?.fileMatchType == .domainSuffix)
+        // The resolved config likewise carries exactly one rule for the pattern.
+        let resolved = plan.resolvedConfiguration().urlRules.filter { $0.hostPattern == "github.com" }
+        #expect(resolved.count == 1)
+        #expect(resolved.first?.lockedSourceID == "US")
+    }
+
+    // MARK: - Order is a diff dimension (a reorder-only backup must be importable)
+
+    @Test("replace detects and applies a reorder-only backup — order is priority")
+    func replaceAppliesReorderOnlyBackup() {
+        // Local order 1,2,3,4. The file lists the SAME rules/bindings in reverse.
+        // Order is priority (first match wins), so this IS a change: Replace must
+        // detect it (Apply enabled) and apply the file's order. A position-blind
+        // diff reported "no changes" and disabled Apply — the bug this guards.
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "1.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "2.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "3.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "4.com", lockedSourceID: "US"),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "4.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "3.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "2.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "1.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        plan.mode = .replace
+        #expect(plan.summary().hasEffect)
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["4.com", "3.com", "2.com", "1.com"])
+    }
+
+    @Test("merge keeps local order, so a reorder-only backup is a no-op by design")
+    func mergeIgnoresReorderOnlyBackup() {
+        // Merge is non-destructive: it keeps the local arrangement and only adds
+        // new rules, so a file that merely reorders existing rules changes nothing
+        // in a merge. (Use Replace to adopt a backup's order.)
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "1.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "2.com", lockedSourceID: "US"),
+        ])
+        let plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "2.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "1.com", lockedSourceID: "US"),
+        ]), installedSources: installed)   // default mode = .merge
+        #expect(!plan.summary().hasEffect)
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["1.com", "2.com"])
+    }
+
+    @Test("urlOrderDiffers flags a reorder of the shared rules — and only that")
+    func urlOrderDiffersDetection() {
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "b.com", lockedSourceID: "US"),
+        ])
+        // Same rules, reversed → the order choice matters.
+        let reordered = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "b.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        #expect(reordered.urlOrderDiffers)
+        // Same rules, same order → no choice to make.
+        let same = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "b.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        #expect(!same.urlOrderDiffers)
+        // A purely-new file rule is not a reorder of the shared set.
+        let added = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "b.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "c.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        #expect(!added.urlOrderDiffers)
+    }
+
+    @Test("merge can opt into the file's order (overriding the keep-local default)")
+    func mergeCanAdoptFileOrder() {
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "1.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "2.com", lockedSourceID: "US"),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "2.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "1.com", lockedSourceID: "US"),
+        ]), installedSources: installed)   // default merge → keep local
+        #expect(plan.urlOrderDiffers)
+        #expect(!plan.summary().hasEffect)                                          // default keeps local order
+        plan.urlOrderUseFile = true                                                 // user adopts the file's order
+        #expect(plan.summary().hasEffect)
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["2.com", "1.com"])
+    }
+
+    @Test("replace always adopts the file's order — the order choice is Merge-only")
+    func replaceAlwaysUsesFileOrder() {
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "1.com", lockedSourceID: "US"),
+            URLRule(hostPattern: "2.com", lockedSourceID: "US"),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "2.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "1.com", lockedSourceID: "US"),
+        ]), installedSources: installed)
+        plan.mode = .replace
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["2.com", "1.com"])
+        // Replace makes the config match the file — order included — so a leftover
+        // Merge-side override is ignored: the file's order still wins.
+        plan.urlOrderUseFile = false
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["2.com", "1.com"])
+    }
+
+    @Test("reordering a rule that pins a missing source does not tally as inactive")
+    func reorderDoesNotInflateInactive() {
+        // `a` pins a not-installed source; `b` is fine. The file shares both rules,
+        // reversed. Applying the file's order is a reorder, not a rebind — a
+        // reorder doesn't change a source's install status, so it must NOT be
+        // counted as a newly-inactive import (only added/rebound rules are).
+        let current = LockConfiguration(urlRules: [
+            URLRule(hostPattern: "a.com", lockedSourceID: "Missing"),
+            URLRule(hostPattern: "b.com", lockedSourceID: "US"),
+        ])
+        var plan = ImportPlan(current: current, backup: backup(urlRules: [
+            BackupURLRule(hostPattern: "b.com", lockedSourceID: "US"),
+            BackupURLRule(hostPattern: "a.com", lockedSourceID: "Missing"),
+        ]), installedSources: installed)   // "Missing" is not installed
+        plan.mode = .replace               // replace defaults to file order → the reorder applies
+        let s = plan.summary()
+        #expect(s.hasEffect)               // the reorder is a real change…
+        #expect(s.inactive == 0)           // …but not a new inactive import
+        #expect(plan.resolvedConfiguration().urlRules.map(\.hostPattern) == ["b.com", "a.com"])
+    }
 }

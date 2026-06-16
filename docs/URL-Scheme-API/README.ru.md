@@ -128,9 +128,27 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `set-enhanced-mode` | `enabled` = `true` \| `false` \| `toggle` | Включить/выключить расширенный режим (или переключить его). |
-| `set-url-rule` | `host` *(req)*, `source` \| `source-name` *(req)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Создать или заменить правило для URL. `host` — это шаблон, например `github.com` (совпадает с поддоменами) или `*.example.com`. Без `id` существующее правило для того же хоста обновляется, а не дублируется. |
+| `set-url-rule` | `host` *(alias `pattern`, req)*, `source` \| `source-name` *(req)*, `match-type` = `domain-suffix` \| `domain` \| `domain-keyword` \| `url-regex` *(default `domain-suffix`)*, `action` = `lock` \| `switch` *(default `lock`)*, `id` *(optional UUID)* | Создать или заменить правило для URL. Способ сопоставления шаблона зависит от `match-type` (см. [ниже](#match-types)). Без `id` существующее правило для того же шаблона обновляется, а не дублируется. |
 | `remove-url-rule` | `id` *(UUID)* \| `host` | Удалить правило для URL по его `id` (из `list-url-rules`) или по `host`. |
 | `clear-url-rules` | — | Удалить **все** правила для URL. |
+
+#### Match types
+
+`match-type` определяет, как шаблон правила сравнивается с текущим URL в
+браузере. Правила обрабатываются **сверху вниз, и побеждает первое совпадение**,
+поэтому их порядок задаёт их приоритет (перетаскивайте для изменения порядка в
+**Настройки ▸ Правила для URL**).
+
+| `match-type` | Pattern is… | Matches |
+|---|---|---|
+| `domain-suffix` *(default)* | хост, например `github.com` | этот хост **и все его поддомены** (`github.com`, `gist.github.com`). Ведущий `*.` допускается. |
+| `domain` | хост, например `github.com` | **только этот точный хост**, без поддоменов. |
+| `domain-keyword` | подстрока, например `google` | любой хост, который её **содержит** (`google.com`, `mail.google.com`, `googleapis.com`). |
+| `url-regex` | регулярное выражение | **весь URL** (схема · хост · путь · запрос · фрагмент) — без учёта регистра и без привязки к началу/концу. Единственный тип, способный различать страницы одного сайта по пути или запросу. Шаблон, который не компилируется, отклоняется с ошибкой `invalid_parameter`. |
+
+`match-type` также принимает псевдонимы `suffix`, `keyword` и `regex`. В правиле
+`url-regex` шаблон обычно содержит символы (`?`, `&`, `/`, `\`), которые нужно
+кодировать процентами в URL.
 
 ### App
 
@@ -155,7 +173,7 @@ LockIME намеренно не предоставляет **никаких ко
 | `current-source` | `{ "id": "...", "name": "..." }` активного источника. |
 | `list-sources` *(alias `sources`)* | Массив установленных источников: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Массив `{ "bundleID", "mode", "source"? }`. |
-| `list-url-rules` *(alias `url-rules`)* | Массив `{ "id", "host", "action", "source" }`. |
+| `list-url-rules` *(alias `url-rules`)* | Массив `{ "id", "host", "action", "matchType", "source" }`, в порядке приоритета (побеждает первое совпадение). |
 | `list-log` *(aliases `log`, `recent-activations`)* | Записи о принудительных переключениях за последние 24 ч, новейшие сначала: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
 | `get-config` *(alias `config`)* | Полный сохранённый объект конфигурации. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
@@ -197,7 +215,7 @@ LockIME намеренно не предоставляет **никаких ко
 | `no_command` | Токен команды не был передан. |
 | `unknown_command` | Токен команды не распознан. |
 | `missing_parameter` | Обязательный параметр отсутствует. |
-| `invalid_parameter` | Значение параметра вне допустимого диапазона (неверный `mode`, `action`, `direction`, `code` или UUID). |
+| `invalid_parameter` | Значение параметра вне допустимого диапазона (неверный `mode`, `action`, `match-type`, `direction`, `code`, не компилирующийся шаблон `url-regex` или некорректный UUID). |
 | `unknown_source` | `id`/`name` не совпадает ни с одним установленным выбираемым источником. |
 | `no_input_sources` | Не установлено ни одного выбираемого источника ввода. |
 | `rule_not_found` | Указанное правило для приложения/URL не существует. |
@@ -214,6 +232,9 @@ open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
+open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
+# url-regex сопоставляется со всем URL — закодируйте шаблон процентами (здесь: github\.com/.*/pull)
+open "lockime://set-url-rule?pattern=github%5C.com%2F.%2A%2Fpull&source=com.apple.keylayout.ABC&match-type=url-regex"
 open "lockime://set-launch-at-login?enabled=on"
 ```
 
