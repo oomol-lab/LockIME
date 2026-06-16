@@ -145,7 +145,7 @@ par glisser-déposer dans **Réglages ▸ Règles par URL**).
 | `domain-keyword` | une sous-chaîne, p. ex. `google` | tout hôte qui la **contient** (`google.com`, `mail.google.com`, `googleapis.com`). |
 | `url-regex` | une expression régulière | l'**URL entière** (schéma · hôte · chemin · requête · fragment) — insensible à la casse et non ancrée. Le seul type capable de distinguer les pages d'un même site par le chemin ou la requête. Un motif non compilable est rejeté avec `invalid_parameter`. |
 
-`match-type` accepte aussi les alias `suffix`, `keyword` et `regex`. Pour une
+`match-type` accepte aussi des alias tels que `suffix`, `keyword` et `regex`. Pour une
 règle `url-regex`, le motif contient généralement des caractères (`?`, `&`, `/`, `\`)
 qui doivent être encodés en pourcentage dans l'URL.
 

@@ -140,7 +140,7 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | `domain-keyword` | 一個子字串，例如 `google` | 任何**包含**它的 host（`google.com`、`mail.google.com`、`googleapis.com`）。 |
 | `url-regex` | 一個正規表示式 | **整個 URL**（scheme · host · path · query · fragment）——不分大小寫且不錨定。唯一能依 path 或 query 區分同一站台不同頁面的類型。無法編譯的模式會以 `invalid_parameter` 被拒。 |
 
-`match-type` 也接受別名 `suffix`、`keyword` 和 `regex`。對於一條
+`match-type` 也接受 `suffix`、`keyword`、`regex` 等別名。對於一條
 `url-regex` 規則，模式通常含有必須在 URL 中 percent-encode 的字元
 （`?`、`&`、`/`、`\`）。
 

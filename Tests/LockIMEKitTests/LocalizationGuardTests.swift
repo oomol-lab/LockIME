@@ -200,7 +200,11 @@ struct LocalizationGuardTests {
         // content uses string literals renders against the system locale, not the
         // app's in-app override, producing a half-translated screen. The fix is to
         // re-inject `.environment(\.locale, state.locale)` at the call site (see
-        // BackupSettingsPane). This guards that every sheet does so.
+        // BackupSettingsPane). This guards that every sheet does so — and that it
+        // injects the app's *own* locale, not some other value: matching only
+        // `.environment(\.locale` would pass `.environment(\.locale, .current)`,
+        // which still bridges in the system language.
+        let reinjection = try Regex(#"\.environment\(\s*\\\.locale\s*,\s*(?:appState|state)\.locale\s*\)"#)
         for (name, text) in try Self.appSwiftFiles() {
             let lines = Array(text.split(separator: "\n", omittingEmptySubsequences: false))
             for (index, line) in lines.enumerated() {
@@ -208,9 +212,12 @@ struct LocalizationGuardTests {
                 let code = line.prefix(upTo: line.firstRange(of: "//")?.lowerBound ?? line.endIndex)
                 guard code.contains(".sheet(") else { continue }
                 // The re-injection lives inside the sheet's content closure, a few
-                // lines down — scan a generous window.
-                let window = lines[index..<min(index + 20, lines.count)].joined(separator: "\n")
-                if !window.contains(".environment(\\.locale") {
+                // lines down — scan a generous window, stripping each line's comment
+                // so a commented-out modifier can't satisfy the guard.
+                let window = lines[index..<min(index + 20, lines.count)].map { windowLine in
+                    String(windowLine.prefix(upTo: windowLine.firstRange(of: "//")?.lowerBound ?? windowLine.endIndex))
+                }.joined(separator: "\n")
+                if window.firstMatch(of: reinjection) == nil {
                     Issue.record(
                         "\(name):\(index + 1) presents a .sheet without re-injecting \\.locale — add .environment(\\.locale, state.locale) so it follows the in-app language override (see BackupSettingsPane)"
                     )

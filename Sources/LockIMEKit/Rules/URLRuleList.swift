@@ -74,9 +74,16 @@ public enum URLRuleList {
     /// the reorder instead of being clobbered by the drag-start snapshot.
     public static func reordered(_ rules: [URLRule], by ordered: [URLRule]) -> [URLRule]? {
         let byID = Dictionary(rules.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        guard Set(ordered.map(\.id)) == Set(byID.keys),
-              ordered.map(\.id) != rules.map(\.id)
+        let orderedIDs = ordered.map(\.id)
+        // A valid permutation has the same length, no repeats, and the same id
+        // set as the live rules. Checking only set-equality would accept a
+        // non-permutation like `[a, a, b]` (against `[a, b]`) and return a list
+        // with a duplicated rule, corrupting the persisted priority order.
+        guard orderedIDs.count == rules.count,
+              Set(orderedIDs).count == orderedIDs.count,
+              Set(orderedIDs) == Set(byID.keys),
+              orderedIDs != rules.map(\.id)
         else { return nil }
-        return ordered.compactMap { byID[$0.id] }
+        return orderedIDs.compactMap { byID[$0] }
     }
 }

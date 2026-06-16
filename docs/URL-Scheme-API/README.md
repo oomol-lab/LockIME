@@ -143,7 +143,7 @@ order is their priority (drag to reorder in **Settings ▸ URL Rules**).
 | `domain-keyword` | a substring, e.g. `google` | any host that **contains** it (`google.com`, `mail.google.com`, `googleapis.com`). |
 | `url-regex` | a regular expression | the **whole URL** (scheme · host · path · query · fragment) — case-insensitive and unanchored. The only type that can tell pages of one site apart by path or query. An uncompilable pattern is rejected with `invalid_parameter`. |
 
-`match-type` also accepts the aliases `suffix`, `keyword`, and `regex`. For a
+`match-type` also accepts aliases such as `suffix`, `keyword`, and `regex`. For a
 `url-regex` rule the pattern usually contains characters (`?`, `&`, `/`, `\`)
 that must be percent-encoded in the URL.
 

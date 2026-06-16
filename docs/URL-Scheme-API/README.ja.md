@@ -144,7 +144,7 @@ URL ごとのルールには、オプションの Accessibility ゲート付き*
 | `domain-keyword` | 部分文字列。例：`google` | それを**含む**任意の host（`google.com`、`mail.google.com`、`googleapis.com`）。 |
 | `url-regex` | 正規表現 | **URL 全体**（scheme · host · path · query · fragment）——大文字小文字を区別せず、アンカーなし。パスやクエリによって同一サイトのページを区別できる唯一のタイプです。コンパイルできないパターンは `invalid_parameter` で拒否されます。 |
 
-`match-type` はエイリアス `suffix`、`keyword`、`regex` も受け付けます。`url-regex`
+`match-type` は `suffix`、`keyword`、`regex` などのエイリアスも受け付けます。`url-regex`
 ルールでは、パターンに通常 URL 内でパーセントエンコードが必要な文字（`?`、`&`、`/`、
 `\`）が含まれます。
 

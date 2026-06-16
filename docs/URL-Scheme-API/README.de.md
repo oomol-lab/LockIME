@@ -152,7 +152,7 @@ unter **Einstellungen ▸ URL-Regeln** ziehen).
 | `domain-keyword` | eine Teilzeichenkette, z. B. `google` | jeden Host, der sie **enthält** (`google.com`, `mail.google.com`, `googleapis.com`). |
 | `url-regex` | ein regulärer Ausdruck | die **gesamte URL** (Schema · Host · Pfad · Query · Fragment) — ohne Beachtung der Groß-/Kleinschreibung und nicht verankert. Der einzige Typ, der Seiten einer Website nach Pfad oder Query unterscheiden kann. Ein nicht kompilierbares Muster wird mit `invalid_parameter` abgelehnt. |
 
-`match-type` akzeptiert auch die Aliasse `suffix`, `keyword` und `regex`. Bei einer
+`match-type` akzeptiert auch Aliasse wie `suffix`, `keyword` und `regex`. Bei einer
 `url-regex`-Regel enthält das Muster meist Zeichen (`?`, `&`, `/`, `\`), die in der
 URL prozentkodiert werden müssen.
 

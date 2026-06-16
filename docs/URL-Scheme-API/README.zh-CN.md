@@ -139,7 +139,7 @@ Rules** 中拖动以重排）。
 | `domain-keyword` | 一个子串，如 `google` | 匹配任何**包含**它的 host（`google.com`、`mail.google.com`、`googleapis.com`）。 |
 | `url-regex` | 一个正则表达式 | 匹配**整个 URL**（scheme · host · path · query · fragment）——不区分大小写且不锚定。这是唯一能按 path 或 query 区分同一站点不同页面的类型。无法编译的模式会以 `invalid_parameter` 被拒绝。 |
 
-`match-type` 还接受别名 `suffix`、`keyword` 和 `regex`。对于一条 `url-regex`
+`match-type` 还接受 `suffix`、`keyword`、`regex` 等别名。对于一条 `url-regex`
 规则，模式通常会包含必须在 URL 中进行百分号编码的字符（`?`、`&`、`/`、`\`）。
 
 ### App

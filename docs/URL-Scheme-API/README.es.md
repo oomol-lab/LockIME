@@ -144,7 +144,7 @@ gana**, así que su orden es su prioridad (arrástralas para reordenarlas en
 | `domain-keyword` | una subcadena, p. ej. `google` | cualquier host que **la contenga** (`google.com`, `mail.google.com`, `googleapis.com`). |
 | `url-regex` | una expresión regular | la **URL completa** (esquema · host · ruta · consulta · fragmento) — sin distinguir mayúsculas y minúsculas y sin anclar. El único tipo capaz de distinguir páginas de un mismo sitio por ruta o consulta. Un patrón que no se puede compilar se rechaza con `invalid_parameter`. |
 
-`match-type` también acepta los alias `suffix`, `keyword` y `regex`. En una regla
+`match-type` también acepta alias como `suffix`, `keyword` y `regex`. En una regla
 `url-regex` el patrón suele contener caracteres (`?`, `&`, `/`, `\`)
 que deben codificarse con percent-encode en la URL.
 

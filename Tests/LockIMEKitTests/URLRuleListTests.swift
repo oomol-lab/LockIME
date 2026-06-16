@@ -108,6 +108,7 @@ struct URLRuleListTests {
         let a = rule("a.com", us), b = rule("b.com", us), c = rule("c.com", us)
         #expect(URLRuleList.reordered([a, b, c], by: [a, b]) == nil)   // missing an id
         #expect(URLRuleList.reordered([a, b], by: [a, b, c]) == nil)   // extra/unknown id
+        #expect(URLRuleList.reordered([a, b], by: [a, a, b]) == nil)   // duplicate id (right id set, wrong count)
     }
 
     @Test("reordered relinks to the LIVE rule, discarding the snapshot's stale binding")

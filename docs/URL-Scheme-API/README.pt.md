@@ -150,7 +150,7 @@ reordenar em **Ajustes ▸ Regras por URL**).
 | `domain-keyword` | uma substring, p. ex. `google` | qualquer host que a **contenha** (`google.com`, `mail.google.com`, `googleapis.com`). |
 | `url-regex` | uma expressão regular | a **URL inteira** (esquema · host · caminho · consulta · fragmento) — sem diferenciar maiúsculas de minúsculas e sem âncoras. O único tipo que consegue distinguir páginas de um mesmo site por caminho ou consulta. Um padrão que não compila é rejeitado com `invalid_parameter`. |
 
-`match-type` também aceita os apelidos `suffix`, `keyword` e `regex`. Para uma
+`match-type` também aceita apelidos como `suffix`, `keyword` e `regex`. Para uma
 regra `url-regex`, o padrão geralmente contém caracteres (`?`, `&`, `/`, `\`)
 que devem ser codificados em percent-encode na URL.
 
