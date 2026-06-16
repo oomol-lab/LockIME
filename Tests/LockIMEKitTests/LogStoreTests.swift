@@ -53,7 +53,7 @@ struct LogStoreTests {
     }
 
     @Test("recent() returns within-window entries newest-first and honors limit")
-    func recentNewestFirst() {
+    func recentNewestFirst() throws {
         let store = LogStore(inMemory: true)
         let now = Date.now
         store.record(event(ageHours: 0.1, now: now))   // newest, in window
@@ -63,7 +63,9 @@ struct LogStoreTests {
 
         let recent = store.recent(now: now)
         #expect(recent.count == 3)
-        #expect(recent.first!.timestamp > recent.last!.timestamp) // newest first
+        let first = try #require(recent.first)
+        let last = try #require(recent.last)
+        #expect(first.timestamp > last.timestamp)                 // newest first
         #expect(store.recent(now: now, limit: 2).count == 2)      // limit caps
     }
 
