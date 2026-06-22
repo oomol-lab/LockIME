@@ -42,6 +42,7 @@ struct URLRulesSettingsPane: View {
         Form {
             enhancedSection(enhancedBinding)
             rulesSection
+            addressBarSection
         }
         .formStyle(.grouped)
         // Fallback reorder drop for the whole pane: a drag released *not* on a row
@@ -94,6 +95,73 @@ struct URLRulesSettingsPane: View {
             Text("Enhanced mode")
         } footer: {
             SectionFooter("Enhanced mode reads the active browser URL via Accessibility to apply per-URL rules. The core lock needs no permissions.")
+        }
+    }
+
+    // MARK: Address-bar section
+
+    /// The address-bar focus rule: while a browser's address bar (omnibox) has
+    /// keyboard focus, force a chosen source. Accessibility-gated like enhanced
+    /// mode, but independent of it (and of URL rules) — it lives on this page
+    /// because both read the browser via Accessibility. Off by default.
+    @ViewBuilder
+    private var addressBarSection: some View {
+        let enabledBinding = Binding(
+            get: { state.config.addressBarFocusEnabled },
+            set: { state.setAddressBarFocusEnabled($0) }
+        )
+        let actionBinding = Binding(
+            get: { state.config.addressBarAction },
+            set: { state.setAddressBarAction($0) }
+        )
+        let sourceBinding = Binding(
+            get: { state.config.addressBarSourceID },
+            set: { state.setAddressBarSource($0) }
+        )
+        let priorityBinding = Binding(
+            get: { state.config.addressBarOutranksURLRules },
+            set: { state.setAddressBarOutranksURLRules($0) }
+        )
+
+        Section {
+            Toggle("Set the input source in the address bar", isOn: enabledBinding)
+                .disabled(!state.accessibilityGranted)
+
+            if !state.accessibilityGranted {
+                AccessibilityRequiredNote("The address-bar rule requires Accessibility")
+            }
+
+            if state.config.addressBarFocusEnabled {
+                // Labeled pop-up menus — leading label, trailing menu — matching
+                // the grouped-form rows elsewhere (General ▸ Language, App Rules ▸
+                // default source), rather than full-width segmented controls that
+                // read as out of place in a macOS settings list.
+                Picker("Behavior", selection: actionBinding) {
+                    Text("Lock to").tag(RuleAction.lock)
+                    Text("Switch to").tag(RuleAction.switchOnce)
+                }
+
+                Picker("Input source", selection: sourceBinding) {
+                    ForEach(state.availableSources) { src in
+                        Text(src.localizedName).tag(InputSourceID?.some(src.id))
+                    }
+                }
+
+                if state.config.addressBarSourceID == nil {
+                    Label("Choose an input source for the address bar.", systemImage: "exclamationmark.triangle")
+                        .font(DS.Font.sectionFooter)
+                        .foregroundStyle(DS.Palette.warning)
+                }
+
+                Picker("Priority", selection: priorityBinding) {
+                    Text("URL rules first").tag(false)
+                    Text("Address bar first").tag(true)
+                }
+            }
+        } header: {
+            Text("Address bar")
+        } footer: {
+            SectionFooter("While a browser's address bar is focused, LockIME sets your chosen input source so you can type web addresses. “Lock” keeps it fixed; “Switch” sets it once and lets you change it. “Priority” decides which wins when a URL rule also matches the page.")
         }
     }
 

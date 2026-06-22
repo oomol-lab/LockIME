@@ -81,6 +81,8 @@ struct ActivationLogPane: View {
         case .launcherDismissed: "Launcher closed"
         case .urlPolled: "URL re-checked"
         case .urlMatched: "URL matched"
+        case .addressBarFocused: "Address bar focused"
+        case .addressBarBlurred: "Address bar blurred"
         case .lockEngaged: "Lock engaged"
         case .configChanged: "Settings changed"
         case .startupApplied: "Lock restored"
@@ -96,6 +98,7 @@ struct ActivationLogPane: View {
         case .appRule: return "App rule"
         case .globalDefault: return "Default rule"
         case .urlRule: return "URL rule"
+        case .addressBarRule: return "Address-bar rule"
         case nil: return nil
         }
     }

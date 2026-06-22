@@ -9,6 +9,8 @@ public enum RuleSource: String, Sendable, Codable, CaseIterable {
     case globalDefault
     /// An enhanced-mode URL rule.
     case urlRule
+    /// The address-bar focus rule — a browser's address bar has keyboard focus.
+    case addressBarRule
 }
 
 /// The outcome of resolving which source (if any) to enforce right now.
@@ -26,19 +28,41 @@ public enum LockResolution: Equatable, Sendable {
 }
 
 /// Pure resolution of the active lock target. Precedence:
-/// enhanced URL match → per-app rule → global default.
+/// {enhanced URL match, address-bar focus} → per-app rule → global default,
+/// where the relative order of the two browser-scoped rules is user-controlled
+/// (`addressBarOutranksURLRules`, default address-bar-first).
 public enum RuleResolver {
     public static func resolve(
         config: LockConfiguration,
         frontmostBundleID: String?,
-        urlMatch: (id: InputSourceID, action: RuleAction)? = nil
+        urlMatch: (id: InputSourceID, action: RuleAction)? = nil,
+        addressBarFocused: Bool = false
     ) -> LockResolution {
-        // 1. Enhanced mode (P6): a matched browser-URL rule wins outright. Its
-        //    action decides lock vs one-shot switch.
-        if let urlMatch {
-            return urlMatch.action == .switchOnce
-                ? .switchOnce(urlMatch.id, .urlRule)
-                : .lock(urlMatch.id, .urlRule)
+        // 1. Browser-scoped rules: a matched URL rule and/or the focused address
+        //    bar. Both outrank the per-app/default rule; which of the *two* wins
+        //    when both apply is user-controlled (`addressBarOutranksURLRules`,
+        //    default true → the address bar wins, since typing in it is the more
+        //    immediate intent). Each rule's action decides lock vs one-shot
+        //    switch. A `nil` address-bar target makes that rule inert (it
+        //    contributes no candidate), so an enabled-but-unconfigured rule never acts.
+        let urlResolution: LockResolution? = urlMatch.map {
+            $0.action == .switchOnce ? .switchOnce($0.id, .urlRule) : .lock($0.id, .urlRule)
+        }
+        let addressBarResolution: LockResolution? = {
+            guard addressBarFocused, config.addressBarFocusEnabled, let id = config.addressBarSourceID
+            else { return nil }
+            return config.addressBarAction == .switchOnce
+                ? .switchOnce(id, .addressBarRule)
+                : .lock(id, .addressBarRule)
+        }()
+        // Array index = priority (element 0 outranks element 1); `compactMap`
+        // drops an inactive (nil) candidate so it neither wins nor blocks the
+        // one behind it, and `.first` takes the highest-priority survivor.
+        let browserScoped = config.addressBarOutranksURLRules
+            ? [addressBarResolution, urlResolution]
+            : [urlResolution, addressBarResolution]
+        if let winner = browserScoped.compactMap({ $0 }).first {
+            return winner
         }
 
         // 2. Per-app rule.

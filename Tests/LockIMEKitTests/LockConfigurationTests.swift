@@ -183,6 +183,53 @@ struct LockConfigurationTests {
         #expect(ex.matchType == .domain)
     }
 
+    @Test("address-bar fields default off and round-trip through Codable")
+    func addressBarRoundTrips() throws {
+        // Defaults: off, switch action, no source, address bar outranks URL rules.
+        let def = LockConfiguration.default
+        #expect(def.addressBarFocusEnabled == false)
+        #expect(def.addressBarAction == .switchOnce)
+        #expect(def.addressBarSourceID == nil)
+        #expect(def.addressBarOutranksURLRules == true)
+
+        let original = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            addressBarFocusEnabled: true,
+            addressBarAction: .lock,
+            addressBarSourceID: "com.apple.keylayout.ABC",
+            addressBarOutranksURLRules: false // non-default, to prove it round-trips
+        )
+        let decoded = try JSONDecoder().decode(LockConfiguration.self, from: try JSONEncoder().encode(original))
+        #expect(decoded == original)
+        #expect(decoded.addressBarFocusEnabled)
+        #expect(decoded.addressBarAction == .lock)
+        #expect(decoded.addressBarSourceID == "com.apple.keylayout.ABC")
+        #expect(decoded.addressBarOutranksURLRules == false)
+    }
+
+    @Test("a config predating the address-bar fields decodes to the off defaults")
+    func decodesLegacyWithoutAddressBarFields() throws {
+        let json = #"{"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US", "enhancedModeEnabled": true}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.addressBarFocusEnabled == false)
+        #expect(config.addressBarAction == .switchOnce)
+        #expect(config.addressBarSourceID == nil)
+        // A config predating this field defaults to the new address-bar-first behavior.
+        #expect(config.addressBarOutranksURLRules == true)
+    }
+
+    @Test("an unknown address-bar action degrades to switchOnce instead of throwing")
+    func decodesUnknownAddressBarAction() throws {
+        // A newer build could write an action this one doesn't know; it must
+        // degrade rather than abort the whole config decode.
+        let json = #"{"addressBarFocusEnabled": true, "addressBarAction": "teleport", "addressBarSourceID": "com.apple.keylayout.ABC"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.addressBarFocusEnabled)
+        #expect(config.addressBarAction == .switchOnce)
+        #expect(config.addressBarSourceID == "com.apple.keylayout.ABC")
+    }
+
     @Test("URLMatchType.id is its raw value (the stable persisted token)")
     func urlMatchTypeID() {
         #expect(URLMatchType.domainSuffix.rawValue == "domain-suffix")

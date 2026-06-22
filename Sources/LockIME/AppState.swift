@@ -370,6 +370,39 @@ final class AppState {
         commit()
     }
 
+    // MARK: - Address-bar focus rule
+
+    /// Turn the address-bar focus rule on or off. Enabling with no target yet
+    /// pre-fills it with the global default source so the rule isn't inert (a
+    /// `nil` target makes the resolver skip it); the source picker can change it.
+    func setAddressBarFocusEnabled(_ enabled: Bool) {
+        config.addressBarFocusEnabled = enabled
+        if enabled, config.addressBarSourceID == nil {
+            config.addressBarSourceID = config.defaultSourceID
+        }
+        commit()
+    }
+
+    /// Choose whether the address-bar rule continuously locks its source or
+    /// switches to it once on focus.
+    func setAddressBarAction(_ action: RuleAction) {
+        config.addressBarAction = action
+        commit()
+    }
+
+    /// Set the source the address-bar rule targets.
+    func setAddressBarSource(_ id: InputSourceID?) {
+        config.addressBarSourceID = id
+        commit()
+    }
+
+    /// Choose which wins when both the address-bar rule and a URL rule apply:
+    /// `true` = address bar, `false` = URL rule (the default).
+    func setAddressBarOutranksURLRules(_ outranks: Bool) {
+        config.addressBarOutranksURLRules = outranks
+        commit()
+    }
+
     func upsertURLRule(_ rule: URLRule) {
         // Insert/update in place so editing a rule's binding (match type / action /
         // source) keeps its position — order is priority now, and an edit must not

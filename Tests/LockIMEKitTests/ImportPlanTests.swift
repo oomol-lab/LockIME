@@ -230,7 +230,21 @@ struct ImportPlanTests {
 
     @Test("import never touches the per-device runtime flags")
     func runtimeFlagsPreserved() {
-        let current = LockConfiguration(isEnabled: true, defaultSourceID: "US", enhancedModeEnabled: true)
+        // The address-bar feature is per-device runtime state (like isEnabled /
+        // enhancedModeEnabled): it must never travel through a backup and must
+        // survive an import unchanged. A refactor of resolvedConfiguration() that
+        // rebuilt the result from scratch instead of from `baseConfig` would
+        // silently reset these (e.g. flip the user's priority back to URL-first) —
+        // this asserts the `var result = baseConfig` carry-over for all of them.
+        let current = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "US",
+            enhancedModeEnabled: true,
+            addressBarFocusEnabled: true,
+            addressBarAction: .lock,
+            addressBarSourceID: "ABC",
+            addressBarOutranksURLRules: false // non-default, to prove import preserves it
+        )
         var plan = ImportPlan(current: current, backup: backup(
             appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "ABC")]
         ), installedSources: installed)
@@ -238,6 +252,10 @@ struct ImportPlanTests {
         let resolved = plan.resolvedConfiguration()
         #expect(resolved.isEnabled == true)
         #expect(resolved.enhancedModeEnabled == true)
+        #expect(resolved.addressBarFocusEnabled == true)
+        #expect(resolved.addressBarAction == .lock)
+        #expect(resolved.addressBarSourceID == "ABC")
+        #expect(resolved.addressBarOutranksURLRules == false)
     }
 
     // MARK: - Missing sources

@@ -48,6 +48,12 @@ public enum ActivationReason: String, Sendable, Codable, CaseIterable {
     case urlPolled
     /// Enhanced mode: the browser URL matched a rule and that rule was applied.
     case urlMatched
+    /// A browser's address bar gained keyboard focus and the address-bar rule
+    /// applied its source.
+    case addressBarFocused
+    /// A browser's address bar lost keyboard focus, so the address-bar rule
+    /// released and the app/URL/default rule was re-resolved.
+    case addressBarBlurred
     /// The master lock toggle was turned on while the source was off target.
     case lockEngaged
     /// A configuration edit while already locked (default source, an app rule,

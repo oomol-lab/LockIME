@@ -171,19 +171,47 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     public var enhancedModeEnabled: Bool
     /// Per-URL rules (enhanced mode).
     public var urlRules: [URLRule]
+    /// Whether the address-bar focus rule is on: while a browser's address
+    /// bar (omnibox / unified URL field) has keyboard focus, force
+    /// `addressBarSourceID`. Accessibility-gated and independent of
+    /// `enhancedModeEnabled`; **off by default**, so it never acts until the
+    /// user opts in. Detection is event-driven via the focused AX element — see
+    /// `AddressBarFocusMonitor`.
+    public var addressBarFocusEnabled: Bool
+    /// Whether the address-bar rule **continuously locks** its source (a
+    /// bilingual IME stays fixed) or **switches to it once** on focus (then
+    /// releases, so the user can change it). Mirrors `URLRule.action`.
+    public var addressBarAction: RuleAction
+    /// The source the address-bar rule targets. `nil` makes the rule inert even
+    /// when enabled (the resolver skips it), so the UI pre-fills it on enable.
+    public var addressBarSourceID: InputSourceID?
+    /// When both a URL rule and the focused address bar apply, whether the
+    /// **address-bar rule wins**. Default `true` — while you're typing in the
+    /// address bar, that intent outranks the loaded page's URL rule. Set `false`
+    /// to let URL rules win instead. (Has no effect when the address bar isn't
+    /// focused, or when no URL rule matches the page.)
+    public var addressBarOutranksURLRules: Bool
 
     public init(
         isEnabled: Bool = false,
         defaultSourceID: InputSourceID? = nil,
         appRules: [AppRule] = [],
         enhancedModeEnabled: Bool = false,
-        urlRules: [URLRule] = []
+        urlRules: [URLRule] = [],
+        addressBarFocusEnabled: Bool = false,
+        addressBarAction: RuleAction = .switchOnce,
+        addressBarSourceID: InputSourceID? = nil,
+        addressBarOutranksURLRules: Bool = true
     ) {
         self.isEnabled = isEnabled
         self.defaultSourceID = defaultSourceID
         self.appRules = appRules
         self.enhancedModeEnabled = enhancedModeEnabled
         self.urlRules = urlRules
+        self.addressBarFocusEnabled = addressBarFocusEnabled
+        self.addressBarAction = addressBarAction
+        self.addressBarSourceID = addressBarSourceID
+        self.addressBarOutranksURLRules = addressBarOutranksURLRules
     }
 
     // Forward/backward-compatible decoding: missing keys fall back to defaults
@@ -195,6 +223,15 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         appRules = try container.decodeIfPresent([AppRule].self, forKey: .appRules) ?? []
         enhancedModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .enhancedModeEnabled) ?? false
         urlRules = try container.decodeIfPresent([URLRule].self, forKey: .urlRules) ?? []
+        addressBarFocusEnabled = try container.decodeIfPresent(Bool.self, forKey: .addressBarFocusEnabled) ?? false
+        // Decode the action as a raw *string* and map it (same rationale as
+        // `URLRule`): a missing key OR an unrecognized value (a newer build wrote
+        // an action this one doesn't know, then a downgrade reads it) both fall
+        // back to `.switchOnce` instead of throwing.
+        let rawAddressBarAction = try container.decodeIfPresent(String.self, forKey: .addressBarAction)
+        addressBarAction = rawAddressBarAction.flatMap(RuleAction.init(rawValue:)) ?? .switchOnce
+        addressBarSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .addressBarSourceID)
+        addressBarOutranksURLRules = try container.decodeIfPresent(Bool.self, forKey: .addressBarOutranksURLRules) ?? true
     }
 
     public static let `default` = LockConfiguration()

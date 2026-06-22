@@ -10709,6 +10709,150 @@
           }
         }
       }
+    },
+    "Address bar": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Adressleiste" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Barra de direcciones" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Barre d’adresse" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバー" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Barra de endereços" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Адресная строка" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列" } }
+      }
+    },
+    "Set the input source in the address bar": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Eingabequelle in der Adressleiste festlegen" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Establecer la fuente de entrada en la barra de direcciones" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Définir la source de saisie dans la barre d’adresse" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーで入力ソースを設定" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Definir a fonte de entrada na barra de endereços" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Задавать источник ввода в адресной строке" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "在地址栏中设置输入法" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "在網址列中設定輸入法" } }
+      }
+    },
+    "The address-bar rule requires Accessibility": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Adressleisten-Regel erfordert Bedienungshilfen" } },
+        "es": { "stringUnit": { "state": "translated", "value": "La regla de la barra de direcciones requiere accesibilidad" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "La règle de barre d’adresse nécessite l’accessibilité" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーのルールにはアクセシビリティが必要です" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "A regra da barra de endereços requer acessibilidade" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Правило адресной строки требует универсального доступа" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏规则需要辅助功能权限" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列規則需要輔助使用權限" } }
+      }
+    },
+    "Choose an input source for the address bar.": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wählen Sie eine Eingabequelle für die Adressleiste." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Elige una fuente de entrada para la barra de direcciones." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisissez une source de saisie pour la barre d’adresse." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーの入力ソースを選択してください。" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Escolha uma fonte de entrada para a barra de endereços." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Выберите источник ввода для адресной строки." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "请为地址栏选择一个输入法。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "請為網址列選擇一個輸入法。" } }
+      }
+    },
+    "Address bar focused": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Adressleiste fokussiert" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Barra de direcciones enfocada" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Barre d’adresse active" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーにフォーカス" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Barra de endereços em foco" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Фокус на адресной строке" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏获得焦点" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列取得焦點" } }
+      }
+    },
+    "Address bar blurred": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Adressleiste nicht mehr fokussiert" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Barra de direcciones sin foco" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Barre d’adresse désactivée" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーのフォーカス解除" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Barra de endereços sem foco" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Фокус снят с адресной строки" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏失去焦点" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列失去焦點" } }
+      }
+    },
+    "Address-bar rule": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Adressleisten-Regel" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Regla de barra de direcciones" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Règle de barre d’adresse" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバーのルール" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Regra da barra de endereços" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Правило адресной строки" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏规则" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列規則" } }
+      }
+    },
+    "URL rules first": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "URL-Regeln zuerst" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Reglas de URL primero" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Règles d’URL d’abord" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "URL ルール優先" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Regras de URL primeiro" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Сначала правила URL" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "网址规则优先" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址規則優先" } }
+      }
+    },
+    "Address bar first": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Adressleiste zuerst" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Barra de direcciones primero" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Barre d’adresse d’abord" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アドレスバー優先" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Barra de endereços primeiro" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Сначала адресная строка" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "地址栏优先" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "網址列優先" } }
+      }
+    },
+    "Behavior": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Verhalten" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Comportamiento" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Comportement" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "動作" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Comportamento" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Поведение" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "行为" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "行為" } }
+      }
+    },
+    "Priority": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Priorität" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Prioridad" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Priorité" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "優先順位" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Prioridade" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Приоритет" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "优先级" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "優先順序" } }
+      }
+    },
+    "While a browser's address bar is focused, LockIME sets your chosen input source so you can type web addresses. “Lock” keeps it fixed; “Switch” sets it once and lets you change it. “Priority” decides which wins when a URL rule also matches the page.": {
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Solange die Adressleiste eines Browsers fokussiert ist, legt LockIME die gewählte Eingabequelle fest, damit Sie Webadressen eingeben können. „Sperren“ hält sie fest; „Wechseln“ setzt sie einmalig und lässt Sie sie ändern. „Priorität“ entscheidet, was Vorrang hat, wenn auch eine URL-Regel auf die Seite zutrifft." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Mientras la barra de direcciones de un navegador está enfocada, LockIME establece la fuente de entrada elegida para que puedas escribir direcciones web. «Bloquear» la mantiene fija; «Cambiar» la establece una vez y te deja cambiarla. «Prioridad» decide cuál prevalece cuando una regla de URL también coincide con la página." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lorsque la barre d’adresse d’un navigateur est active, LockIME définit la source de saisie choisie pour vous permettre de saisir des adresses web. « Verrouiller » la maintient fixe ; « Basculer » la définit une fois et vous laisse la changer. « Priorité » détermine ce qui l’emporte lorsqu’une règle d’URL correspond aussi à la page." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ブラウザのアドレスバーがフォーカスされている間、LockIME は選択した入力ソースに設定し、ウェブアドレスを入力しやすくします。「ロック」は固定したままにし、「切り替え」は一度だけ設定して、その後は変更できます。「優先順位」は、URL ルールも現在のページに一致する場合にどちらを優先するかを決めます。" } },
+        "pt": { "stringUnit": { "state": "translated", "value": "Enquanto a barra de endereços de um navegador está em foco, o LockIME define a fonte de entrada escolhida para você digitar endereços da web. «Bloquear» a mantém fixa; «Alternar» a define uma vez e permite que você a altere. «Prioridade» decide qual prevalece quando uma regra de URL também corresponde à página." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Пока адресная строка браузера в фокусе, LockIME устанавливает выбранный источник ввода, чтобы вы могли вводить веб-адреса. «Блокировать» удерживает его постоянно; «Переключить» задаёт его один раз и позволяет изменить. «Приоритет» определяет, что важнее, когда правило URL тоже подходит к странице." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "当浏览器地址栏获得焦点时，LockIME 会设置为你选择的输入法，便于输入网址。「锁定」会保持不变；「切换」只设置一次，之后你可自行更改。「优先级」决定当某条网址规则也匹配当前页面时以哪个为准。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "當瀏覽器網址列取得焦點時，LockIME 會設定為你選擇的輸入法，方便輸入網址。「鎖定」會維持不變；「切換」只設定一次，之後你可自行變更。「優先順序」決定當某條網址規則也符合目前頁面時以哪個為準。" } }
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ public final class LockEngine {
     private let enabledSourcesObserver: InputSourceChangeObserver
     private let appMonitor: any FrontmostAppMonitoring
     private let floatingAppMonitor: any FloatingAppMonitoring
+    private let addressBarMonitor: any AddressBarFocusMonitoring
     private let urlProvider: (any BrowserURLProviding)?
     private var urlPollTask: Task<Void, Never>?
 
@@ -31,6 +32,11 @@ public final class LockEngine {
     /// focus, if any. It shadows `frontmostBundleID` for rule resolution because
     /// macOS leaves the frontmost app unchanged while an overlay is up.
     private var launcherBundleID: String?
+    /// Whether the frontmost browser's address bar currently holds keyboard
+    /// focus. Reset to `false` on any frontmost/launcher change (a new context
+    /// hasn't proven the address bar is focused yet) and re-driven by the
+    /// address-bar monitor's events.
+    private var addressBarFocused = false
 
     /// Identity of the one-shot switch rule currently in effect, so the engine
     /// fires a `.switchOnce` resolution only on a *genuine transition into* the
@@ -69,6 +75,7 @@ public final class LockEngine {
         provider: (any InputSourceProviding)? = nil,
         appMonitor: (any FrontmostAppMonitoring)? = nil,
         floatingAppMonitor: (any FloatingAppMonitoring)? = nil,
+        addressBarMonitor: (any AddressBarFocusMonitoring)? = nil,
         urlProvider: (any BrowserURLProviding)? = nil
     ) {
         let provider = provider ?? TISInputSourceProvider()
@@ -78,6 +85,7 @@ public final class LockEngine {
         self.enabledSourcesObserver = InputSourceChangeObserver(.enabledSourcesChanged)
         self.appMonitor = appMonitor ?? AppActivationMonitor()
         self.floatingAppMonitor = floatingAppMonitor ?? FloatingAppMonitor()
+        self.addressBarMonitor = addressBarMonitor ?? AddressBarFocusMonitor()
         self.urlProvider = urlProvider
         self.controller.onActivation = { [weak self] event in
             self?.onActivation?(event)
@@ -90,6 +98,8 @@ public final class LockEngine {
         enabledSourcesObserver.start { [weak self] in self?.handleEnabledSourcesChange() }
         appMonitor.start { [weak self] id in self?.handleFrontmostChange(id) }
         floatingAppMonitor.start { [weak self] id in self?.handleLauncherChange(id) }
+        addressBarMonitor.start { [weak self] focused in self?.handleAddressBarFocusChange(focused) }
+        updateAddressBarMonitoring()
         notifyCurrent()
     }
 
@@ -98,6 +108,7 @@ public final class LockEngine {
         enabledSourcesObserver.stop()
         appMonitor.stop()
         floatingAppMonitor.stop()
+        addressBarMonitor.stop()
         urlPollTask?.cancel()
         urlPollTask = nil
     }
@@ -107,6 +118,7 @@ public final class LockEngine {
     /// grant — only then can the overlay observers attach.
     public func accessibilityDidChange() {
         floatingAppMonitor.refresh()
+        addressBarMonitor.refresh()
     }
 
     /// Apply a configuration: update rules/default, set master enable, and
@@ -132,6 +144,7 @@ public final class LockEngine {
             reevaluate(reason: reason)                       // update cached target only
         }
         updateURLPolling()
+        updateAddressBarMonitoring()
         notifyCurrent()
     }
 
@@ -165,9 +178,13 @@ public final class LockEngine {
         // A normal app activating means no launcher overlay is up (overlays
         // never raise an activation), so clear any stale launcher attribution.
         launcherBundleID = nil
+        // A new frontmost app hasn't proven its address bar is focused; the
+        // monitor will re-assert focus if the new browser's bar is active.
+        addressBarFocused = false
         onFrontmostChange?(effectiveBundleID)
         reevaluate(reason: .appActivated)
         updateURLPolling()
+        updateAddressBarMonitoring()
         notifyCurrent()
     }
 
@@ -176,9 +193,26 @@ public final class LockEngine {
     /// unchanged frontmost app; `nil` reverts to the frontmost app.
     private func handleLauncherChange(_ bundleID: String?) {
         launcherBundleID = bundleID
+        // A launcher overlay shadows the browser, so the address bar isn't the
+        // keyboard focus any more; clear it and re-arm monitoring against the
+        // effective app (the overlay isn't a browser, so it suspends).
+        addressBarFocused = false
         onFrontmostChange?(effectiveBundleID)
         reevaluate(reason: bundleID != nil ? .launcherFocused : .launcherDismissed)
         updateURLPolling()
+        updateAddressBarMonitoring()
+        notifyCurrent()
+    }
+
+    /// A browser's address bar gained or lost keyboard focus. While it holds
+    /// focus, the address-bar rule resolves (unless an explicit URL rule wins);
+    /// losing focus re-resolves to the app/URL/default rule. There is no
+    /// "restore the previous source" step — a one-shot switch simply releases,
+    /// and a continuous lock falls back to whatever the standing rules say.
+    private func handleAddressBarFocusChange(_ focused: Bool) {
+        guard addressBarFocused != focused else { return }
+        addressBarFocused = focused
+        reevaluate(reason: focused ? .addressBarFocused : .addressBarBlurred)
         notifyCurrent()
     }
 
@@ -192,7 +226,8 @@ public final class LockEngine {
         switch RuleResolver.resolve(
             config: config,
             frontmostBundleID: effectiveBundleID,
-            urlMatch: urlMatch.map { (id: $0.id, action: $0.action) }
+            urlMatch: urlMatch.map { (id: $0.id, action: $0.action) },
+            addressBarFocused: addressBarFocused
         ) {
         case .lock(let id, let ruleSource):
             controller.setTarget(
@@ -313,6 +348,17 @@ public final class LockEngine {
                 self.reevaluate(reason: .urlPolled)
             }
         }
+    }
+
+    /// Observe the frontmost browser's address-bar focus only while the feature
+    /// is on, a target is set, and a browser is frontmost — so the AX observer
+    /// attaches to exactly the browser the user is in, and detaches otherwise. A
+    /// launcher overlay over a browser suspends it (the overlay isn't a browser).
+    private func updateAddressBarMonitoring() {
+        let shouldObserve = config.addressBarFocusEnabled
+            && config.addressBarSourceID != nil
+            && BrowserBundleIDs.isBrowser(effectiveBundleID)
+        addressBarMonitor.observe(bundleID: shouldObserve ? effectiveBundleID : nil)
     }
 
     private func notifyCurrent() {

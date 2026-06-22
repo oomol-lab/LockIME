@@ -103,4 +103,144 @@ struct RuleResolverTests {
         )
         #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .lock(us, .globalDefault))
     }
+
+    // MARK: - Address-bar focus rule
+
+    @Test("address-bar focus locks its source over the app/default rule")
+    func addressBarLocks() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.apple.Safari", mode: .locked, lockedSourceID: pinyin)],
+            addressBarFocusEnabled: true,
+            addressBarAction: .lock,
+            addressBarSourceID: abc
+        )
+        #expect(
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", addressBarFocused: true)
+                == .lock(abc, .addressBarRule)
+        )
+        // Not focused → the app rule applies as usual.
+        #expect(
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", addressBarFocused: false)
+                == .lock(pinyin, .appRule)
+        )
+    }
+
+    @Test("address-bar focus with the switch action yields a one-shot switch")
+    func addressBarSwitches() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            addressBarFocusEnabled: true,
+            addressBarAction: .switchOnce,
+            addressBarSourceID: abc
+        )
+        #expect(
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", addressBarFocused: true)
+                == .switchOnce(abc, .addressBarRule)
+        )
+    }
+
+    @Test("by default the address bar outranks a URL rule; URL-first is an opt-out")
+    func addressBarOutranksByDefault() {
+        // New default: addressBarOutranksURLRules == true → the address bar wins
+        // when both apply.
+        let def = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            addressBarFocusEnabled: true,
+            addressBarAction: .lock,
+            addressBarSourceID: abc
+        )
+        #expect(def.addressBarOutranksURLRules == true)
+        #expect(
+            RuleResolver.resolve(
+                config: def, frontmostBundleID: "com.apple.Safari",
+                urlMatch: (pinyin, .lock), addressBarFocused: true
+            ) == .lock(abc, .addressBarRule)
+        )
+
+        // Opt out → URL rules win when the user flips the flag.
+        var urlFirst = def
+        urlFirst.addressBarOutranksURLRules = false
+        #expect(
+            RuleResolver.resolve(
+                config: urlFirst, frontmostBundleID: "com.apple.Safari",
+                urlMatch: (pinyin, .lock), addressBarFocused: true
+            ) == .lock(pinyin, .urlRule)
+        )
+    }
+
+    @Test("the priority flag only matters when the address bar is actually focused")
+    func priorityOnlyWhenFocused() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            addressBarFocusEnabled: true,
+            addressBarAction: .lock,
+            addressBarSourceID: abc
+            // addressBarOutranksURLRules defaults to true
+        )
+        // Bar not focused → the URL rule applies regardless of the priority flag.
+        #expect(
+            RuleResolver.resolve(
+                config: config, frontmostBundleID: "com.apple.Safari",
+                urlMatch: (pinyin, .lock), addressBarFocused: false
+            ) == .lock(pinyin, .urlRule)
+        )
+        // No URL match, bar focused → the address bar applies.
+        #expect(
+            RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Safari", addressBarFocused: true)
+                == .lock(abc, .addressBarRule)
+        )
+    }
+
+    @Test("the winner's switch action is preserved when both browser-scoped rules apply")
+    func switchActionPreservedForWinner() {
+        // URL-first order (opt-out): a switch-action URL rule wins as a one-shot,
+        // even though the address-bar rule is a lock.
+        let urlFirst = LockConfiguration(
+            isEnabled: true, defaultSourceID: us,
+            addressBarFocusEnabled: true, addressBarAction: .lock, addressBarSourceID: abc,
+            addressBarOutranksURLRules: false
+        )
+        #expect(
+            RuleResolver.resolve(
+                config: urlFirst, frontmostBundleID: "com.apple.Safari",
+                urlMatch: (pinyin, .switchOnce), addressBarFocused: true
+            ) == .switchOnce(pinyin, .urlRule)
+        )
+
+        // Address-bar first: a switch-action address-bar rule wins as a one-shot,
+        // even though the URL rule is a lock.
+        let barFirst = LockConfiguration(
+            isEnabled: true, defaultSourceID: us,
+            addressBarFocusEnabled: true, addressBarAction: .switchOnce, addressBarSourceID: abc,
+            addressBarOutranksURLRules: true
+        )
+        #expect(
+            RuleResolver.resolve(
+                config: barFirst, frontmostBundleID: "com.apple.Safari",
+                urlMatch: (pinyin, .lock), addressBarFocused: true
+            ) == .switchOnce(abc, .addressBarRule)
+        )
+    }
+
+    @Test("the address-bar rule is inert when disabled or unconfigured")
+    func addressBarInertWhenOffOrUnset() {
+        // Disabled → falls through to the default.
+        let off = LockConfiguration(
+            isEnabled: true, defaultSourceID: us,
+            addressBarFocusEnabled: false, addressBarAction: .lock, addressBarSourceID: abc
+        )
+        #expect(RuleResolver.resolve(config: off, frontmostBundleID: "com.apple.Safari", addressBarFocused: true) == .lock(us, .globalDefault))
+
+        // Enabled but no source set → falls through (never acts inert).
+        let noSource = LockConfiguration(
+            isEnabled: true, defaultSourceID: us,
+            addressBarFocusEnabled: true, addressBarAction: .lock, addressBarSourceID: nil
+        )
+        #expect(RuleResolver.resolve(config: noSource, frontmostBundleID: "com.apple.Safari", addressBarFocused: true) == .lock(us, .globalDefault))
+    }
 }
