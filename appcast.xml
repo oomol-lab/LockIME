@@ -3,6 +3,21 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.4.1</title>
+            <pubDate>Mon, 22 Jun 2026 05:26:41 +0000</pubDate>
+            <sparkle:version>202606220524</sparkle:version>
+            <sparkle:shortVersionString>1.4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat(rules): add address-bar focus lock/switch rule by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/29
+* docs(readme): regenerate settings screenshots for new UI ([`ec25adc`](https://github.com/oomol-lab/LockIME/commit/ec25adc2b427128c02b427d6d1d02f0e7f6bd47e))
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0...v1.4.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1/LockIME-1.4.1-arm64.zip" length="2478023" type="application/octet-stream" sparkle:edSignature="7+m+f4gXzWToDNWcR7fhHXY6+3fzpZwlu0kmv8b+vK9MD6HqL3kPp1PKfo2BFbvXs3mqGK95of5nH171GIDtAg=="/>
+        </item>
+        <item>
             <title>1.4.0-beta.2</title>
             <pubDate>Mon, 22 Jun 2026 05:15:18 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -17,21 +32,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0-beta.1...v1.4.0-beta.2
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.0-beta.2/LockIME-1.4.0-beta.2-arm64.zip" length="2478041" type="application/octet-stream" sparkle:edSignature="LfePwXXP4DVsAgzACIwMvZEcQ5vmcYicK9g3JJqMOdR7SaFIIBEITeUB3BLfOZpnwt/ASpS2tR9MiJvOGt29Ag=="/>
-        </item>
-        <item>
-            <title>1.4.0-beta.1</title>
-            <pubDate>Wed, 17 Jun 2026 01:59:39 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202606170157</sparkle:version>
-            <sparkle:shortVersionString>1.4.0-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* docs(readme): regenerate settings screenshots for new UI ([`ec25adc`](https://github.com/oomol-lab/LockIME/commit/ec25adc2b427128c02b427d6d1d02f0e7f6bd47e))
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.3.0-beta.3...v1.4.0-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.0-beta.1/LockIME-1.4.0-beta.1-arm64.zip" length="2465154" type="application/octet-stream" sparkle:edSignature="pB/NfCHyt3FFviJD6N2j5da9r/blf21Y6tB/oIuwlsK1Th3yBFc3EoeGcWrhOuSME1l/derZx00ch0PttrywAg=="/>
         </item>
         <item>
             <title>1.4.0</title>
@@ -50,22 +50,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.3.0...v1.4.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.0/LockIME-1.4.0-arm64.zip" length="2465129" type="application/octet-stream" sparkle:edSignature="m3BagAhT2d591sznWCwIjOqomZ0+jmIqLcL4kwcYQ6XDEsrWqU7jgZCU9uZQCYDiL0t82kKwuciD1uUTxcJ2Cg=="/>
-        </item>
-        <item>
-            <title>1.3.0-beta.3</title>
-            <pubDate>Tue, 16 Jun 2026 23:26:57 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202606162325</sparkle:version>
-            <sparkle:shortVersionString>1.3.0-beta.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(rules): add URL match types and drag-to-reorder priority by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/26
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.3.0-beta.2...v1.3.0-beta.3
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.3.0-beta.3/LockIME-1.3.0-beta.3-arm64.zip" length="2465150" type="application/octet-stream" sparkle:edSignature="+GcivEdGynR1q6zi+murYsQzPO1VNKVim3b3NhefDZUO3PtwA5WvYyEbx9jPDeyrzMZu+0Wd78B1ugeRaL1XBw=="/>
         </item>
         <item>
             <title>1.3.0</title>
@@ -91,22 +75,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.2.2...v1.3.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.3.0/LockIME-1.3.0-arm64.zip" length="2376772" type="application/octet-stream" sparkle:edSignature="B5TV26VCeVd1kH3i5l0mpzUxPN5XN0giEfLePp00D1cYxl3uX5POuBMUnAm6T0t26Fxu+1XkpqsEODKnJMUSDA=="/>
-        </item>
-        <item>
-            <title>1.2.2</title>
-            <pubDate>Fri, 12 Jun 2026 09:25:50 +0000</pubDate>
-            <sparkle:version>202606120924</sparkle:version>
-            <sparkle:shortVersionString>1.2.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* test: add CI-safe unit coverage across LockIMEKit by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/10
-* feat(lock): detect Spotlight and launcher overlays for rules by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/11
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.2.1...v1.2.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.2.2/LockIME-1.2.2-arm64.zip" length="3641641" type="application/octet-stream" sparkle:edSignature="pAnRLicERGXQjCek48scHM28BZj9BI7FxMeuUMXBwQHmMGPgYMNOU/oXRfMSi4/jrv1/bWAxT3h77fZIfo1vCA=="/>
         </item>
         <item>
             <title>1.0.2</title>
