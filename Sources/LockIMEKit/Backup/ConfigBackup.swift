@@ -149,6 +149,57 @@ public extension ConfigBackup {
     /// The conventional file extension for exported backups.
     static let fileExtension = "lockime"
 
+    /// The fixed, brand prefix every exported backup's default filename carries
+    /// (before the timestamp). ASCII and **unlocalized on purpose**: it keeps a
+    /// folder of exports grouped and sortable regardless of the app's display
+    /// language, and "LockIME" is the brand (never translated).
+    static let fileNamePrefix = "LockIME Backup"
+
+    /// The default export filename **without** the extension — the value the
+    /// export `NSSavePanel` should put in its name field. The panel appends the
+    /// single, correct `.lockime` from its `allowedContentTypes`; see
+    /// `suggestedFileName` for why the extension is *not* embedded here.
+    ///
+    /// The stem is the brand prefix plus a wall-clock timestamp built from
+    /// calendar components in a fixed, locale-independent layout
+    /// (`yyyy-MM-dd HH-mm-ss`) — deliberately *not* a localized `DateFormatter`
+    /// string, which would (a) leak the **system** locale into a name the app's
+    /// language override is meant to govern and (b) risk filename-illegal
+    /// separators (a `:` is reserved on macOS). Time fields use `-`, never `.`,
+    /// so the stem carries **no dots at all** — nothing `NSSavePanel` could
+    /// mistake for an existing extension. The ASCII layout sorts chronologically
+    /// by name.
+    ///
+    /// - Parameters:
+    ///   - date: the moment to stamp (the caller passes `Date()` at export time).
+    ///   - timeZone: the zone the wall-clock time is rendered in; defaults to the
+    ///     user's current zone, injectable for deterministic tests.
+    static func suggestedFileNameStem(date: Date, timeZone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let c = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        let stamp = String(
+            format: "%04d-%02d-%02d %02d-%02d-%02d",
+            c.year ?? 0, c.month ?? 0, c.day ?? 0, c.hour ?? 0, c.minute ?? 0, c.second ?? 0
+        )
+        return "\(fileNamePrefix) \(stamp)"
+    }
+
+    /// The full default export filename, `<stem>.lockime`, for contexts that
+    /// need a complete name (logging, non-panel saves).
+    ///
+    /// The export panel does **not** use this — it feeds `suggestedFileNameStem`
+    /// and lets `allowedContentTypes` append the extension. Embedding the
+    /// extension in `NSSavePanel.nameFieldStringValue` risks a doubled
+    /// `….lockime.lockime`: the panel ensures the saved file carries an allowed
+    /// extension, and if its own extension-detection doesn't cleanly match the
+    /// embedded one (notably when the stem contains dots, e.g. a `23.15.28`
+    /// time), it appends `.lockime` a second time. Letting the panel own the
+    /// extension sidesteps that entirely.
+    static func suggestedFileName(date: Date, timeZone: TimeZone = .current) -> String {
+        "\(suggestedFileNameStem(date: date, timeZone: timeZone)).\(fileExtension)"
+    }
+
     /// Build a backup envelope from a live configuration, dropping the per-device
     /// runtime state and capturing a display-name catalog for every referenced
     /// input source whose name is known.

@@ -248,4 +248,117 @@ struct ConfigBackupTests {
         #expect(payload.urlRules.isEmpty)
         #expect(payload.sourceNames.isEmpty)
     }
+
+    // MARK: - Suggested export filename
+
+    /// A `Date` at the given wall-clock components in a fixed zone, so the
+    /// expected filename is deterministic regardless of the test host's zone.
+    private func date(
+        _ y: Int, _ mo: Int, _ d: Int, _ h: Int, _ mi: Int, _ s: Int,
+        in timeZone: TimeZone
+    ) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        var c = DateComponents()
+        (c.year, c.month, c.day, c.hour, c.minute, c.second) = (y, mo, d, h, mi, s)
+        return calendar.date(from: c)!
+    }
+
+    @Test("suggestedFileNameStem is the panel name field value — no extension, no dots")
+    func suggestedFileNameStemHasNoDots() {
+        // The export panel feeds this to NSSavePanel and lets allowedContentTypes
+        // append the extension. The stem must carry NO dots — a dot would look
+        // like an extension to the panel and risk a doubled `.lockime.lockime`.
+        let tz = TimeZone(identifier: "America/New_York")!
+        let stem = ConfigBackup.suggestedFileNameStem(date: date(2026, 6, 22, 23, 15, 28, in: tz), timeZone: tz)
+        #expect(stem == "LockIME Backup 2026-06-22 23-15-28")
+        #expect(!stem.contains("."))
+        #expect((stem as NSString).pathExtension.isEmpty)
+    }
+
+    @Test("suggestedFileName is the stem plus exactly the .lockime extension")
+    func suggestedFileNameIsStemPlusExtension() {
+        let tz = TimeZone(identifier: "UTC")!
+        let date = date(2026, 6, 22, 23, 15, 28, in: tz)
+        let stem = ConfigBackup.suggestedFileNameStem(date: date, timeZone: tz)
+        let full = ConfigBackup.suggestedFileName(date: date, timeZone: tz)
+        #expect(full == "\(stem).\(ConfigBackup.fileExtension)")
+    }
+
+    @Test("suggestedFileName stamps a fixed yyyy-MM-dd HH-mm-ss layout")
+    func suggestedFileNameLayout() {
+        let tz = TimeZone(identifier: "America/New_York")!
+        let name = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 14, 30, 15, in: tz), timeZone: tz)
+        #expect(name == "LockIME Backup 2026-06-22 14-30-15.lockime")
+    }
+
+    @Test("suggestedFileName zero-pads every component")
+    func suggestedFileNameZeroPads() {
+        let tz = TimeZone(identifier: "UTC")!
+        let name = ConfigBackup.suggestedFileName(date: date(2026, 1, 2, 3, 4, 5, in: tz), timeZone: tz)
+        #expect(name == "LockIME Backup 2026-01-02 03-04-05.lockime")
+    }
+
+    @Test("suggestedFileName renders wall-clock time in the given zone")
+    func suggestedFileNameHonorsZone() {
+        // The same instant reads as different wall-clock times per zone, so the
+        // stamp must reflect the zone passed in — not the host's.
+        let instant = date(2026, 6, 22, 12, 0, 0, in: TimeZone(identifier: "UTC")!)
+        let tokyo = ConfigBackup.suggestedFileName(date: instant, timeZone: TimeZone(identifier: "Asia/Tokyo")!)
+        let utc = ConfigBackup.suggestedFileName(date: instant, timeZone: TimeZone(identifier: "UTC")!)
+        #expect(tokyo == "LockIME Backup 2026-06-22 21-00-00.lockime")
+        #expect(utc == "LockIME Backup 2026-06-22 12-00-00.lockime")
+    }
+
+    @Test("suggestedFileName carries the brand prefix and the backup extension")
+    func suggestedFileNamePrefixAndExtension() {
+        let tz = TimeZone(identifier: "UTC")!
+        let name = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 9, 8, 7, in: tz), timeZone: tz)
+        #expect(name.hasPrefix(ConfigBackup.fileNamePrefix + " "))
+        #expect(name.hasSuffix("." + ConfigBackup.fileExtension))
+    }
+
+    @Test("suggestedFileName produces a filename-legal name (no reserved separators)")
+    func suggestedFileNameIsLegal() {
+        let tz = TimeZone(identifier: "UTC")!
+        let name = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 14, 30, 15, in: tz), timeZone: tz)
+        // `:` is reserved on macOS (and `/` is the path separator); the stamp
+        // must avoid both — that's why the time uses `-`.
+        #expect(!name.contains(":"))
+        #expect(!name.contains("/"))
+    }
+
+    @Test("suggestedFileName contains exactly one dot — the extension separator")
+    func suggestedFileNameHasSingleDot() {
+        // Regression guard: a timestamp with interior dots (e.g. `…23.15.28`)
+        // gives the name a multi-part trailing extension that fools NSSavePanel
+        // into appending `.lockime` a second time → `….lockime.lockime`. The only
+        // `.` in the name must be the one before the extension.
+        let tz = TimeZone(identifier: "UTC")!
+        let name = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 23, 15, 28, in: tz), timeZone: tz)
+        #expect(name.filter { $0 == "." }.count == 1)
+        #expect((name as NSString).pathExtension == ConfigBackup.fileExtension)
+    }
+
+    @Test("suggestedFileName defaults to the current zone (the production call site)")
+    func suggestedFileNameDefaultsToCurrentZone() {
+        // The export panel calls `suggestedFileName(date:)` with no zone, leaning
+        // on the `timeZone = .current` default. Exercise that default path without
+        // hardcoding a host-zone-dependent expected string: it must equal the same
+        // call made with `.current` passed explicitly.
+        let instant = date(2026, 6, 22, 12, 0, 0, in: TimeZone(identifier: "UTC")!)
+        #expect(ConfigBackup.suggestedFileName(date: instant)
+            == ConfigBackup.suggestedFileName(date: instant, timeZone: .current))
+    }
+
+    @Test("suggestedFileName names later exports so they sort after earlier ones")
+    func suggestedFileNameSortsChronologically() {
+        let tz = TimeZone(identifier: "UTC")!
+        // The distinguishability goal: distinct moments give distinct names, and
+        // lexicographic order matches chronological order (sortable in Finder).
+        let earlier = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 9, 0, 0, in: tz), timeZone: tz)
+        let later = ConfigBackup.suggestedFileName(date: date(2026, 6, 22, 9, 0, 1, in: tz), timeZone: tz)
+        #expect(earlier != later)
+        #expect(earlier < later)
+    }
 }

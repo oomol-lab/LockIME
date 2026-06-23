@@ -76,10 +76,15 @@ struct BackupSettingsPane: View {
         let panel = NSSavePanel()
         panel.title = state.loc("Export Configuration")
         panel.prompt = state.loc("Export")
-        panel.nameFieldStringValue = "LockIME Backup.\(ConfigBackup.fileExtension)"
+        // Stamp the suggested name with the local time so successive exports are
+        // distinguishable in Finder instead of all defaulting to one filename.
+        // Feed the panel the *stem* (no extension): `allowedContentTypes` makes it
+        // append the single correct `.lockime`. Embedding the extension here makes
+        // NSSavePanel append a SECOND one (`.lockime.lockime`), so we leave it off.
         if let type = UTType(filenameExtension: ConfigBackup.fileExtension) {
             panel.allowedContentTypes = [type]
         }
+        panel.nameFieldStringValue = ConfigBackup.suggestedFileNameStem(date: Date())
         panel.isExtensionHidden = false
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
