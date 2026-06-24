@@ -172,7 +172,7 @@ that file to the zip by basename and embeds it inline as a CDATA
 `<description sparkle:format="markdown">` (`--embed-release-notes` is required —
 markdown notes are not auto-embedded the way HTML fragments are), so the notes
 travel with the appcast and need no hosting. The update window renders that
-markdown natively with swift-markdown-ui — embedding **markdown, not a
+markdown natively with its own parser — embedding **markdown, not a
 pre-rendered HTML fragment**, which that view would show as raw tags. The same
 file is reused verbatim as the GitHub Release `body`, so the Release page and the
 update window can never disagree.

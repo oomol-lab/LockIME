@@ -87,7 +87,6 @@ struct AcknowledgementsView: View {
 
     private let libraries: [Library] = [
         .init(name: "Sparkle", license: "Sparkle License", url: URL(string: "https://github.com/sparkle-project/Sparkle")!),
-        .init(name: "swift-markdown-ui", license: "MIT License", url: URL(string: "https://github.com/gonzalezreal/swift-markdown-ui")!),
         .init(name: "KeyboardShortcuts", license: "MIT License", url: URL(string: "https://github.com/sindresorhus/KeyboardShortcuts")!),
         .init(name: "PermissionFlow", license: "MIT License", url: URL(string: "https://github.com/jaywcjlove/PermissionFlow")!),
     ]

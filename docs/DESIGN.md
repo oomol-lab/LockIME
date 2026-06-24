@@ -216,8 +216,8 @@ Background `.regularMaterial`. Rhythm: 28 top · icon **128** (`NSApp.applicatio
 · 14 · name `.title` semibold · 2 · "Version x (y)" `.callout .secondary`
 selectable · 12 · tagline `.subheadline .secondary` · 14 · links row · Spacer ·
 copyright `.caption .tertiary` · 20 bottom. Links (`.buttonStyle(.link)`): GitHub,
-Website, Acknowledgements (sheet listing Sparkle / swift-markdown-ui /
-KeyboardShortcuts licenses).
+Website, Acknowledgements (sheet listing Sparkle / KeyboardShortcuts /
+PermissionFlow licenses).
 
 ### 4.4 Update window — Apple Software Update parity
 Fixed **540×480**, non-reflowing across phases. Header: **real app icon 52pt**
