@@ -49,7 +49,7 @@ jobs:
       APP_NAME: LockIME
       TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Full history + tags so the release-notes step can list the
           # direct-push commits in <previous-tag>..HEAD.

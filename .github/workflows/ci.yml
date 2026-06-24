@@ -48,7 +48,7 @@ jobs:
     if: needs.gate.outputs.run == 'true'
     runs-on: blacksmith-6vcpu-macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Select Xcode 26
         run: |

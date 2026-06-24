@@ -47,7 +47,7 @@ jobs:
       channel: ${{ steps.compute.outputs.channel }}
       prerelease: ${{ steps.compute.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
