@@ -353,14 +353,24 @@ jobs:
           done
           rm -f "$RUNNER_TEMP/notary_key.p8"
 
-      - name: Tag & publish GitHub Release
+      - name: Tag GitHub Release & upload assets (draft)
+        # Immutable releases (now enabled on this repo) freeze a Release's
+        # assets the moment it is *published*, so every asset must be attached
+        # while the release is still a draft. Create it as a draft here (drafts
+        # stay mutable), upload all four artifacts, then publish it in the next
+        # step. Doing it published-in-one-shot fails with "Cannot upload asset
+        # ... to an immutable release" partway through the upload — softprops'
+        # own hint is exactly this: "keep the release as a draft with
+        # draft: true, then publish it later from that draft."
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag }}
           # Pin the tag to the commit that was actually built, not whatever
-          # the default branch points at by the time this step runs.
+          # the default branch points at by the time this step runs. The tag
+          # ref itself is only created when the draft is published (next step).
           target_commitish: ${{ github.sha }}
           prerelease: ${{ inputs.prerelease }}
+          draft: true
           # Four artifacts per release: a zip (the Sparkle enclosure) and a
           # dmg (manual download) for each architecture. The dist dirs also
           # hold .md release notes and the appcast — only the zips ship.
@@ -373,6 +383,21 @@ jobs:
           # (Replaces generate_release_notes: true, which would regenerate them
           # independently and only populate the Release page, not the appcast.)
           body_path: build/release-notes.md
+
+      - name: Publish GitHub Release
+        # Flip the draft to published now that all assets are attached. This is
+        # where the tag (on github.sha, recorded above) is created and the
+        # release becomes immutable — with its assets already in place.
+        # --draft=false touches only the draft flag, so prerelease is preserved
+        # (a beta stays a pre-release and never becomes "Latest"; GitHub still
+        # auto-computes "Latest" for stable on publish, same as before). The
+        # downstream steps below run sequentially in this same job and don't
+        # subscribe to release.published/release.prereleased events, so the
+        # draft-publishes-as-release.published quirk doesn't affect them.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: gh release edit "$TAG" --draft=false
 
       - name: Stage appcasts for gh-pages
         # Publish ONLY the appcasts. The dist dirs also hold the distribution
