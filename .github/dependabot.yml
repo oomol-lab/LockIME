@@ -1,0 +1,51 @@
+# Dependabot keeps two dependency surfaces current. Commit prefixes and the
+# `(deps)` scope follow the repo's Conventional Commits convention so the
+# squash titles read like every other PR (`ci(deps): ...`, `build(deps): ...`).
+#
+# cooldown: let a freshly released version soak for N days before its PR is
+# opened — supply-chain safety, so a malicious or broken release has time to
+# be caught/yanked first. It delays *version* updates only; security (CVE)
+# updates still open immediately, so we don't trade away urgent patches.
+version: 2
+updates:
+  # GitHub Actions pinned across ci / nightly / release / build-publish.
+  # `directory: "/"` scans .github/workflows/; local reusable-workflow
+  # `uses: ./...` references are ignored automatically.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    # github-actions supports only the flat default-days (no per-semver-tier
+    # cooldown), so every actions bump waits 3 days.
+    cooldown:
+      default-days: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Swift Package Manager deps (Sparkle, KeyboardShortcuts, PermissionFlow).
+  # This project has no top-level Package.swift — xcodegen declares the
+  # packages in project.yml and the pins live in the Xcode project bundle
+  # (LockIME.xcodeproj/.../swiftpm/Package.resolved). Dependabot's Swift
+  # updater discovers that nested Package.resolved and reads the version
+  # rules from project.pbxproj (xcodegen's `from:` → "up to next major"),
+  # so it stays within each package's major and never proposes a major bump.
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    # swift also supports semver-major/minor/patch-days if you ever want
+    # majors to soak longer than patches; default-days: 3 keeps it uniform.
+    cooldown:
+      default-days: 3
+    groups:
+      swift:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "build"
+      include: "scope"
