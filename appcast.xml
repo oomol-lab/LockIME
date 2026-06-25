@@ -3,6 +3,28 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.4.1-beta.2</title>
+            <pubDate>Thu, 25 Jun 2026 03:44:39 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202606250342</sparkle:version>
+            <sparkle:shortVersionString>1.4.1-beta.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat(backup): timestamp the exported config filename by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/30
+* fix(ci): upload release assets to a draft before publishing by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/31
+* ci: add Dependabot for GitHub Actions and Swift deps by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/32
+* fix(about): drop stale swift-markdown-ui acknowledgement by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/34
+* ci(deps): bump actions/checkout from 6 to 7 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/33
+
+## New Contributors
+* @dependabot[bot] made their first contribution in https://github.com/oomol-lab/LockIME/pull/33
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0-beta.2...v1.4.1-beta.2
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1-beta.2/LockIME-1.4.1-beta.2-arm64.zip" length="2479536" type="application/octet-stream" sparkle:edSignature="avBedh46qBZxe/haRTOaWF12iIiRc0Uzp8DhzMQDtI6iAjEZtLAgBUuw/VhIY7bBovYYslzz0sSUc50f2LIrAg=="/>
+        </item>
+        <item>
             <title>1.4.1</title>
             <pubDate>Mon, 22 Jun 2026 05:26:41 +0000</pubDate>
             <sparkle:version>202606220524</sparkle:version>
