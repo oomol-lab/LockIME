@@ -51,9 +51,10 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 
 - **Sofortiges Wieder-Sperren** — schaltet die aktive Eingabequelle in dem Moment zurück, in dem du (oder eine andere App) sie wechselst, global oder pro App.
 - **Sperren oder wechseln** — Regeln pro App und pro URL können eine Eingabequelle *sperren* (bei jeder Abweichung erneut angewendet) oder einmalig dorthin *wechseln*, sobald du die App oder Seite aktivierst, und dich danach frei wählen lassen.
+- **Global sperren oder einfach wechseln** — ein einziger Schalter **LockIME aktivieren** treibt alles an; ein untergeordneter Schalter **Sperre aktivieren** steuert ausschließlich die kontinuierliche Sperre. Schalte die Sperre aus, um LockIME als reinen Umschalter pro App/pro Seite zu nutzen — es schaltet dich hinein, lässt dich danach frei und fixiert nichts.
 - **Flexibler URL-Abgleich** — Regeln pro URL (erweiterter Modus) passen über eine Domain und ihre Subdomains, eine exakte Domain, ein Domain-Schlüsselwort oder einen regulären Ausdruck über die vollständige URL und greifen in einer Prioritätsreihenfolge, die du per Ziehen anordnest — der erste Treffer gewinnt.
 - **Steuerung über die Menüleiste** — aktivieren/deaktivieren, die gesperrte Eingabequelle wechseln, die aktuelle Eingabequelle einsehen und die Auslösungen direkt in der Menüleiste verfolgen.
-- **Tastatur-Kurzbefehle** — konfigurierbare globale Kurzbefehle zum Ein- und Ausschalten der Sperre und zum Durchschalten der gesperrten Eingabequelle sowie App-spezifische Kurzbefehle, um die Regel der vordersten App durchzuschalten oder zu entfernen.
+- **Tastatur-Kurzbefehle** — konfigurierbare globale Kurzbefehle zum Ein- und Ausschalten von LockIME und zum Durchschalten der gesperrten Eingabequelle sowie App-spezifische Kurzbefehle, um die Regel der vordersten App durchzuschalten oder zu entfernen.
 - **Start bei Anmeldung** — startet automatisch beim Anmelden (standardmäßig aus).
 - **Heller & dunkler Modus** — eine einheitliche, systemnative Designsprache, die sich an helles und dunkles Erscheinungsbild anpasst, plus ein maßgeschneidertes App-Symbol. Siehe [docs/DESIGN.md](../DESIGN.md).
 - **Sprachwechsel zur Laufzeit** — wechsle sofort zwischen 9 Sprachen, ohne Neustart: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.

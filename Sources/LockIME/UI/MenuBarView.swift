@@ -46,16 +46,19 @@ struct MenuBarView: View {
         // lock toggles. (A `Toggle`'s native checkmark lives in NSMenu's *state*
         // column, which collapses to zero width when nothing is checked — that
         // is what made the menu jump.) Clicking an unchecked source locks to it
-        // (sets target + enables, one commit); clicking the checked source
-        // disables locking. No separate master toggle, no submenu. Source names
+        // (sets the global target + engages master and locking, one commit);
+        // clicking the checked source clears the global target (app and switch
+        // rules stay live). No separate master toggle, no submenu. Source names
         // are verbatim system strings, not catalog keys. The global toggle-lock
-        // shortcut (Settings ▸ Shortcuts) is unchanged: it flips locking on/off
-        // against the remembered target.
+        // shortcut (Settings ▸ Shortcuts) flips the master (Enable LockIME) on/off.
         ForEach(state.availableSources) { source in
             let isLockedTo = state.isLocked && state.config.defaultSourceID == source.id
             Button {
                 if isLockedTo {
-                    state.setMasterEnabled(false)
+                    // Clear just the global lock target — the app and any one-shot
+                    // switch rules stay alive. (Use Settings to turn LockIME off
+                    // entirely, or to toggle locking without losing the target.)
+                    state.setDefaultSource(nil)
                 } else {
                     state.lockToSource(source.id)
                 }

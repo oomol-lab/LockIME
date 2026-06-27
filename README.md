@@ -61,15 +61,19 @@ Either way, the app keeps itself up to date via Sparkle.
 - **Lock or switch** — per-app and per-URL rules can *lock* an input source
   (re-applied whenever it drifts) or just *switch* to it once when you focus the
   app or page, then step out of the way and let you change it freely.
+- **Lock globally, or just switch** — one **Enable LockIME** switch powers
+  everything; a subordinate **Enable locking** toggle controls only the
+  continuous lock. Turn locking off to use LockIME as a pure per-app/per-site
+  switcher — it switches you in, then leaves you free, pinning nothing.
 - **Flexible URL matching** — per-URL rules (enhanced mode) match by a domain and
   its subdomains, an exact domain, a domain keyword, or a regular expression over
   the full URL, and apply in a priority order you drag to arrange — first match
   wins.
 - **Menu-bar control** — activate/deactivate, switch the locked input source,
   view the current source, and track the activation count from the menu bar.
-- **Keyboard shortcuts** — configurable global shortcuts to toggle locking and
-  cycle the locked input source, plus per-app shortcuts to cycle or unbind the
-  rule for whichever app is frontmost.
+- **Keyboard shortcuts** — configurable global shortcuts to toggle LockIME on or
+  off and cycle the locked input source, plus per-app shortcuts to cycle or
+  unbind the rule for whichever app is frontmost.
 - **Launch at login** — starts automatically when you log in (off by default).
 - **Light & dark mode** — a unified, system-native design language that adapts to
   light and dark appearance, plus a bespoke app icon. See

@@ -161,8 +161,20 @@ public struct URLRule: Codable, Sendable, Hashable, Identifiable {
 
 /// The full persisted locking configuration.
 public struct LockConfiguration: Codable, Sendable, Equatable {
-    /// Master on/off (the tray "activate" toggle).
+    /// Master on/off — "Enable LockIME". When off, the app is fully idle: it
+    /// neither **locks** nor **switches**, regardless of any rule. This is the
+    /// single power switch the menu bar and the global toggle shortcut flip.
     public var isEnabled: Bool
+    /// Whether the **continuous-lock** capability is engaged, *subordinate* to
+    /// `isEnabled` (it only matters while the master is on). When off, no rule
+    /// ever pins a source continuously — the global default, per-app `.locked`
+    /// rules, URL `.lock` rules, and the address-bar lock all go inert — but the
+    /// **one-shot switch** capability is untouched and keeps firing (a `.switched`
+    /// app rule, a `.switchOnce` URL/address-bar rule). That is the "act like
+    /// Input Source Pro" mode: per-context auto-switch with no global lock.
+    /// Defaults **on** so an upgrade preserves the prior behavior (master on ⇒
+    /// locking on), and a missing key decodes to `true` for the same reason.
+    public var lockingEnabled: Bool
     /// Global default locked source, used when no app rule applies.
     public var defaultSourceID: InputSourceID?
     /// Per-app overrides.
@@ -194,6 +206,7 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
 
     public init(
         isEnabled: Bool = false,
+        lockingEnabled: Bool = true,
         defaultSourceID: InputSourceID? = nil,
         appRules: [AppRule] = [],
         enhancedModeEnabled: Bool = false,
@@ -204,6 +217,7 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         addressBarOutranksURLRules: Bool = true
     ) {
         self.isEnabled = isEnabled
+        self.lockingEnabled = lockingEnabled
         self.defaultSourceID = defaultSourceID
         self.appRules = appRules
         self.enhancedModeEnabled = enhancedModeEnabled
@@ -219,6 +233,9 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
+        // Absent (any config persisted before this field existed) ⇒ `true`, so an
+        // upgrade keeps the prior "master on ⇒ locking on" behavior unchanged.
+        lockingEnabled = try container.decodeIfPresent(Bool.self, forKey: .lockingEnabled) ?? true
         defaultSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .defaultSourceID)
         appRules = try container.decodeIfPresent([AppRule].self, forKey: .appRules) ?? []
         enhancedModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .enhancedModeEnabled) ?? false

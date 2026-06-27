@@ -78,13 +78,20 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+The master (`lock` / `unlock` / `toggle-lock`) turns **LockIME** on or off — it
+gates everything (both locking and switching). The `set-locking` sub-toggle,
+subordinate to the master, controls only the **continuous lock**: turn it off to
+stop pinning any source while one-shot switch rules keep firing — the "act like a
+pure switcher" mode.
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Turn the master lock **on**. |
-| `unlock` | — | Turn the master lock **off**. |
-| `toggle-lock` *(alias `toggle`)* | — | Flip the master lock. |
+| `lock` | — | Turn **LockIME** (the master) **on** — applies your rules. |
+| `unlock` | — | Turn **LockIME** (the master) **off** — fully idle. |
+| `toggle-lock` *(alias `toggle`)* | — | Flip the master on/off. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Turn the **continuous lock** on/off (or flip it). Off ⇒ nothing is pinned, but switch rules still fire. No effect while the master is off. |
 
 ### Global input source
 
@@ -179,6 +186,8 @@ Query commands return a JSON payload through the `x-success` callback (see
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -193,6 +202,8 @@ Query commands return a JSON payload through the `x-success` callback (see
 }
 ```
 
+`enabled` is the master ("Enable LockIME"); `lockingEnabled` is the continuous-lock
+sub-toggle; `locked` is `true` only when both are on (a lock is actually in force).
 `currentSource`, `defaultSource`, and `frontmostApp` are present only when known.
 
 ---

@@ -65,10 +65,28 @@ struct LockConfigurationTests {
         let config = try JSONDecoder().decode(LockConfiguration.self, from: Data("{}".utf8))
         #expect(config == LockConfiguration.default)
         #expect(config.isEnabled == false)
+        #expect(config.lockingEnabled == true)
         #expect(config.defaultSourceID == nil)
         #expect(config.appRules.isEmpty)
         #expect(config.enhancedModeEnabled == false)
         #expect(config.urlRules.isEmpty)
+    }
+
+    @Test("a pre-existing config (no lockingEnabled key) migrates to locking on")
+    func lockingEnabledDefaultsTrueWhenAbsent() throws {
+        // Any configuration persisted before the field existed lacks the key, so
+        // an upgrade must keep the prior "master on ⇒ locking on" behavior.
+        let json = #"{"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.lockingEnabled == true)
+    }
+
+    @Test("an explicit lockingEnabled=false is honored (pure-switch mode persists)")
+    func lockingEnabledFalseIsHonored() throws {
+        let json = #"{"isEnabled": true, "lockingEnabled": false}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.isEnabled == true)
+        #expect(config.lockingEnabled == false)
     }
 
     @Test("decoding a partial object keeps present keys and defaults the rest")

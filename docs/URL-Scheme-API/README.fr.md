@@ -79,13 +79,16 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+Le verrou principal (`lock` / `unlock` / `toggle-lock`) active ou désactive **LockIME** — il conditionne tout (le verrouillage comme la bascule). Le sous-commutateur `set-locking`, subordonné au verrou principal, ne contrôle que le **verrou continu** : désactivez-le pour cesser d'épingler toute source tandis que les règles de bascule ponctuelle continuent de se déclencher — le mode « se comporter comme un simple commutateur ».
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Activer le verrou principal (**on**). |
-| `unlock` | — | Désactiver le verrou principal (**off**). |
-| `toggle-lock` *(alias `toggle`)* | — | Inverser le verrou principal. |
+| `lock` | — | Activer **LockIME** (le verrou principal) — applique vos règles. |
+| `unlock` | — | Désactiver **LockIME** (le verrou principal) — totalement inactif. |
+| `toggle-lock` *(alias `toggle`)* | — | Inverser l'état du verrou principal. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activer/désactiver le **verrou continu** (ou l'inverser). Désactivé ⇒ rien n'est épinglé, mais les règles de bascule se déclenchent quand même. Sans effet tant que le verrou principal est désactivé. |
 
 ### Global input source
 
@@ -181,6 +184,8 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -195,6 +200,7 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 }
 ```
 
+`enabled` est le verrou principal (« Activer LockIME ») ; `lockingEnabled` est le sous-commutateur de verrou continu ; `locked` vaut `true` uniquement lorsque les deux sont activés (un verrou est réellement en vigueur).
 `currentSource`, `defaultSource` et `frontmostApp` ne sont présents que lorsqu'ils sont connus.
 
 ---

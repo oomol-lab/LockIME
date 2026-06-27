@@ -55,9 +55,10 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 
 - **Rebloqueio instantâneo** — devolve a fonte de entrada ativa para a bloqueada no momento em que você (ou outro app) a troca, globalmente ou por app.
 - **Bloquear ou alternar** — as regras por app e por URL podem *bloquear* uma fonte de entrada (reaplicada sempre que ela desvia) ou apenas *alternar* para ela uma vez quando você foca o app ou a página, deixando você livre para mudá-la depois.
+- **Bloquear globalmente, ou apenas alternar** — um único interruptor **Ativar o LockIME** comanda tudo; um botão subordinado **Ativar o bloqueio** controla apenas o bloqueio contínuo. Desative o bloqueio para usar o LockIME como um alternador puro por app/por site — ele alterna você para a fonte, depois deixa você livre, sem fixar nada.
 - **Correspondência flexível de URL** — as regras por URL (modo aprimorado) correspondem por um domínio e seus subdomínios, por um domínio exato, por uma palavra-chave de domínio, ou por uma expressão regular sobre a URL inteira, e se aplicam em uma ordem de prioridade que você arrasta para organizar — a primeira correspondência vence.
 - **Controle pela barra de menus** — ative/desative, troque a fonte de entrada bloqueada, veja a fonte atual e acompanhe o contador de ativações pela barra de menus.
-- **Atalhos de teclado** — atalhos globais configuráveis para ativar/desativar o bloqueio e percorrer a fonte de entrada bloqueada, além de atalhos por app para percorrer ou remover a regra do app em primeiro plano.
+- **Atalhos de teclado** — atalhos globais configuráveis para ativar/desativar o LockIME e percorrer a fonte de entrada bloqueada, além de atalhos por app para percorrer ou remover a regra do app em primeiro plano.
 - **Iniciar no login** — inicia automaticamente quando você faz login (desativado por padrão).
 - **Modo claro e escuro** — uma linguagem de design unificada e nativa do sistema, que se adapta às aparências clara e escura, além de um ícone de app sob medida. Veja [docs/DESIGN.md](../DESIGN.md).
 - **Troca de idioma ao vivo** — alterne instantaneamente entre 9 idiomas, sem reiniciar: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.

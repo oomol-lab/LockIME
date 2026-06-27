@@ -2858,54 +2858,106 @@
         }
       }
     },
-    "Enable input-source locking": {
+    "Enable LockIME": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "启用输入法锁定"
+            "value": "启用 LockIME"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "啟用輸入法鎖定"
+            "value": "啟用 LockIME"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "入力ソースのロックを有効にする"
+            "value": "LockIME を有効にする"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activer le verrouillage de la source de saisie"
+            "value": "Activer LockIME"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eingabequellen-Sperre aktivieren"
+            "value": "LockIME aktivieren"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activar el bloqueo de la fuente de entrada"
+            "value": "Activar LockIME"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ativar o bloqueio da fonte de entrada"
+            "value": "Ativar o LockIME"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Включить блокировку источника ввода"
+            "value": "Включить LockIME"
+          }
+        }
+      }
+    },
+    "Enable locking": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用锁定"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用鎖定"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ロックを有効にする"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer le verrouillage"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sperre aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar el bloqueo"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar o bloqueio"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить блокировку"
           }
         }
       }
@@ -4730,54 +4782,54 @@
         }
       }
     },
-    "When enabled, LockIME keeps the keyboard input source pinned to the configured target.": {
+    "Enable LockIME to apply your rules. With locking on, it keeps the input source pinned to your target; turn locking off to only switch on entry — for the apps and sites you set — and stay free to change it.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "启用后，LockIME 会将键盘输入法固定为所配置的目标。"
+            "value": "启用 LockIME 后规则才会生效。开启锁定时，它会将输入法持续固定到你的目标；关闭锁定则只在进入你设定的应用和网站时切换一次，之后你可自由更改。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "啟用後，LockIME 會將鍵盤輸入法固定為所設定的目標。"
+            "value": "啟用 LockIME 後規則才會生效。開啟鎖定時，它會將輸入法持續固定到你的目標；關閉鎖定則只在進入你設定的應用程式和網站時切換一次，之後你可自由變更。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "有効にすると、LockIME はキーボードの入力ソースを設定したターゲットに固定し続けます。"
+            "value": "ルールを適用するには LockIME を有効にします。ロックをオンにすると入力ソースを指定したターゲットに固定し続けます。ロックをオフにすると、設定したアプリやサイトに入ったときに一度だけ切り替え、その後は自由に変更できます。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une fois activé, LockIME maintient la source de saisie du clavier sur la cible configurée."
+            "value": "Activez LockIME pour appliquer vos règles. Lorsque le verrouillage est activé, il maintient la source de saisie sur votre cible ; désactivez-le pour ne basculer qu'à l'entrée — pour les apps et sites que vous définissez — tout en restant libre d'en changer."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn aktiviert, hält LockIME die Tastatur-Eingabequelle auf dem konfigurierten Ziel."
+            "value": "Aktivieren Sie LockIME, um Ihre Regeln anzuwenden. Bei aktivierter Sperre bleibt die Eingabequelle auf Ihrem Ziel fixiert; schalten Sie die Sperre aus, um nur beim Wechsel zu den von Ihnen festgelegten Apps und Websites einmal umzuschalten – und sie weiterhin frei zu ändern."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando está activado, LockIME mantiene la fuente de entrada del teclado fijada en el destino configurado."
+            "value": "Activa LockIME para aplicar tus reglas. Con el bloqueo activado, mantiene la fuente de entrada fijada en tu destino; desactívalo para cambiar solo al entrar —en las apps y sitios que definas— y seguir pudiendo cambiarla libremente."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando ativado, o LockIME mantém a fonte de entrada do teclado fixada no destino configurado."
+            "value": "Ative o LockIME para aplicar suas regras. Com o bloqueio ativado, ele mantém a fonte de entrada fixada no seu destino; desative o bloqueio para alternar apenas ao entrar — nos apps e sites que você definir — e continuar livre para alterá-la."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Когда включено, LockIME удерживает источник ввода клавиатуры на заданной цели."
+            "value": "Включите LockIME, чтобы применить правила. Когда блокировка включена, источник ввода остаётся закреплён за вашей целью; выключите её, чтобы переключаться только при входе — для заданных вами приложений и сайтов — и сохранять свободу смены."
           }
         }
       }

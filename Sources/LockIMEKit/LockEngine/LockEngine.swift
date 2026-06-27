@@ -131,17 +131,25 @@ public final class LockEngine {
     /// since whichever fires is the one that emits the activation event.
     public func apply(_ config: LockConfiguration, reason: ActivationReason = .configChanged) {
         self.config = config
-        // Order matters so disabling is side-effect free. When enabling (or
-        // re-applying while on), set the target first, then enforce. When
-        // disabling, stop enforcing *first* — otherwise reevaluate could force
-        // one last switch under the still-enabled state before the lock turns
-        // off (e.g. the source has drifted off target and the revert is pending).
-        if config.isEnabled {
-            reevaluate(reason: reason)                       // set target
-            controller.setEnabled(true, reason: reason)      // then enforce on enable
+        // Continuous locking is *subordinate* to the master: it engages only when
+        // both "Enable LockIME" (`isEnabled`) and the lock sub-toggle
+        // (`lockingEnabled`) are on. One-shot switching is gated by the master
+        // alone (in `fireSwitchOnceIfNeeded`), so a master-on / locking-off config
+        // still fires switch rules while pinning nothing — the "act like Input
+        // Source Pro" mode. `reevaluate` always runs so the switch arm can fire
+        // whenever the master is on, regardless of the lock sub-toggle.
+        let lockEngaged = config.isEnabled && config.lockingEnabled
+        // Order matters so disengaging the lock is side-effect free. When
+        // engaging (or re-applying while engaged), set the target first, then
+        // enforce. Otherwise stop enforcing *first* — else reevaluate could force
+        // one last switch under the still-engaged lock before it turns off (e.g.
+        // the source has drifted off target and the revert is pending).
+        if lockEngaged {
+            reevaluate(reason: reason)                       // set lock target + fire switch
+            controller.setEnabled(true, reason: reason)      // then enforce on engage
         } else {
             controller.setEnabled(false, reason: reason)     // stop enforcing first
-            reevaluate(reason: reason)                       // update cached target only
+            reevaluate(reason: reason)                       // fire switch (if master on); cache lock target only
         }
         updateURLPolling()
         updateAddressBarMonitoring()

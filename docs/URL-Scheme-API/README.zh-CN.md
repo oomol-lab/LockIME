@@ -74,13 +74,16 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+主开关（`lock` / `unlock` / `toggle-lock`）用于开启或关闭 **LockIME**——它掌控着一切（锁定与切换都包括在内）。从属于主开关的 `set-locking` 子开关只控制**持续锁定**：把它关掉，就会停止固定任何输入源，而一次性的切换规则照常触发——也就是“表现得像一个纯切换器”的模式。
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | **开启**主锁定。 |
-| `unlock` | — | **关闭**主锁定。 |
-| `toggle-lock` *(alias `toggle`)* | — | 翻转主锁定。 |
+| `lock` | — | 开启 **LockIME**（主开关）——应用你的规则。 |
+| `unlock` | — | 关闭 **LockIME**（主开关）——完全闲置。 |
+| `toggle-lock` *(alias `toggle`)* | — | 翻转主开关的开/关。 |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 开启/关闭**持续锁定**（或翻转它）。关闭后 ⇒ 不固定任何东西，但切换规则仍会触发。当主开关关闭时无效。 |
 
 ### Global input source
 
@@ -174,6 +177,8 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -188,6 +193,7 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 }
 ```
 
+`enabled` 即主开关（“启用 LockIME”）；`lockingEnabled` 是持续锁定子开关；只有当两者都开启时（确实有锁定在生效）`locked` 才为 `true`。
 `currentSource`、`defaultSource` 和 `frontmostApp` 仅在已知时才会出现。
 
 ---

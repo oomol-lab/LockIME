@@ -147,16 +147,18 @@ is checked) keeps the gutter reserved at a constant width, so the menu never
 grows or shrinks as the lock toggles — and NSMenu drops SwiftUI's `.opacity` on a
 Label's system-image icon, so the slot must swap the image itself, not hide a
 symbol. Clicking an unchecked source locks to it (`AppState.lockToSource` sets
-the target *and* enables locking in one commit, re-resolving and flipping the
-active source immediately); clicking the checked source disables locking
-(`setMasterEnabled(false)`), leaving the target remembered. This is the same
+the target *and* turns the master **and** the lock sub-toggle on in one commit,
+re-resolving and flipping the active source immediately); clicking the checked
+source clears just the global lock target (`setDefaultSource(nil)`) — the app and
+any one-shot switch rules stay live. This is the same
 write path as the App Rules "Global default" picker. Source names are
 `Text(verbatim:)` system strings, not catalog keys. The
 engine keeps the list live via a second
 `InputSourceChangeObserver(.enabledSourcesChanged)`, so adding/removing an input
 source in System Settings updates both this menu and the Settings pickers. The
-global toggle-lock shortcut (Settings ▸ Shortcuts) is unchanged — it flips
-locking on/off against the remembered target, independent of this list.
+global toggle-lock shortcut (Settings ▸ Shortcuts) flips the master
+(Enable LockIME) on/off; `lockingEnabled` persists across toggles, so a
+pure-switch user stays in pure-switch mode.
 Collapse Settings / Check for Updates / About into one `Section` (fewer dividers).
 Keep `.keyboardShortcut` hints. Zero custom color — NSMenu supplies everything.
 (Active-scope `.badge` is a nice-to-have — verify it renders on the real macOS 26
@@ -173,9 +175,15 @@ user to **Permissions** for the single Accessibility grant); the root view's
 `onDisappear` (window close, not a tab switch) is the abandon signal that stops
 the grant watcher.
 
-- **General:** master toggle (`withAnimation(DS.Motion.toggle)` +
-  `.contentTransition(.symbolEffect(.replace))` on the lock label), current source
-  + activation count via `LabeledContent`, launch-at-login, language.
+- **General:** two stacked toggles — the master **Enable LockIME**
+  (`config.isEnabled`, gates everything) and the subordinate **Enable locking**
+  (`config.lockingEnabled`, the continuous lock), the latter `.disabled` while the
+  master is off (HIG dependency: indent + dim). Locking off is the "act like Input
+  Source Pro" mode — switch rules still fire, nothing is pinned. Both animate with
+  `withAnimation(DS.Motion.toggle)`. Then current source + activation count via
+  `LabeledContent`, launch-at-login, language. The padlock surfaces (tray/About
+  icon, menu glyph/header, checkmark) track `isLocked = isEnabled &&
+  lockingEnabled`, so they look unchanged for anyone who leaves locking on.
 - **App / URL Rules:** rows via shared `AppRowLabel(bundleID:)` (icon 22 + name
   `.body` + bundle ID `.caption2 .secondary`). Empty state =
   `ContentUnavailableView` with an action. Rows `.transition(.move(edge:.top)

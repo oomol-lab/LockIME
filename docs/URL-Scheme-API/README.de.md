@@ -84,13 +84,21 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+Der Hauptschalter (`lock` / `unlock` / `toggle-lock`) schaltet **LockIME** ein oder
+aus — er steuert alles (sowohl das Sperren als auch das Wechseln). Der
+`set-locking`-Unterschalter, der dem Hauptschalter untergeordnet ist, steuert allein
+die **kontinuierliche Sperre**: Schalte sie aus, um keine Quelle mehr zu fixieren,
+während einmalige Wechselregeln weiterhin auslösen — der Modus „wie ein reiner
+Umschalter handeln".
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Die Hauptsperre **einschalten**. |
-| `unlock` | — | Die Hauptsperre **ausschalten**. |
-| `toggle-lock` *(alias `toggle`)* | — | Die Hauptsperre umschalten. |
+| `lock` | — | **LockIME** (der Hauptschalter) **einschalten** — wendet deine Regeln an. |
+| `unlock` | — | **LockIME** (der Hauptschalter) **ausschalten** — vollständig untätig. |
+| `toggle-lock` *(alias `toggle`)* | — | Den Hauptschalter ein/aus umschalten. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Die **kontinuierliche Sperre** ein-/ausschalten (oder umschalten). Aus ⇒ nichts wird fixiert, aber Wechselregeln lösen weiterhin aus. Wirkungslos, solange der Hauptschalter aus ist. |
 
 ### Global input source
 
@@ -189,6 +197,8 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -203,6 +213,9 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 }
 ```
 
+`enabled` ist der Hauptschalter („LockIME aktivieren"); `lockingEnabled` ist der
+Unterschalter für die kontinuierliche Sperre; `locked` ist nur dann `true`, wenn
+beide eingeschaltet sind (tatsächlich eine Sperre in Kraft ist).
 `currentSource`, `defaultSource` und `frontmostApp` sind nur vorhanden, wenn sie
 bekannt sind.
 

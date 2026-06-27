@@ -77,13 +77,20 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+マスター（`lock` / `unlock` / `toggle-lock`）は **LockIME** をオン/オフします——これが
+すべて（ロックと切り替えの両方）を制御します。マスターに従属するサブトグル
+`set-locking` は、**継続ロック**だけを制御します：オフにすると、ワンショットの切り替え
+ルールが発火し続ける一方で、どのソースも固定しなくなります——「純粋な切り替え役のように
+振る舞う」モードです。
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | マスターロックを**オン**にします。 |
-| `unlock` | — | マスターロックを**オフ**にします。 |
-| `toggle-lock` *(alias `toggle`)* | — | マスターロックを反転します。 |
+| `lock` | — | **LockIME**（マスター）を**オン**にします——ルールを適用します。 |
+| `unlock` | — | **LockIME**（マスター）を**オフ**にします——完全にアイドル状態になります。 |
+| `toggle-lock` *(alias `toggle`)* | — | マスターのオン/オフを反転します。 |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | **継続ロック**をオン/オフ（または反転）します。オフ ⇒ 何も固定されませんが、切り替えルールは引き続き発火します。マスターがオフの間は効果がありません。 |
 
 ### Global input source
 
@@ -181,6 +188,8 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -195,6 +204,8 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 }
 ```
 
+`enabled` はマスター（「LockIME を有効にする」）です。`lockingEnabled` は継続ロックのサブトグル
+です。`locked` は両方がオンのとき（実際にロックが効いているとき）にのみ `true` になります。
 `currentSource`、`defaultSource`、`frontmostApp` は、判明している場合にのみ含まれます。
 
 ---

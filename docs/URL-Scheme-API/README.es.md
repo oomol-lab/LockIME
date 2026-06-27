@@ -78,13 +78,20 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 ## Command reference
 
-### Master lock
+### Enable & locking
+
+El maestro (`lock` / `unlock` / `toggle-lock`) activa o desactiva **LockIME** — controla
+el acceso a todo (tanto el bloqueo como el cambio). El subconmutador `set-locking`,
+subordinado al maestro, controla únicamente el **bloqueo continuo**: desactívalo para dejar
+de fijar cualquier fuente mientras las reglas de cambio de una sola vez siguen disparándose —
+el modo «actuar como un cambiador puro».
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Activa el bloqueo maestro (**on**). |
-| `unlock` | — | Desactiva el bloqueo maestro (**off**). |
-| `toggle-lock` *(alias `toggle`)* | — | Invierte el bloqueo maestro. |
+| `lock` | — | Activa **LockIME** (el maestro) — aplica tus reglas. |
+| `unlock` | — | Desactiva **LockIME** (el maestro) — totalmente inactivo. |
+| `toggle-lock` *(alias `toggle`)* | — | Invierte el maestro (on/off). |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activa o desactiva el **bloqueo continuo** (o lo invierte). Off ⇒ no se fija nada, pero las reglas de cambio siguen disparándose. Sin efecto mientras el maestro esté desactivado. |
 
 ### Global input source
 
@@ -180,6 +187,8 @@ Los comandos de consulta devuelven una carga útil JSON a través del callback `
 
 ```json
 {
+  "enabled": true,
+  "lockingEnabled": true,
   "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
@@ -194,6 +203,8 @@ Los comandos de consulta devuelven una carga útil JSON a través del callback `
 }
 ```
 
+`enabled` es el maestro («Activar LockIME»); `lockingEnabled` es el subconmutador del bloqueo
+continuo; `locked` es `true` solo cuando ambos están activos (hay un bloqueo realmente en vigor).
 `currentSource`, `defaultSource` y `frontmostApp` están presentes solo cuando se conocen.
 
 ---
