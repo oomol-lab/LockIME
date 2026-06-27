@@ -3,6 +3,21 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.4.1-beta.4</title>
+            <pubDate>Sat, 27 Jun 2026 14:43:07 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202606271441</sparkle:version>
+            <sparkle:shortVersionString>1.4.1-beta.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat: separate the app master switch from locking by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/39
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1-beta.3...v1.4.1-beta.4
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1-beta.4/LockIME-1.4.1-beta.4-x86_64.zip" length="2599669" type="application/octet-stream" sparkle:edSignature="0SCDr70MWv+ZG1NBXz/XHVjkGMbkw6cVSlhNo+5VHXfVHukh4kLf4AaqeA9X8Mfi8LU09f3xhLMzK2E7eWFjAA=="/>
+        </item>
+        <item>
             <title>1.4.1-beta.3</title>
             <pubDate>Fri, 26 Jun 2026 01:52:44 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -52,21 +67,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0...v1.4.1
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1/LockIME-1.4.1-x86_64.zip" length="2595363" type="application/octet-stream" sparkle:edSignature="Tlfn2j2XXaz83oml8a8A/fUbDMz5259hYIFIgERRwTvX7B1Ts1Vxnx/Oi7g6wPQGoLpbQ+UjfVkaIpoCrOzhBg=="/>
-        </item>
-        <item>
-            <title>1.4.0-beta.2</title>
-            <pubDate>Mon, 22 Jun 2026 05:15:18 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202606220513</sparkle:version>
-            <sparkle:shortVersionString>1.4.0-beta.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(rules): add address-bar focus lock/switch rule by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/29
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0-beta.1...v1.4.0-beta.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.0-beta.2/LockIME-1.4.0-beta.2-x86_64.zip" length="2595376" type="application/octet-stream" sparkle:edSignature="pDNoddqk23durnk6NoPkFMpITDUr5V1u3LXUNst15AUb4W6sY85JsFZEHIye4ARZaqpntKCmAFb3ess9/8BEDg=="/>
         </item>
         <item>
             <title>1.4.0</title>
