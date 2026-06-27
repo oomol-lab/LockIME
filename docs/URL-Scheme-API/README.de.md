@@ -98,7 +98,7 @@ Umschalter handeln".
 | `lock` | — | **LockIME** (der Hauptschalter) **einschalten** — wendet deine Regeln an. |
 | `unlock` | — | **LockIME** (der Hauptschalter) **ausschalten** — vollständig untätig. |
 | `toggle-lock` *(alias `toggle`)* | — | Den Hauptschalter ein/aus umschalten. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Die **kontinuierliche Sperre** ein-/ausschalten (oder umschalten). Aus ⇒ nichts wird fixiert, aber Wechselregeln lösen weiterhin aus. Wirkungslos, solange der Hauptschalter aus ist. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Die **kontinuierliche Sperre** ein-/ausschalten (oder umschalten). Aus ⇒ nichts wird fixiert, aber Wechselregeln lösen weiterhin aus. Ohne unmittelbare Laufzeitwirkung, solange der Hauptschalter aus ist. |
 
 ### Global input source
 

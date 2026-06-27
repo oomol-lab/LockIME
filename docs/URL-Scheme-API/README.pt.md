@@ -95,7 +95,7 @@ disparando — o modo "agir como um alternador puro".
 | `lock` | — | Liga o **LockIME** (o mestre) — aplica suas regras. |
 | `unlock` | — | Desliga o **LockIME** (o mestre) — totalmente ocioso. |
 | `toggle-lock` *(alias `toggle`)* | — | Inverte o mestre (liga/desliga). |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Liga/desliga o **bloqueio contínuo** (ou o inverte). Desligado ⇒ nada é fixado, mas as regras de alternância ainda disparam. Sem efeito enquanto o mestre estiver desligado. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Liga/desliga o **bloqueio contínuo** (ou o inverte). Desligado ⇒ nada é fixado, mas as regras de alternância ainda disparam. Sem efeito imediato em tempo de execução enquanto o mestre estiver desligado. |
 
 ### Global input source
 

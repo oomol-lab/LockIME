@@ -91,7 +91,7 @@ pure switcher" mode.
 | `lock` | — | Turn **LockIME** (the master) **on** — applies your rules. |
 | `unlock` | — | Turn **LockIME** (the master) **off** — fully idle. |
 | `toggle-lock` *(alias `toggle`)* | — | Flip the master on/off. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Turn the **continuous lock** on/off (or flip it). Off ⇒ nothing is pinned, but switch rules still fire. No effect while the master is off. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Turn the **continuous lock** on/off (or flip it). Off ⇒ nothing is pinned, but switch rules still fire. No immediate runtime effect while the master is off. |
 
 ### Global input source
 

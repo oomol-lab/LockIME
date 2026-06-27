@@ -88,7 +88,7 @@ Le verrou principal (`lock` / `unlock` / `toggle-lock`) active ou désactive **L
 | `lock` | — | Activer **LockIME** (le verrou principal) — applique vos règles. |
 | `unlock` | — | Désactiver **LockIME** (le verrou principal) — totalement inactif. |
 | `toggle-lock` *(alias `toggle`)* | — | Inverser l'état du verrou principal. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activer/désactiver le **verrou continu** (ou l'inverser). Désactivé ⇒ rien n'est épinglé, mais les règles de bascule se déclenchent quand même. Sans effet tant que le verrou principal est désactivé. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activer/désactiver le **verrou continu** (ou l'inverser). Désactivé ⇒ rien n'est épinglé, mais les règles de bascule se déclenchent quand même. Sans effet immédiat à l'exécution tant que le verrou principal est désactivé. |
 
 ### Global input source
 

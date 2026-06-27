@@ -83,7 +83,7 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | `lock` | — | 开启 **LockIME**（主开关）——应用你的规则。 |
 | `unlock` | — | 关闭 **LockIME**（主开关）——完全闲置。 |
 | `toggle-lock` *(alias `toggle`)* | — | 翻转主开关的开/关。 |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 开启/关闭**持续锁定**（或翻转它）。关闭后 ⇒ 不固定任何东西，但切换规则仍会触发。当主开关关闭时无效。 |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 开启/关闭**持续锁定**（或翻转它）。关闭后 ⇒ 不固定任何东西，但切换规则仍会触发。当主开关关闭时无即时运行效果。 |
 
 ### Global input source
 

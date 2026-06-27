@@ -84,7 +84,7 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | `lock` | — | 開啟 **LockIME**（主控）——套用你的規則。 |
 | `unlock` | — | 關閉 **LockIME**（主控）——完全閒置。 |
 | `toggle-lock` *(alias `toggle`)* | — | 翻轉主控的開／關。 |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 開啟／關閉**持續鎖定**（或翻轉它）。關閉 ⇒ 不固定任何輸入法，但切換規則仍會觸發。主控關閉時此指令無效。 |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 開啟／關閉**持續鎖定**（或翻轉它）。關閉 ⇒ 不固定任何輸入法，但切換規則仍會觸發。主控關閉時此指令無即時執行效果。 |
 
 ### Global input source
 

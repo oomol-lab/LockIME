@@ -91,7 +91,7 @@ el modo «actuar como un cambiador puro».
 | `lock` | — | Activa **LockIME** (el maestro) — aplica tus reglas. |
 | `unlock` | — | Desactiva **LockIME** (el maestro) — totalmente inactivo. |
 | `toggle-lock` *(alias `toggle`)* | — | Invierte el maestro (on/off). |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activa o desactiva el **bloqueo continuo** (o lo invierte). Off ⇒ no se fija nada, pero las reglas de cambio siguen disparándose. Sin efecto mientras el maestro esté desactivado. |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activa o desactiva el **bloqueo continuo** (o lo invierte). Off ⇒ no se fija nada, pero las reglas de cambio siguen disparándose. Sin efecto inmediato en tiempo de ejecución mientras el maestro esté desactivado. |
 
 ### Global input source
 

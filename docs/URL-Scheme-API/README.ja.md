@@ -90,7 +90,7 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 | `lock` | — | **LockIME**（マスター）を**オン**にします——ルールを適用します。 |
 | `unlock` | — | **LockIME**（マスター）を**オフ**にします——完全にアイドル状態になります。 |
 | `toggle-lock` *(alias `toggle`)* | — | マスターのオン/オフを反転します。 |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | **継続ロック**をオン/オフ（または反転）します。オフ ⇒ 何も固定されませんが、切り替えルールは引き続き発火します。マスターがオフの間は効果がありません。 |
+| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | **継続ロック**をオン/オフ（または反転）します。オフ ⇒ 何も固定されませんが、切り替えルールは引き続き発火します。マスターがオフの間は即時の実行時効果はありません。 |
 
 ### Global input source
 
