@@ -39,12 +39,18 @@ final class UpdateController {
     /// "Last checked" line in the Updates pane.
     var lastCheckDate: Date? { updater?.lastUpdateCheckDate }
 
-    /// True while an update is installing/relaunching. The app's terminate guard
-    /// consults this so Sparkle's install-and-relaunch is never vetoed — even when
-    /// the menu bar icon is hidden (when a bare `terminate:` would be cancelled).
+    /// True while an update is actually installing/relaunching. The app's
+    /// terminate guard consults this so Sparkle's install-and-relaunch is never
+    /// vetoed — even when the menu bar icon is hidden (when a bare `terminate:`
+    /// would be cancelled). Deliberately *not* `.readyToInstall`: that phase is the
+    /// "install and relaunch?" prompt waiting on the user, which can stay up
+    /// indefinitely, and during it a status-item hide must still keep the app alive
+    /// (the hidden-icon veto) rather than be mistaken for a sanctioned relaunch.
+    /// `.installing` is entered only once the user has committed (see
+    /// `LockIMEUserDriver.showInstallingUpdate`).
     var isInstallingUpdate: Bool {
         switch model.phase {
-        case .readyToInstall, .installing: return true
+        case .installing: return true
         default: return false
         }
     }
