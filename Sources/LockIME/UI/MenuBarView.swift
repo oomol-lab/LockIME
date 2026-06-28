@@ -110,7 +110,10 @@ struct MenuBarView: View {
         Divider()
 
         Button {
-            NSApplication.shared.terminate(nil)
+            // Route through AppState so the termination is flagged as wanted —
+            // the AppDelegate terminate guard otherwise vetoes a bare terminate:
+            // (it can't tell a real quit from AppKit hiding our status item).
+            state.quit()
         } label: {
             Label("Quit", systemImage: "power")
         }

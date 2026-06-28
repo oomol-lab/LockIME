@@ -265,6 +265,27 @@ final class AppState {
         }
     }
 
+    /// Set when the user (menu **Quit** / `lockime://quit`) deliberately asks us
+    /// to exit, so `AppDelegate.applicationShouldTerminate` can tell a *wanted*
+    /// quit apart from the unsolicited `terminate:` AppKit fires the moment our
+    /// menu bar icon is hidden — which must never kill the app.
+    private(set) var terminationRequested = false
+
+    /// The one sanctioned exit path: flag the termination as wanted, then quit.
+    /// Works even when the menu bar icon is hidden (the terminate guard lets a
+    /// flagged termination through).
+    func quit() {
+        terminationRequested = true
+        NSApp.terminate(nil)
+    }
+
+    /// Bridge to SwiftUI's `\.openSettings` action, captured by a tiny view in the
+    /// MenuBarExtra label (see `LockIMEApp`). The AppKit `showSettingsWindow:`
+    /// selector returns success but never actually opens the SwiftUI `Settings`
+    /// scene for this accessory app, so the recovery path (`AppDelegate`, when the
+    /// menu bar icon is hidden) calls this instead.
+    @ObservationIgnored var openSettingsAction: (() -> Void)?
+
     deinit {
         purgeTask?.cancel()
         // The shortcut observer is torn down in `stop()`; a nonisolated deinit

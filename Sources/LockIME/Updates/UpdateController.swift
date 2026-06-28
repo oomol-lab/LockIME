@@ -39,6 +39,16 @@ final class UpdateController {
     /// "Last checked" line in the Updates pane.
     var lastCheckDate: Date? { updater?.lastUpdateCheckDate }
 
+    /// True while an update is installing/relaunching. The app's terminate guard
+    /// consults this so Sparkle's install-and-relaunch is never vetoed — even when
+    /// the menu bar icon is hidden (when a bare `terminate:` would be cancelled).
+    var isInstallingUpdate: Bool {
+        switch model.phase {
+        case .readyToInstall, .installing: return true
+        default: return false
+        }
+    }
+
     @ObservationIgnored private let driver: LockIMEUserDriver
     @ObservationIgnored private let updaterDelegate = UpdaterDelegate()
     @ObservationIgnored private var updater: SPUUpdater?

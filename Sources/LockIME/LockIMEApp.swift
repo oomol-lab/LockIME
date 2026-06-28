@@ -16,6 +16,7 @@ struct LockIMEApp: App {
             // snacking on bamboo = unlocked. Monochrome template glyphs so the
             // system supplies the menu-bar tint (light/dark/active).
             Image(appState.isLocked ? "TrayLocked" : "TrayUnlocked")
+                .background(SettingsActionBridge(appState: appState))
         }
         .menuBarExtraStyle(.menu)
 
@@ -24,6 +25,22 @@ struct LockIMEApp: App {
                 .localized(with: appState)
                 .modelContainer(appState.modelContainer)
         }
+    }
+}
+
+/// Captures SwiftUI's `\.openSettings` action into `AppState` so AppKit (the
+/// `AppDelegate` menu-bar-icon recovery) can open the `Settings` scene the only
+/// way that actually works for this accessory app. Lives in the MenuBarExtra
+/// *label* — the one view instantiated at launch even while the icon is hidden —
+/// as a zero-size, invisible background.
+private struct SettingsActionBridge: View {
+    let appState: AppState
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onAppear { appState.openSettingsAction = { openSettings() } }
     }
 }
 

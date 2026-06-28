@@ -116,8 +116,10 @@ final class URLCommandHandler {
             return .success(nil)
         case .quit:
             // Defer past the synchronous reply so an x-success callback still
-            // fires before the app tears down.
-            Task { @MainActor in NSApp.terminate(nil) }
+            // fires before the app tears down. Route through `quit()` so the
+            // termination is flagged as wanted — it must succeed even when the
+            // menu bar icon is hidden (the terminate guard would otherwise veto).
+            Task { @MainActor in state.quit() }
             return .success(nil)
 
         // Queries
