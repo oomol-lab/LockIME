@@ -3482,6 +3482,162 @@
         }
       }
     },
+    "Hide menu bar icon": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏菜单栏图标"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隱藏選單列圖示"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メニューバーアイコンを隠す"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer l’icône de la barre des menus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol in der Menüleiste ausblenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar el icono de la barra de menús"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar o ícone da barra de menus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыть значок в строке меню"
+          }
+        }
+      }
+    },
+    "LockIME keeps running in the background with its icon hidden. To show this window again, open LockIME from the Applications folder or Spotlight.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏图标后，LockIME 仍在后台运行。要再次显示此窗口，请从「应用程序」文件夹或 Spotlight 打开 LockIME。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隱藏圖示後，LockIME 仍在背景執行。若要再次顯示此視窗，請從「應用程式」資料夾或 Spotlight 開啟 LockIME。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アイコンを隠しても、LockIME はバックグラウンドで動作し続けます。このウィンドウを再び表示するには、「アプリケーション」フォルダまたは Spotlight から LockIME を開いてください。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LockIME continue de fonctionner en arrière-plan, son icône masquée. Pour afficher à nouveau cette fenêtre, ouvrez LockIME depuis le dossier Applications ou Spotlight."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LockIME läuft mit ausgeblendetem Symbol im Hintergrund weiter. Um dieses Fenster wieder anzuzeigen, öffne LockIME über den Ordner „Programme“ oder Spotlight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LockIME sigue funcionando en segundo plano con su icono oculto. Para volver a mostrar esta ventana, abre LockIME desde la carpeta Aplicaciones o desde Spotlight."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O LockIME continua a funcionar em segundo plano com o ícone oculto. Para mostrar esta janela novamente, abra o LockIME a partir da pasta Aplicações ou do Spotlight."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LockIME продолжает работать в фоне со скрытым значком. Чтобы снова показать это окно, откройте LockIME из папки «Программы» или через Spotlight."
+          }
+        }
+      }
+    },
+    "Menu Bar": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選單列"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メニューバー"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barre des menus"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüleiste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barra de menús"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barra de menus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Строка меню"
+          }
+        }
+      }
+    },
     "Lock input source": {
       "localizations": {
         "zh-Hans": {

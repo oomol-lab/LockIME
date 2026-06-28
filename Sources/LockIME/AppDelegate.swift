@@ -45,7 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let isDefaultLaunch = notification.userInfo?["NSApplicationLaunchIsDefaultLaunchKey"] as? Bool ?? true
         guard isDefaultLaunch, !appState.launchAtLoginActive else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            guard let self, self.menuBarIconHidden else { return }
+            // Reveal for either hidden state: a system hide (the persisted default,
+            // only observable a beat after launch) or the in-app "Hide menu bar
+            // icon" toggle (known immediately, but re-checked here all the same).
+            guard let self, self.statusItemPersistedHidden || self.appState.menuBarIconHidden else { return }
             self.openSettings()
         }
     }
@@ -74,7 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if appState.terminationRequested { return .terminateNow }
         if appState.updateController.isInstallingUpdate { return .terminateNow }
         if isSystemTerminationEvent { return .terminateNow }
-        if menuBarIconHidden { return .terminateCancel }
+        if statusItemPersistedHidden || appState.menuBarIconHidden { return .terminateCancel }
         return .terminateNow
     }
 
@@ -108,13 +111,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Menu bar icon recovery
 
-    /// True when our status item is persisted as hidden. AppKit saves each
-    /// MenuBarExtra item's visibility in our own defaults domain under an
-    /// "NSStatusItem Visible…" key (the suffix carries an index and, on recent
-    /// macOS, a "CC" infix for Control-Center-managed items), so match the family
-    /// by prefix rather than one literal key. If Apple ever renames it this reads
-    /// `false` and we fall back to default termination — no crash, no veto.
-    private var menuBarIconHidden: Bool {
+    /// True when the icon was hidden *by the system* — the user ⌘-dragged it off
+    /// the bar or hid it in Control Center. AppKit saves each MenuBarExtra item's
+    /// visibility in our own defaults domain under an "NSStatusItem Visible…" key
+    /// (the suffix carries an index and, on recent macOS, a "CC" infix for
+    /// Control-Center-managed items), so match the family by prefix rather than one
+    /// literal key. If Apple ever renames it this reads `false` and we fall back to
+    /// default termination — no crash, no veto. The *in-app* "Hide menu bar icon"
+    /// toggle is tracked separately by `appState.menuBarIconHidden`; the guards
+    /// above honor either signal.
+    private var statusItemPersistedHidden: Bool {
         UserDefaults.standard.dictionaryRepresentation().contains { key, value in
             key.hasPrefix("NSStatusItem Visible")
                 && (value as? NSNumber)?.boolValue == false

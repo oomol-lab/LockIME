@@ -29,6 +29,18 @@ final class AppState {
     private(set) var apiEnabled: Bool = false
     @ObservationIgnored private static let apiEnabledKey = "apiEnabled"
 
+    /// Whether the user has hidden LockIME's menu-bar icon (Settings ▸ General ▸
+    /// Menu Bar). Per-device like `apiEnabled` — its own `UserDefaults` key,
+    /// deliberately **not** part of `LockConfiguration`, so it never travels
+    /// through config export/import. Drives the `MenuBarExtra`'s `isInserted`
+    /// binding (mirrored by an `@AppStorage` on the same key so the scene reacts
+    /// live). Hiding does not stop the app: the lock engine keeps running, the
+    /// AppDelegate terminate guard treats a hidden icon as a sanctioned state, and
+    /// relaunching re-presents Settings. The key is non-private so the scene's
+    /// `@AppStorage` mirror can name it.
+    private(set) var menuBarIconHidden: Bool = false
+    @ObservationIgnored static let menuBarIconHiddenKey = "menuBarIconHidden"
+
     /// The configured global toggle-lock shortcut, mirrored as observable state
     /// so the menu-bar header re-renders the moment the user binds or clears it
     /// in Settings (a plain `getShortcut` read isn't tracked by `@Observable`).
@@ -113,6 +125,7 @@ final class AppState {
     init() {
         languagePreference = .load()
         apiEnabled = UserDefaults.standard.bool(forKey: Self.apiEnabledKey) // absent ⇒ false (opt-in)
+        menuBarIconHidden = UserDefaults.standard.bool(forKey: Self.menuBarIconHiddenKey) // absent ⇒ false (icon shown)
         ThirdPartyBundleLocalization.apply(language: languagePreference.effectiveLanguage)
     }
 
@@ -121,6 +134,16 @@ final class AppState {
     func setAPIEnabled(_ enabled: Bool) {
         apiEnabled = enabled
         UserDefaults.standard.set(enabled, forKey: Self.apiEnabledKey)
+    }
+
+    /// Hide or show LockIME's menu-bar icon. Persisted immediately (the key the
+    /// `MenuBarExtra` `isInserted` mirror watches) so the change takes effect live
+    /// and survives relaunch. This is the single write path for the preference —
+    /// the scene's `@AppStorage` mirror and the terminate/reveal guards all read
+    /// back through here — so the cached value the guards see is always fresh.
+    func setMenuBarIconHidden(_ hidden: Bool) {
+        menuBarIconHidden = hidden
+        UserDefaults.standard.set(hidden, forKey: Self.menuBarIconHiddenKey)
     }
 
     /// GitHub URL of the URL-scheme API reference, in the app's current language

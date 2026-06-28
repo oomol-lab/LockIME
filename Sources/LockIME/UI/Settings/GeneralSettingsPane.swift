@@ -58,6 +58,20 @@ struct GeneralSettingsPane: View {
             }
 
             Section {
+                let hideIconBinding = Binding(
+                    get: { state.menuBarIconHidden },
+                    set: { newValue in
+                        withAnimation(DS.Motion.toggle) { state.setMenuBarIconHidden(newValue) }
+                    }
+                )
+                Toggle("Hide menu bar icon", isOn: hideIconBinding)
+            } header: {
+                Text("Menu Bar")
+            } footer: {
+                SectionFooter("LockIME keeps running in the background with its icon hidden. To show this window again, open LockIME from the Applications folder or Spotlight.")
+            }
+
+            Section {
                 let languageBinding = Binding(
                     get: { state.languagePreference },
                     set: { state.setLanguagePreference($0) }
