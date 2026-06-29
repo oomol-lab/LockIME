@@ -127,5 +127,6 @@ struct AcknowledgementsView: View {
             }
         }
         .frame(width: DS.Window.acknowledgementsWidth, height: DS.Window.acknowledgementsHeight)
+        .overlayScrollers()
     }
 }

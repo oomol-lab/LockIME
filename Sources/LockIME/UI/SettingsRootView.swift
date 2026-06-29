@@ -32,6 +32,10 @@ struct SettingsRootView: View {
         }
         .scenePadding()
         .frame(minWidth: 680, idealWidth: 700, minHeight: 600)
+        // Thin, auto-hiding overlay scrollers for every pane (incl. the Log
+        // table), even when the system is pinned to wide legacy bars. Keyed on
+        // the selected tab so the sweep re-runs for each lazily-mounted pane.
+        .overlayScrollers(trigger: state.settingsTab)
         // The Settings *window* closing (not a tab switch — this root outlives
         // those) is the "abandon" signal for an in-flight Accessibility grant.
         .onDisappear { state.stopAccessibilityWatch() }

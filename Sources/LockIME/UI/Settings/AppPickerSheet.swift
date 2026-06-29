@@ -55,6 +55,7 @@ struct AppPickerSheet: View {
             .searchable(text: $query, placement: .toolbar)
         }
         .frame(width: DS.Window.pickerWidth, height: DS.Window.pickerHeight)
+        .overlayScrollers()
         .task {
             let scanned = InstalledAppsScanner.scan()
             apps = scanned

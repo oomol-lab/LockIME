@@ -141,6 +141,7 @@ struct ImportReviewSheet: View {
             footer
         }
         .frame(width: 600, height: 620)
+        .overlayScrollers()
     }
 
     // MARK: Header

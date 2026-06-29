@@ -20,6 +20,7 @@ struct UpdateWindowView: View {
             footer
         }
         .frame(width: DS.Window.updateWidth, height: DS.Window.updateHeight)
+        .overlayScrollers()
     }
 
     // MARK: Header
