@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.0-beta.1</title>
+            <pubDate>Tue, 30 Jun 2026 01:50:49 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202606300149</sparkle:version>
+            <sparkle:shortVersionString>1.5.0-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat(ui): use thin overlay scrollers app-wide by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/41
+* ci(dependabot): drop the broken swift ecosystem by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/42
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1-beta.5...v1.5.0-beta.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.1/LockIME-1.5.0-beta.1-x86_64.zip" length="2612457" type="application/octet-stream" sparkle:edSignature="5xn42rNJtdsiAhbhCjL1+OZ7HHj4ivUbTwXUHkP/08EKcKeB4SPa8gXUsmNx/K1I44PhySswX5ucWTQGAekZAw=="/>
+        </item>
+        <item>
             <title>1.5.0</title>
             <pubDate>Mon, 29 Jun 2026 00:51:34 +0000</pubDate>
             <sparkle:version>202606290049</sparkle:version>
