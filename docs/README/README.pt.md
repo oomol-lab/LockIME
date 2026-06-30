@@ -69,6 +69,44 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 - **Sem permissões do sistema para o bloqueio básico** — um modo aprimorado opcional, condicionado à permissão de Accessibility, libera regras mais finas por URL e por campo em foco.
 - **Automação** — um esquema de URL `lockime://` permite que outros apps, scripts e o Shortcuts controlem o LockIME (veja abaixo).
 
+## Comparison
+
+O cenário de fontes de entrada do macOS tem duas alternativas amplamente usadas ao LockIME — **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, o mais popular) e **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)** (≈1.6k★) — além de uma longa cauda de ferramentas menores de código aberto e de linha de comando. Todas elas *alternam* a fonte de entrada conforme você se move entre apps ou sites; o LockIME é o que foi construído em torno de um **bloqueio** contínuo que reaplica a fonte de entrada no momento em que ela desvia, ao mesmo tempo em que deixa qualquer regra individual recorrer a uma *alternância* única quando é só isso que você quer.
+
+| | LockIME | Input Source Pro | KeyboardHolder |
+|---|---|---|---|
+| Preço | Grátis | Grátis | Grátis (doação) |
+| Código aberto | GPL-3.0 | GPL-3.0 | ✗ (fechado) |
+| macOS mínimo | 14 | 11 | 10.15 |
+| Tamanho do download | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
+| Regras por app | ✓ | ✓ | ✓ |
+| Regras por site / URL | ✓ | ✓ | ✓ |
+| Tipos de correspondência de URL | subdomínio · exato · palavra-chave · regex | subdomínio · exato · regex | domínio (curinga) |
+| Regra da barra de endereços (campo de URL) | ✓ (bloqueio/alternância/prioridade) | ✓ (fonte padrão) | — |
+| Rebloqueio contínuo | ✓ | ✗ | ✗ |
+| Bloquear *ou* alternar uma vez, por regra | ✓ | ✗ | ✗ |
+| Atalhos de teclado globais | ✓ | ✓ | ✗ |
+| Controle pela barra de menus | ✓ | ✓ | ✓ |
+| Dicas de entrada na tela | ✗ | ✓ | ✓ (opcional) |
+| Registro de ativações de 24 horas | ✓ | ✗ | ✗ |
+| Backup / importação da configuração | ✓ (`.lockime`, com prévia) | ✓ (exportar/importar + CLI) | — |
+| Automação por esquema de URL | ✓ (`lockime://`, x-callback-url) | parcial (importação `inputsourcepro://`) | ✗ |
+| Idiomas da interface | 9 (troca ao vivo) | 6 | zh · en · ja |
+| Permissões do sistema | nenhuma para o básico · Accessibility por URL | nenhuma para o básico · Accessibility por URL | Accessibility¹ |
+| Atualização automática | Sparkle (stable + beta) | ✓ | ✓ |
+| Mantido ativamente (2026) | ✓ | ✓ | ✓ |
+
+¹ O KeyboardHolder não documenta seus requisitos de permissão; ler a barra de endereços do navegador para suas regras por site exige acesso de Accessibility na prática.
+
+**Outras ferramentas que vale a pena conhecer:**
+[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, automático apenas por app, sem manutenção desde 2021),
+[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, alternância *manual* acionada por atalhos, sem manutenção desde 2017), InputSwitcher (freemium, apenas por app) e
+[macism](https://github.com/laishulu/macism) (um bloco de construção de linha de comando para integração com editores, não um alternador com interface gráfica).
+
+**Onde o LockIME se encaixa:** escolha o **Input Source Pro** para a maior comunidade e as dicas de entrada na tela mais ricas — um indicador flutuante que segue o seu cursor, com esquemas de cores e controles de posição. Opte pelo **KeyboardHolder** para uma memória por app refinada, sem configuração, que simplesmente funciona. Recorra ao **LockIME** quando você quer *fixar* uma fonte de entrada em vez de apenas alterná-la: um **bloqueio** rígido por app, por URL ou da barra de endereços que reaplica no momento em que qualquer coisa a muda — com um modo de *alternância* única por regra, um tipo de correspondência de URL por `keyword`, automação `lockime://` rica (x-callback-url, controle total do estado), um registro de ativações de 24 horas, a localização mais ampla do grupo (9 idiomas) e o menor download (menos de 3 MB).
+
+> Os números são aproximados e foram coletados em meados de 2026 (Input Source Pro 2.11.0, KeyboardHolder 1.14.10); um "—" marca uma capacidade não documentada, não uma ausência confirmada. Estrelas, tamanhos e capacidades mudam — correções são bem-vindas.
+
 ## Automation
 
 O LockIME expõe um esquema de URL `lockime://` para que outros apps, scripts, o Shortcuts e launchers possam controlá-lo — ativar/desativar o bloqueio, redirecionar a fonte de entrada, gerenciar regras e ler o estado de volta com callbacks [x-callback-url](https://x-callback-url.com). Ela está desativada por padrão — ative-a em **Ajustes ▸ Geral ▸ Automação**.

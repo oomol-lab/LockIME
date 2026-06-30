@@ -93,6 +93,67 @@ Either way, the app keeps itself up to date via Sparkle.
 - **Automation** — a `lockime://` URL scheme lets other apps, scripts, and
   Shortcuts drive LockIME (see below).
 
+## Comparison
+
+The macOS input-source landscape has two widely-used alternatives to LockIME —
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, the
+most popular) and **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
+(≈1.6k★) — plus a long tail of smaller open-source and CLI tools. They all
+*switch* the input source as you move between apps or sites; LockIME is the one
+built around a continuous **lock** that re-applies the input source the moment
+it drifts, while still letting any individual rule fall back to a one-time
+*switch* when that is all you want.
+
+| | LockIME | Input Source Pro | KeyboardHolder |
+|---|---|---|---|
+| Price | Free | Free | Free (donation) |
+| Open source | GPL-3.0 | GPL-3.0 | ✗ (closed) |
+| Minimum macOS | 14 | 11 | 10.15 |
+| Download size | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
+| Per-app rules | ✓ | ✓ | ✓ |
+| Per-website / URL rules | ✓ | ✓ | ✓ |
+| URL match types | subdomain · exact · keyword · regex | subdomain · exact · regex | domain (wildcard) |
+| Address-bar (URL field) rule | ✓ (lock/switch/priority) | ✓ (default source) | — |
+| Continuous re-lock | ✓ | ✗ | ✗ |
+| Lock *or* one-time switch, per rule | ✓ | ✗ | ✗ |
+| Global keyboard shortcuts | ✓ | ✓ | ✗ |
+| Menu-bar control | ✓ | ✓ | ✓ |
+| On-screen input hints | ✗ | ✓ | ✓ (optional) |
+| 24-hour activation log | ✓ | ✗ | ✗ |
+| Config backup / import | ✓ (`.lockime`, with review) | ✓ (export/import + CLI) | — |
+| URL-scheme automation | ✓ (`lockime://`, x-callback-url) | partial (`inputsourcepro://` import) | ✗ |
+| UI languages | 9 (live switch) | 6 | zh · en · ja |
+| System permissions | none for core · Accessibility for per-URL | none for core · Accessibility for per-URL | Accessibility¹ |
+| Auto-update | Sparkle (stable + beta) | ✓ | ✓ |
+| Actively maintained (2026) | ✓ | ✓ | ✓ |
+
+¹ KeyboardHolder does not document its permission requirements; reading the
+browser address bar for its per-website rules requires Accessibility access in
+practice.
+
+**Other tools worth knowing:**
+[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, automatic
+per-app only, unmaintained since 2021),
+[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, *manual* shortcut-driven
+switching, unmaintained since 2017), InputSwitcher (freemium, per-app only), and
+[macism](https://github.com/laishulu/macism) (a CLI building block for editor
+integration, not a GUI switcher).
+
+**Where LockIME fits:** choose **Input Source Pro** for the largest community and
+the richest on-screen input hints — a floating indicator that follows your
+cursor, with color schemes and position controls. Pick **KeyboardHolder** for a
+polished, zero-config per-app memory that just works. Reach for **LockIME** when
+you want to *pin* an input source rather than merely switch it: a hard per-app,
+per-URL, or address-bar **lock** that re-applies the moment anything changes it —
+with a one-time *switch* mode per rule, a `keyword` URL match type, rich
+`lockime://` automation (x-callback-url, full state control), a 24-hour
+activation log, the broadest localization of the group (9 languages), and the
+smallest download (under 3 MB).
+
+> Figures are approximate and were gathered mid-2026 (Input Source Pro 2.11.0,
+> KeyboardHolder 1.14.10); a "—" marks an undocumented capability, not a
+> confirmed absence. Stars, sizes, and capabilities drift — corrections welcome.
+
 ## Automation
 
 LockIME exposes a `lockime://` URL scheme so other apps, scripts, Shortcuts, and

@@ -65,6 +65,63 @@ brew install --cask oomol-lab/tap/lockime
 - **核心鎖定無需系統權限**——可選的、由 Accessibility 把關的增強模式可解鎖更細緻的依 URL / 聚焦欄位規則。
 - **自動化**——`lockime://` URL scheme 讓其他應用程式、指令稿與「捷徑」（Shortcuts）能驅動 LockIME（見下文）。
 
+## Comparison
+
+macOS 輸入法生態中有兩個被廣泛使用、可替代 LockIME 的選擇——
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)**（≈3.3k★，最受
+歡迎的那個）與 **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
+（≈1.6k★）——再加上一長串較小型的開源與 CLI 工具。它們全都會在你於應用程式或
+站台之間移動時*切換*輸入法；LockIME 則是圍繞著持續**鎖定**打造的那一個，一旦
+輸入法偏離就立刻重新套用，同時仍允許任一條規則在你只需要這樣時退回到一次性的
+*切換*。
+
+| | LockIME | Input Source Pro | KeyboardHolder |
+|---|---|---|---|
+| 價格 | 免費 | 免費 | 免費（捐款） |
+| 開源 | GPL-3.0 | GPL-3.0 | ✗（閉源） |
+| 最低 macOS | 14 | 11 | 10.15 |
+| 下載體積 | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
+| 依應用程式規則 | ✓ | ✓ | ✓ |
+| 依站台 / URL 規則 | ✓ | ✓ | ✓ |
+| URL 比對類型 | 子網域 · 確切 · 關鍵字 · 正規表示式 | 子網域 · 確切 · 正規表示式 | 網域（萬用字元） |
+| 網址列（URL 欄位）規則 | ✓（鎖定 / 切換 / 優先序） | ✓（預設輸入法） | — |
+| 持續重新鎖定 | ✓ | ✗ | ✗ |
+| 逐規則鎖定*或*一次性切換 | ✓ | ✗ | ✗ |
+| 全域鍵盤快速鍵 | ✓ | ✓ | ✗ |
+| 選單列控制 | ✓ | ✓ | ✓ |
+| 畫面上輸入法提示 | ✗ | ✓ | ✓（可選） |
+| 24 小時觸發記錄 | ✓ | ✗ | ✗ |
+| 設定備份 / 匯入 | ✓（`.lockime`，含審查） | ✓（匯出/匯入 + CLI） | — |
+| URL scheme 自動化 | ✓（`lockime://`、x-callback-url） | 部分（`inputsourcepro://` 匯入） | ✗ |
+| 介面語言 | 9（即時切換） | 6 | zh · en · ja |
+| 系統權限 | 核心免權限 · 依 URL 需 Accessibility | 核心免權限 · 依 URL 需 Accessibility | Accessibility¹ |
+| 自動更新 | Sparkle（stable + beta） | ✓ | ✓ |
+| 持續維護中（2026） | ✓ | ✓ | ✓ |
+
+¹ KeyboardHolder 未說明它的權限需求；在實務上，要為其依站台規則讀取瀏覽器
+網址列需要 Accessibility 存取權。
+
+**其他值得了解的工具：**
+[SwitchKey](https://github.com/itsuhane/SwitchKey)（≈959★、GPL-3.0、僅自動依
+應用程式、自 2021 年起未再維護）、
+[Kawa](https://github.com/hatashiro/kawa)（≈1.5k★、MIT、*手動*以快速鍵驅動
+切換、自 2017 年起未再維護）、InputSwitcher（freemium、僅依應用程式），以及
+[macism](https://github.com/laishulu/macism)（供編輯器整合的 CLI 構件，並非
+GUI 切換器）。
+
+**LockIME 的定位：**若想要最大的社群與最豐富的畫面上輸入法提示——一個跟隨你
+游標的浮動指示器，並具備色彩配置與位置控制——請選 **Input Source Pro**；若想
+要精緻、零設定、開箱即用的依應用程式記憶，請選 **KeyboardHolder**。當你想要把
+輸入法*固定*住、而不只是切換它時，就選 **LockIME**：一種硬性的依應用程式、依
+URL 或網址列**鎖定**，只要有任何東西改變它就立刻重新套用——並具備逐規則的一次
+性*切換*模式、`keyword` 這種 URL 比對類型、豐富的 `lockime://` 自動化
+（x-callback-url、完整狀態控制）、24 小時觸發記錄、這一群裡最廣的在地化
+（9 種語言），以及最小的下載體積（不到 3 MB）。
+
+> 數字為約略值，蒐集於 2026 年中（Input Source Pro 2.11.0、
+> KeyboardHolder 1.14.10）；「—」標示的是未記載的能力，而非已確認的缺漏。
+> 星數、體積與能力都會隨時間變動——歡迎指正。
+
 ## Automation
 
 LockIME 提供 `lockime://` URL scheme，讓其他應用程式、指令稿、「捷徑」（Shortcuts）與啟動器都能驅動它——切換鎖定、重新指定輸入法、管理規則，並透過 [x-callback-url](https://x-callback-url.com) 回呼讀回狀態。它預設為關閉——請到 **設定 ▸ 一般 ▸ 自動化** 把它開啟。

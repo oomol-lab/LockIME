@@ -65,6 +65,74 @@ Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silic
 - **Aucune permission système pour le verrouillage de base** — un mode renforcé optionnel, soumis à l'autorisation Accessibility, débloque des règles plus fines par URL et par champ ayant le focus.
 - **Automatisation** — un schéma d'URL `lockime://` permet à d'autres applications, scripts et Shortcuts de piloter LockIME (voir ci-dessous).
 
+## Comparison
+
+Le paysage des sources de saisie sous macOS compte deux alternatives largement
+utilisées à LockIME —
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, la
+plus populaire) et **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
+(≈1.6k★) — ainsi qu'une longue série d'outils open-source et CLI plus modestes.
+Tous *basculent* la source de saisie à mesure que vous passez d'une application
+ou d'un site à l'autre ; LockIME est celle qui est conçue autour d'un
+**verrouillage** continu qui réapplique la source de saisie dès qu'elle dévie,
+tout en laissant chaque règle individuelle se rabattre sur une *bascule* unique
+lorsque c'est tout ce que vous voulez.
+
+| | LockIME | Input Source Pro | KeyboardHolder |
+|---|---|---|---|
+| Prix | Gratuit | Gratuit | Gratuit (don) |
+| Open source | GPL-3.0 | GPL-3.0 | ✗ (fermé) |
+| macOS minimum | 14 | 11 | 10.15 |
+| Taille de téléchargement | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
+| Règles par application | ✓ | ✓ | ✓ |
+| Règles par site / URL | ✓ | ✓ | ✓ |
+| Types de correspondance d'URL | sous-domaine · exact · mot-clé · regex | sous-domaine · exact · regex | domaine (joker) |
+| Règle de barre d'adresse (champ URL) | ✓ (verrouillage/bascule/priorité) | ✓ (source par défaut) | — |
+| Reverrouillage continu | ✓ | ✗ | ✗ |
+| Verrouiller *ou* basculer une fois, par règle | ✓ | ✗ | ✗ |
+| Raccourcis clavier globaux | ✓ | ✓ | ✗ |
+| Contrôle depuis la barre de menus | ✓ | ✓ | ✓ |
+| Indications de saisie à l'écran | ✗ | ✓ | ✓ (optionnel) |
+| Journal d'activation sur 24 heures | ✓ | ✗ | ✗ |
+| Sauvegarde / import de la configuration | ✓ (`.lockime`, avec prévisualisation) | ✓ (export/import + CLI) | — |
+| Automatisation par schéma d'URL | ✓ (`lockime://`, x-callback-url) | partiel (import `inputsourcepro://`) | ✗ |
+| Langues de l'interface | 9 (changement à chaud) | 6 | zh · en · ja |
+| Permissions système | aucune pour le cœur · Accessibility par URL | aucune pour le cœur · Accessibility par URL | Accessibility¹ |
+| Mise à jour automatique | Sparkle (stable + beta) | ✓ | ✓ |
+| Activement maintenu (2026) | ✓ | ✓ | ✓ |
+
+¹ KeyboardHolder ne documente pas ses exigences en matière de permissions ; la
+lecture de la barre d'adresse du navigateur pour ses règles par site nécessite
+en pratique l'accès Accessibility.
+
+**Autres outils à connaître :**
+[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, uniquement
+par application automatique, non maintenu depuis 2021),
+[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, bascule *manuelle*
+pilotée par raccourci, non maintenu depuis 2017), InputSwitcher (freemium,
+uniquement par application), et
+[macism](https://github.com/laishulu/macism) (une brique CLI pour l'intégration
+aux éditeurs, pas un commutateur graphique).
+
+**Où se situe LockIME :** choisissez **Input Source Pro** pour la plus grande
+communauté et les indications de saisie à l'écran les plus riches — un
+indicateur flottant qui suit votre curseur, avec des palettes de couleurs et des
+réglages de position. Optez pour **KeyboardHolder** pour une mémoire par
+application soignée et sans configuration, qui fonctionne tout simplement.
+Tournez-vous vers **LockIME** lorsque vous voulez *épingler* une source de saisie
+plutôt que simplement la basculer : un **verrouillage** strict par application,
+par URL ou par barre d'adresse qui se réapplique dès que quoi que ce soit la
+change — avec un mode *bascule* unique par règle, un type de correspondance d'URL
+`keyword`, une riche automatisation `lockime://` (x-callback-url, contrôle
+complet de l'état), un journal d'activation sur 24 heures, la localisation la
+plus large du groupe (9 langues), et le plus petit téléchargement (moins de
+3 MB).
+
+> Les chiffres sont approximatifs et ont été recueillis à la mi-2026 (Input
+> Source Pro 2.11.0, KeyboardHolder 1.14.10) ; un « — » signale une capacité non
+> documentée, et non une absence confirmée. Les étoiles, les tailles et les
+> capacités évoluent — les corrections sont les bienvenues.
+
 ## Automation
 
 LockIME expose un schéma d'URL `lockime://` afin que d'autres applications, scripts, Shortcuts et lanceurs puissent le piloter — activer/désactiver le verrouillage, recibler la source de saisie, gérer les règles et relire l'état grâce aux rappels [x-callback-url](https://x-callback-url.com). Elle est désactivée par défaut — activez-la dans **Réglages ▸ Général ▸ Automatisation**.

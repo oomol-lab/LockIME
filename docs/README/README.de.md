@@ -65,6 +65,65 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 - **Keine Systemberechtigungen für das Kern-Sperren** — ein optionaler, über Accessibility freigeschalteter erweiterter Modus ermöglicht feinere Regeln pro URL und pro fokussiertem Feld.
 - **Automatisierung** — ein `lockime://`-URL-Schema lässt andere Apps, Skripte und Kurzbefehle LockIME steuern (siehe unten).
 
+## Comparison
+
+Die macOS-Eingabequellen-Landschaft kennt zwei weit verbreitete Alternativen zu LockIME —
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, die
+beliebteste) und **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
+(≈1.6k★) — sowie einen langen Schwanz kleinerer Open-Source- und CLI-Tools. Sie alle
+*wechseln* die Eingabequelle, während du dich zwischen Apps oder Seiten bewegst; LockIME ist
+das Tool, das um eine kontinuierliche **Sperre** herum gebaut ist, die die Eingabequelle in dem
+Moment erneut anwendet, in dem sie abweicht, und dabei jede einzelne Regel weiterhin auf einen
+einmaligen *Wechsel* zurückfallen lassen kann, wenn das alles ist, was du willst.
+
+| | LockIME | Input Source Pro | KeyboardHolder |
+|---|---|---|---|
+| Preis | Kostenlos | Kostenlos | Kostenlos (Spende) |
+| Open Source | GPL-3.0 | GPL-3.0 | ✗ (geschlossen) |
+| Mindest-macOS | 14 | 11 | 10.15 |
+| Download-Größe | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
+| Regeln pro App | ✓ | ✓ | ✓ |
+| Regeln pro Website / URL | ✓ | ✓ | ✓ |
+| URL-Abgleichstypen | Subdomain · exakt · Schlüsselwort · Regex | Subdomain · exakt · Regex | Domain (Platzhalter) |
+| Adressleisten-Regel (URL-Feld) | ✓ (Sperren/Wechseln/Priorität) | ✓ (Standardquelle) | — |
+| Kontinuierliches Wieder-Sperren | ✓ | ✗ | ✗ |
+| Sperren *oder* einmaliger Wechsel, pro Regel | ✓ | ✗ | ✗ |
+| Globale Tastatur-Kurzbefehle | ✓ | ✓ | ✗ |
+| Steuerung über die Menüleiste | ✓ | ✓ | ✓ |
+| Eingabe-Hinweise auf dem Bildschirm | ✗ | ✓ | ✓ (optional) |
+| 24-Stunden-Aktivitätsprotokoll | ✓ | ✗ | ✗ |
+| Konfigurations-Backup / -Import | ✓ (`.lockime`, mit Vorschau) | ✓ (Export/Import + CLI) | — |
+| URL-Schema-Automatisierung | ✓ (`lockime://`, x-callback-url) | teilweise (`inputsourcepro://`-Import) | ✗ |
+| UI-Sprachen | 9 (Wechsel zur Laufzeit) | 6 | zh · en · ja |
+| Systemberechtigungen | keine für den Kern · Accessibility für Regeln pro URL | keine für den Kern · Accessibility für Regeln pro URL | Accessibility¹ |
+| Automatische Updates | Sparkle (stable + beta) | ✓ | ✓ |
+| Aktiv gepflegt (2026) | ✓ | ✓ | ✓ |
+
+¹ KeyboardHolder dokumentiert seine Berechtigungsanforderungen nicht; das Auslesen der
+Browser-Adressleiste für seine Regeln pro Website erfordert in der Praxis Accessibility-Zugriff.
+
+**Weitere erwähnenswerte Tools:**
+[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, automatisch
+nur pro App, seit 2021 ungepflegt),
+[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, *manuelles* kurzbefehlgesteuertes
+Umschalten, seit 2017 ungepflegt), InputSwitcher (Freemium, nur pro App) und
+[macism](https://github.com/laishulu/macism) (ein CLI-Baustein für die Editor-Integration, kein GUI-Umschalter).
+
+**Wo LockIME hineinpasst:** Wähle **Input Source Pro** für die größte Community und die
+umfangreichsten Eingabe-Hinweise auf dem Bildschirm — eine schwebende Anzeige, die deinem
+Cursor folgt, mit Farbschemata und Positionssteuerung. Wähle **KeyboardHolder** für ein
+ausgefeiltes, konfigurationsfreies Gedächtnis pro App, das einfach funktioniert. Greife zu
+**LockIME**, wenn du eine Eingabequelle *fixieren* statt sie nur zu wechseln möchtest: eine
+harte **Sperre** pro App, pro URL oder für die Adressleiste, die sich in dem Moment erneut
+anwendet, in dem irgendetwas sie ändert — mit einem einmaligen *Wechsel*-Modus pro Regel,
+einem `keyword`-URL-Abgleichstyp, umfangreicher `lockime://`-Automatisierung (x-callback-url,
+vollständige Zustandskontrolle), einem 24-Stunden-Aktivitätsprotokoll, der breitesten
+Lokalisierung der Gruppe (9 Sprachen) und dem kleinsten Download (unter 3 MB).
+
+> Die Angaben sind ungefähr und wurden Mitte 2026 erhoben (Input Source Pro 2.11.0,
+> KeyboardHolder 1.14.10); ein „—" kennzeichnet eine nicht dokumentierte Fähigkeit, kein
+> bestätigtes Fehlen. Sterne, Größen und Fähigkeiten verschieben sich — Korrekturen willkommen.
+
 ## Automation
 
 LockIME stellt ein `lockime://`-URL-Schema bereit, damit andere Apps, Skripte, Kurzbefehle und Launcher es steuern können — das Sperren umschalten, die Eingabequelle neu festlegen, Regeln verwalten und mit [x-callback-url](https://x-callback-url.com)-Rückrufen den Zustand auslesen. Sie ist standardmäßig aus — schalte sie unter **Einstellungen ▸ Allgemein ▸ Automatisierung** ein.
