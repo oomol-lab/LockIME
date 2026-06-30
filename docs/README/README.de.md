@@ -67,14 +67,14 @@ Oder lade die zu deinem Mac passende `.dmg`-Datei (`-arm64` für Apple silicon, 
 
 ## Comparison
 
-Die macOS-Eingabequellen-Landschaft kennt zwei weit verbreitete Alternativen zu LockIME —
-**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, die
-beliebteste) und **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
-(≈1.6k★) — sowie einen langen Schwanz kleinerer Open-Source- und CLI-Tools. Sie alle
-*wechseln* die Eingabequelle, während du dich zwischen Apps oder Seiten bewegst; LockIME ist
-das Tool, das um eine kontinuierliche **Sperre** herum gebaut ist, die die Eingabequelle in dem
-Moment erneut anwendet, in dem sie abweicht, und dabei jede einzelne Regel weiterhin auf einen
-einmaligen *Wechsel* zurückfallen lassen kann, wenn das alles ist, was du willst.
+Die zwei am weitesten verbreiteten Alternativen zu LockIME sind
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** und
+**[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, neben einem
+langen Schwanz kleinerer Open-Source- und CLI-Tools. Sie alle *wechseln* die
+Eingabequelle, während du dich zwischen Apps oder Seiten bewegst; LockIME ist um
+eine kontinuierliche **Sperre** herum gebaut, die sie in dem Moment erneut
+anwendet, in dem sie abweicht — wobei jede Regel weiterhin auf einen einmaligen
+*Wechsel* zurückfallen kann.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
@@ -99,30 +99,25 @@ einmaligen *Wechsel* zurückfallen lassen kann, wenn das alles ist, was du wills
 | Automatische Updates | Sparkle (stable + beta) | ✓ | ✓ |
 | Aktiv gepflegt (2026) | ✓ | ✓ | ✓ |
 
-¹ KeyboardHolder dokumentiert seine Berechtigungsanforderungen nicht; das Auslesen der
-Browser-Adressleiste für seine Regeln pro Website erfordert in der Praxis Accessibility-Zugriff.
+¹ KeyboardHolder dokumentiert seine Berechtigungsanforderungen nicht; das
+Auslesen der Browser-Adressleiste für seine Regeln pro Website erfordert in der
+Praxis Accessibility-Zugriff. Ein „—" kennzeichnet eine nicht dokumentierte
+Fähigkeit, kein bestätigtes Fehlen.
 
-**Weitere erwähnenswerte Tools:**
-[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, automatisch
-nur pro App, seit 2021 ungepflegt),
-[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, *manuelles* kurzbefehlgesteuertes
-Umschalten, seit 2017 ungepflegt), InputSwitcher (Freemium, nur pro App) und
-[macism](https://github.com/laishulu/macism) (ein CLI-Baustein für die Editor-Integration, kein GUI-Umschalter).
+**Die Wahl zwischen ihnen:** Input Source Pro hat die größte Community und die
+umfangreichsten Eingabe-Hinweise auf dem Bildschirm; KeyboardHolder ist ein
+ausgefeiltes, konfigurationsfreies Gedächtnis pro App. Greife zu LockIME, wenn du
+eine Eingabequelle *fixiert* haben möchtest — pro App, pro URL oder in der
+Adressleiste, in dem Augenblick erneut angewendet, in dem irgendetwas sie ändert —
+statt sie nur umzuschalten, wenn du ankommst.
 
-**Wo LockIME hineinpasst:** Wähle **Input Source Pro** für die größte Community und die
-umfangreichsten Eingabe-Hinweise auf dem Bildschirm — eine schwebende Anzeige, die deinem
-Cursor folgt, mit Farbschemata und Positionssteuerung. Wähle **KeyboardHolder** für ein
-ausgefeiltes, konfigurationsfreies Gedächtnis pro App, das einfach funktioniert. Greife zu
-**LockIME**, wenn du eine Eingabequelle *fixieren* statt sie nur zu wechseln möchtest: eine
-harte **Sperre** pro App, pro URL oder für die Adressleiste, die sich in dem Moment erneut
-anwendet, in dem irgendetwas sie ändert — mit einem einmaligen *Wechsel*-Modus pro Regel,
-einem `keyword`-URL-Abgleichstyp, umfangreicher `lockime://`-Automatisierung (x-callback-url,
-vollständige Zustandskontrolle), einem 24-Stunden-Aktivitätsprotokoll, der breitesten
-Lokalisierung der Gruppe (9 Sprachen) und dem kleinsten Download (unter 3 MB).
+**Weitere Tools:** [SwitchKey](https://github.com/itsuhane/SwitchKey) (nur pro
+App, nicht mehr gepflegt), [Kawa](https://github.com/hatashiro/kawa) (manuell,
+kurzbefehlgesteuert), InputSwitcher (Freemium, nur pro App) und
+[macism](https://github.com/laishulu/macism) (ein Kommandozeilen-Baustein, kein
+GUI-Umschalter).
 
-> Die Angaben sind ungefähr und wurden Mitte 2026 erhoben (Input Source Pro 2.11.0,
-> KeyboardHolder 1.14.10); ein „—" kennzeichnet eine nicht dokumentierte Fähigkeit, kein
-> bestätigtes Fehlen. Sterne, Größen und Fähigkeiten verschieben sich — Korrekturen willkommen.
+> Verglichen mit Input Source Pro 2.11.0 und KeyboardHolder 1.14.10, Mitte 2026 — die Angaben verschieben sich; Korrekturen willkommen.
 
 ## Automation
 

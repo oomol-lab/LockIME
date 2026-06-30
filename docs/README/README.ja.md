@@ -67,7 +67,7 @@ brew install --cask oomol-lab/tap/lockime
 
 ## Comparison
 
-macOS の入力ソース界隈には、LockIME に対する広く使われている代替ツールが 2 つあります——**[Input Source Pro](https://github.com/runjuu/InputSourcePro)**（≈3.3k★、最も人気）と **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**（≈1.6k★）——加えて、より小規模なオープンソース / CLI ツールが数多く存在します。いずれも、アプリやサイトを移動するたびに入力ソースを*切り替え*ます。LockIME は、入力ソースがずれた瞬間にそれを再適用する継続的な**ロック**を中心に設計された唯一のツールでありながら、それだけで十分なときには個々のルールを一度きりの*切り替え*にフォールバックさせることもできます。
+LockIME に対する最も広く使われている代替ツールは **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** と **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)** の 2 つで、加えてより小規模なオープンソース / CLI ツールが数多く存在します。いずれも、アプリやサイトを移動するたびに入力ソースを*切り替え*ます。LockIME は、入力ソースがずれた瞬間にそれを再適用する継続的な**ロック**を中心に設計されています——しかも、どのルールも一度きりの*切り替え*にフォールバックできます。
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
@@ -92,14 +92,13 @@ macOS の入力ソース界隈には、LockIME に対する広く使われてい
 | 自動アップデート | Sparkle（stable + beta） | ✓ | ✓ |
 | アクティブにメンテナンス中（2026） | ✓ | ✓ | ✓ |
 
-¹ KeyboardHolder はその権限要件を文書化していません。ウェブサイトごとのルールのためにブラウザのアドレスバーを読み取るには、実際には Accessibility 権限が必要です。
+¹ KeyboardHolder はその権限要件を文書化していません。ウェブサイトごとのルールのためにブラウザのアドレスバーを読み取るには、実際には Accessibility 権限が必要です。「—」は確認された非対応ではなく、文書化されていない機能を示します。
 
-**知っておく価値のある他のツール：**
-[SwitchKey](https://github.com/itsuhane/SwitchKey)（≈959★、GPL-3.0、アプリごとの自動切り替えのみ、2021 年以降メンテナンスされていません）、[Kawa](https://github.com/hatashiro/kawa)（≈1.5k★、MIT、*手動*のショートカット駆動の切り替え、2017 年以降メンテナンスされていません）、InputSwitcher（フリーミアム、アプリごとのみ）、そして [macism](https://github.com/laishulu/macism)（エディタ統合のための CLI 構成要素であり、GUI の切り替えツールではありません）。
+**選び方：** Input Source Pro は最大のコミュニティと最も充実した画面上の入力ヒントを備えています。KeyboardHolder は洗練された、ゼロ設定のアプリごとの記憶です。到着したときに切り替わるだけでなく、入力ソースを*固定*したい——アプリごと・URL ごと・アドレスバーで、何かがそれを変更した瞬間に再適用される——なら、LockIME に手を伸ばしてください。
 
-**LockIME が向いている場面：** 最大のコミュニティと最も充実した画面上の入力ヒント——カーソルを追って表示されるフローティングインジケーターで、カラースキームや位置の設定が可能——を求めるなら **Input Source Pro** を選んでください。洗練された、ゼロ設定でそのまま使えるアプリごとの記憶を求めるなら **KeyboardHolder** を選んでください。入力ソースを単に切り替えるのではなく*固定*したいときには **LockIME** に手を伸ばしてください：何かがそれを変更した瞬間に再適用される、強固なアプリごと・URL ごと・アドレスバーの**ロック**——ルールごとの一度きりの*切り替え*モード、`keyword` URL マッチタイプ、豊富な `lockime://` 自動化（x-callback-url、完全な状態制御）、24 時間の作動ログ、このグループで最も広いローカリゼーション（9 言語）、そして最小のダウンロード（3 MB 未満）を備えています。
+**その他のツール：** [SwitchKey](https://github.com/itsuhane/SwitchKey)（アプリごとのみ、メンテナンス終了）、[Kawa](https://github.com/hatashiro/kawa)（手動、ショートカット駆動）、InputSwitcher（フリーミアム、アプリごとのみ）、そして [macism](https://github.com/laishulu/macism)（コマンドラインの構成要素であり、GUI の切り替えツールではありません）。
 
-> 数値はおおよそのもので、2026 年半ばに収集しました（Input Source Pro 2.11.0、KeyboardHolder 1.14.10）。「—」は確認された非対応ではなく、文書化されていない機能を示します。スター数・サイズ・機能は変動します——訂正を歓迎します。
+> Input Source Pro 2.11.0 と KeyboardHolder 1.14.10 を基準に、2026 年半ばに比較しました——詳細は変動します。訂正を歓迎します。
 
 ## Automation
 

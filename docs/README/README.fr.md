@@ -67,16 +67,14 @@ Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silic
 
 ## Comparison
 
-Le paysage des sources de saisie sous macOS compte deux alternatives largement
-utilisées à LockIME —
-**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, la
-plus populaire) et **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**
-(≈1.6k★) — ainsi qu'une longue série d'outils open-source et CLI plus modestes.
-Tous *basculent* la source de saisie à mesure que vous passez d'une application
-ou d'un site à l'autre ; LockIME est celle qui est conçue autour d'un
-**verrouillage** continu qui réapplique la source de saisie dès qu'elle dévie,
-tout en laissant chaque règle individuelle se rabattre sur une *bascule* unique
-lorsque c'est tout ce que vous voulez.
+Les deux alternatives à LockIME les plus utilisées sont
+**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** et
+**[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, aux côtés
+d'une longue série d'outils open-source et CLI plus modestes. Tous *basculent*
+la source de saisie à mesure que vous passez d'une application ou d'un site à
+l'autre ; LockIME est conçue autour d'un **verrouillage** continu qui la
+réapplique dès qu'elle dévie — tandis que chaque règle peut tout de même se
+rabattre sur une *bascule* unique.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
@@ -103,35 +101,23 @@ lorsque c'est tout ce que vous voulez.
 
 ¹ KeyboardHolder ne documente pas ses exigences en matière de permissions ; la
 lecture de la barre d'adresse du navigateur pour ses règles par site nécessite
-en pratique l'accès Accessibility.
+en pratique l'accès Accessibility. Un « — » signale une capacité non
+documentée, et non une absence confirmée.
 
-**Autres outils à connaître :**
-[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, uniquement
-par application automatique, non maintenu depuis 2021),
-[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, bascule *manuelle*
-pilotée par raccourci, non maintenu depuis 2017), InputSwitcher (freemium,
-uniquement par application), et
-[macism](https://github.com/laishulu/macism) (une brique CLI pour l'intégration
-aux éditeurs, pas un commutateur graphique).
+**Choisir entre eux :** Input Source Pro possède la plus grande communauté et
+les indications de saisie à l'écran les plus riches ; KeyboardHolder est une
+mémoire par application soignée et sans configuration. Tournez-vous vers LockIME
+lorsque vous voulez *épingler* une source de saisie — par application, par URL
+ou dans la barre d'adresse, réappliquée dès que quoi que ce soit la change —
+plutôt que seulement la basculer à votre arrivée.
 
-**Où se situe LockIME :** choisissez **Input Source Pro** pour la plus grande
-communauté et les indications de saisie à l'écran les plus riches — un
-indicateur flottant qui suit votre curseur, avec des palettes de couleurs et des
-réglages de position. Optez pour **KeyboardHolder** pour une mémoire par
-application soignée et sans configuration, qui fonctionne tout simplement.
-Tournez-vous vers **LockIME** lorsque vous voulez *épingler* une source de saisie
-plutôt que simplement la basculer : un **verrouillage** strict par application,
-par URL ou par barre d'adresse qui se réapplique dès que quoi que ce soit la
-change — avec un mode *bascule* unique par règle, un type de correspondance d'URL
-`keyword`, une riche automatisation `lockime://` (x-callback-url, contrôle
-complet de l'état), un journal d'activation sur 24 heures, la localisation la
-plus large du groupe (9 langues), et le plus petit téléchargement (moins de
-3 MB).
+**Autres outils :** [SwitchKey](https://github.com/itsuhane/SwitchKey)
+(uniquement par application, non maintenu), [Kawa](https://github.com/hatashiro/kawa)
+(manuel, piloté par raccourci), InputSwitcher (freemium, uniquement par
+application), et [macism](https://github.com/laishulu/macism) (une brique en
+ligne de commande, pas un commutateur graphique).
 
-> Les chiffres sont approximatifs et ont été recueillis à la mi-2026 (Input
-> Source Pro 2.11.0, KeyboardHolder 1.14.10) ; un « — » signale une capacité non
-> documentée, et non une absence confirmée. Les étoiles, les tailles et les
-> capacités évoluent — les corrections sont les bienvenues.
+> Comparaison effectuée avec Input Source Pro 2.11.0 et KeyboardHolder 1.14.10, à la mi-2026 — les détails évoluent ; les corrections sont les bienvenues.
 
 ## Automation
 

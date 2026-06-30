@@ -71,7 +71,7 @@ De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
 
 ## Comparison
 
-O cenário de fontes de entrada do macOS tem duas alternativas amplamente usadas ao LockIME — **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** (≈3.3k★, o mais popular) e **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)** (≈1.6k★) — além de uma longa cauda de ferramentas menores de código aberto e de linha de comando. Todas elas *alternam* a fonte de entrada conforme você se move entre apps ou sites; o LockIME é o que foi construído em torno de um **bloqueio** contínuo que reaplica a fonte de entrada no momento em que ela desvia, ao mesmo tempo em que deixa qualquer regra individual recorrer a uma *alternância* única quando é só isso que você quer.
+As duas alternativas ao LockIME mais usadas são o **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** e o **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, ao lado de uma longa cauda de ferramentas menores de código aberto e de linha de comando. Todas elas *alternam* a fonte de entrada conforme você se move entre apps ou sites; o LockIME é construído em torno de um **bloqueio** contínuo que a reaplica no momento em que ela desvia — ao mesmo tempo em que qualquer regra ainda pode recorrer a uma *alternância* única.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
@@ -96,16 +96,13 @@ O cenário de fontes de entrada do macOS tem duas alternativas amplamente usadas
 | Atualização automática | Sparkle (stable + beta) | ✓ | ✓ |
 | Mantido ativamente (2026) | ✓ | ✓ | ✓ |
 
-¹ O KeyboardHolder não documenta seus requisitos de permissão; ler a barra de endereços do navegador para suas regras por site exige acesso de Accessibility na prática.
+¹ O KeyboardHolder não documenta seus requisitos de permissão; ler a barra de endereços do navegador para suas regras por site exige acesso de Accessibility na prática. Um "—" marca uma capacidade não documentada, não uma ausência confirmada.
 
-**Outras ferramentas que vale a pena conhecer:**
-[SwitchKey](https://github.com/itsuhane/SwitchKey) (≈959★, GPL-3.0, automático apenas por app, sem manutenção desde 2021),
-[Kawa](https://github.com/hatashiro/kawa) (≈1.5k★, MIT, alternância *manual* acionada por atalhos, sem manutenção desde 2017), InputSwitcher (freemium, apenas por app) e
-[macism](https://github.com/laishulu/macism) (um bloco de construção de linha de comando para integração com editores, não um alternador com interface gráfica).
+**Escolhendo entre eles:** o Input Source Pro tem a maior comunidade e as dicas de entrada na tela mais ricas; o KeyboardHolder é uma memória por app refinada e sem configuração. Recorra ao LockIME quando você quer uma fonte de entrada *fixada* — por app, por URL ou na barra de endereços, reaplicada no instante em que qualquer coisa a muda — em vez de apenas alternada quando você chega.
 
-**Onde o LockIME se encaixa:** escolha o **Input Source Pro** para a maior comunidade e as dicas de entrada na tela mais ricas — um indicador flutuante que segue o seu cursor, com esquemas de cores e controles de posição. Opte pelo **KeyboardHolder** para uma memória por app refinada, sem configuração, que simplesmente funciona. Recorra ao **LockIME** quando você quer *fixar* uma fonte de entrada em vez de apenas alterná-la: um **bloqueio** rígido por app, por URL ou da barra de endereços que reaplica no momento em que qualquer coisa a muda — com um modo de *alternância* única por regra, um tipo de correspondência de URL por `keyword`, automação `lockime://` rica (x-callback-url, controle total do estado), um registro de ativações de 24 horas, a localização mais ampla do grupo (9 idiomas) e o menor download (menos de 3 MB).
+**Outras ferramentas:** [SwitchKey](https://github.com/itsuhane/SwitchKey) (apenas por app, sem manutenção), [Kawa](https://github.com/hatashiro/kawa) (manual, acionado por atalhos), InputSwitcher (freemium, apenas por app) e [macism](https://github.com/laishulu/macism) (um bloco de construção de linha de comando, não um alternador com interface gráfica).
 
-> Os números são aproximados e foram coletados em meados de 2026 (Input Source Pro 2.11.0, KeyboardHolder 1.14.10); um "—" marca uma capacidade não documentada, não uma ausência confirmada. Estrelas, tamanhos e capacidades mudam — correções são bem-vindas.
+> Comparado com o Input Source Pro 2.11.0 e o KeyboardHolder 1.14.10, em meados de 2026 — os detalhes mudam; correções são bem-vindas.
 
 ## Automation
 
