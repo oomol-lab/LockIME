@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.1-beta.1</title>
+            <pubDate>Wed, 01 Jul 2026 10:06:16 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202607011004</sparkle:version>
+            <sparkle:shortVersionString>1.5.1-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* fix(menubar): realign tray icon geometry by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/49
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.3...v1.5.1-beta.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1-beta.1/LockIME-1.5.1-beta.1-arm64.zip" length="2494359" type="application/octet-stream" sparkle:edSignature="JZQXYnYAj/Wln5zfvVeDSUT0LKtPsd83dArX9Ud5s36iSgnKsnwVtBWpCuMoQAzx3pkoefr3WUQ68xBNptLiAA=="/>
+        </item>
+        <item>
             <title>1.5.1</title>
             <pubDate>Wed, 01 Jul 2026 08:25:41 +0000</pubDate>
             <sparkle:version>202607010823</sparkle:version>
