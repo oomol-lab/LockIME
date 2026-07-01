@@ -28,9 +28,8 @@ struct LockIMEApp: App {
             MenuBarView()
                 .localized(with: appState)
         } label: {
-            // The mascot is the state: hugging the keyboard = locked,
-            // snacking on bamboo = unlocked. Monochrome template glyphs so the
-            // system supplies the menu-bar tint (light/dark/active).
+            // Centered monochrome template glyphs let the system supply the
+            // menu-bar tint for light, dark, and active states.
             Image(appState.isLocked ? "TrayLocked" : "TrayUnlocked")
                 .background(SettingsActionBridge(appState: appState))
         }
