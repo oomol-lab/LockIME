@@ -136,7 +136,12 @@ for state in states {
         let rep = NSBitmapImageRep(cgImage: img)
         guard let png = rep.representation(using: .png, properties: [:]) else { continue }
         let url = outputURL(for: state, scale: scale)
-        try? png.write(to: url)
-        print("wrote \(url.path)")
+        do {
+            try png.write(to: url)
+            print("wrote \(url.path)")
+        } catch {
+            FileHandle.standardError.write(Data("failed to write \(url.path): \(error)\n".utf8))
+            exit(1)
+        }
     }
 }
