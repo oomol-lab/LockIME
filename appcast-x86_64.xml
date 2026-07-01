@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.0-beta.2</title>
+            <pubDate>Wed, 01 Jul 2026 01:55:12 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202607010153</sparkle:version>
+            <sparkle:shortVersionString>1.5.0-beta.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* docs(readme): add a competitor comparison section by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/44
+* docs(readme): trim comparison prose, drop star icons/counts by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/45
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.1...v1.5.0-beta.2
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.2/LockIME-1.5.0-beta.2-x86_64.zip" length="2612491" type="application/octet-stream" sparkle:edSignature="HaD9ywfF5jrAZzLCJZ2TZF0/5vfa2dk/E5xdCBVDmbz7NrTYgMjGYX7ohqw+QjYTEBdRu+5MsWelnVh8nw+DAg=="/>
+        </item>
+        <item>
             <title>1.5.0-beta.1</title>
             <pubDate>Tue, 30 Jun 2026 01:50:49 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
