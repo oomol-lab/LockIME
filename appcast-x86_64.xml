@@ -3,6 +3,24 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.1</title>
+            <pubDate>Wed, 01 Jul 2026 08:25:41 +0000</pubDate>
+            <sparkle:version>202607010823</sparkle:version>
+            <sparkle:shortVersionString>1.5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat(ui): use thin overlay scrollers app-wide by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/41
+* ci(dependabot): drop the broken swift ecosystem by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/42
+* docs(readme): add a competitor comparison section by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/44
+* docs(readme): trim comparison prose, drop star icons/counts by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/45
+* fix(rules): keep a global default of None across relaunch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/48
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0...v1.5.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1/LockIME-1.5.1-x86_64.zip" length="2612578" type="application/octet-stream" sparkle:edSignature="7beE6cSX5bothoMa2flLfFnWN7vAKVYH1fPY6LUYb8Yxkipb7Cg43rHBLJrz/QUV2c2hvdwItJiQU39cy/cJCA=="/>
+        </item>
+        <item>
             <title>1.5.0-beta.3</title>
             <pubDate>Wed, 01 Jul 2026 08:18:57 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -16,38 +34,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.2...v1.5.0-beta.3
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.3/LockIME-1.5.0-beta.3-x86_64.zip" length="2612587" type="application/octet-stream" sparkle:edSignature="rlh8f7fD9m/BXMqCwmKbhvbeQ3dVWgFZf0M3Qp8ghZrFyKPLVeVfE2/o2YXUMey1QpOPBKLMgBWS5ZfXs34iAg=="/>
-        </item>
-        <item>
-            <title>1.5.0-beta.2</title>
-            <pubDate>Wed, 01 Jul 2026 01:55:12 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607010153</sparkle:version>
-            <sparkle:shortVersionString>1.5.0-beta.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* docs(readme): add a competitor comparison section by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/44
-* docs(readme): trim comparison prose, drop star icons/counts by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/45
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.1...v1.5.0-beta.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.2/LockIME-1.5.0-beta.2-x86_64.zip" length="2612491" type="application/octet-stream" sparkle:edSignature="HaD9ywfF5jrAZzLCJZ2TZF0/5vfa2dk/E5xdCBVDmbz7NrTYgMjGYX7ohqw+QjYTEBdRu+5MsWelnVh8nw+DAg=="/>
-        </item>
-        <item>
-            <title>1.5.0-beta.1</title>
-            <pubDate>Tue, 30 Jun 2026 01:50:49 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202606300149</sparkle:version>
-            <sparkle:shortVersionString>1.5.0-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(ui): use thin overlay scrollers app-wide by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/41
-* ci(dependabot): drop the broken swift ecosystem by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/42
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1-beta.5...v1.5.0-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.1/LockIME-1.5.0-beta.1-x86_64.zip" length="2612457" type="application/octet-stream" sparkle:edSignature="5xn42rNJtdsiAhbhCjL1+OZ7HHj4ivUbTwXUHkP/08EKcKeB4SPa8gXUsmNx/K1I44PhySswX5ucWTQGAekZAw=="/>
         </item>
         <item>
             <title>1.5.0</title>
@@ -86,23 +72,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0...v1.4.1
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1/LockIME-1.4.1-x86_64.zip" length="2595363" type="application/octet-stream" sparkle:edSignature="Tlfn2j2XXaz83oml8a8A/fUbDMz5259hYIFIgERRwTvX7B1Ts1Vxnx/Oi7g6wPQGoLpbQ+UjfVkaIpoCrOzhBg=="/>
-        </item>
-        <item>
-            <title>1.4.0</title>
-            <pubDate>Tue, 16 Jun 2026 23:30:49 +0000</pubDate>
-            <sparkle:version>202606162328</sparkle:version>
-            <sparkle:shortVersionString>1.4.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(release): drop blank gap before direct-push commits by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/23
-* docs(readme): add config backup and tiny download features by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/24
-* feat(api): add lockime:// URL scheme automation by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/25
-* feat(rules): add URL match types and drag-to-reorder priority by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/26
-* docs(readme): refresh settings screenshots for current UI ([`f050428`](https://github.com/oomol-lab/LockIME/commit/f0504280adb8344dc2b81cb41eb85fb3a68bcc84))
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.3.0...v1.4.0
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.0/LockIME-1.4.0-x86_64.zip" length="2580142" type="application/octet-stream" sparkle:edSignature="cC4txvVp2udK6sIYG+rp7HdcW5KbGy+ORGvE42/A6z1i30zX5WA02EQBnKvG5Nqh4e4uimEVGMoVPDdW0FjDCA=="/>
         </item>
     </channel>
 </rss>
