@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.0-beta.3</title>
+            <pubDate>Wed, 01 Jul 2026 08:18:57 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202607010816</sparkle:version>
+            <sparkle:shortVersionString>1.5.0-beta.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* fix(rules): keep a global default of None across relaunch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/48
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.2...v1.5.0-beta.3
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.3/LockIME-1.5.0-beta.3-arm64.zip" length="2494551" type="application/octet-stream" sparkle:edSignature="oU0xa6ohyiubOue437XRnzgv/AL8T8HNPtz7pWHp0q2UUF1cuY7sWCdFT/IFjgwLHLRaC6LkjEmXaRzDZcumDA=="/>
+        </item>
+        <item>
             <title>1.5.0-beta.2</title>
             <pubDate>Wed, 01 Jul 2026 01:55:11 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -60,22 +76,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1...v1.5.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0/LockIME-1.5.0-arm64.zip" length="2490349" type="application/octet-stream" sparkle:edSignature="pD7wUdtsl7PLc+pYfU01hs9MoLV7JS7suEu8oWw2xMJEtHZUiO+emoUIALFWGallQ/7tIgzwwMRylAN1iq9/AQ=="/>
-        </item>
-        <item>
-            <title>1.4.1-beta.5</title>
-            <pubDate>Sun, 28 Jun 2026 04:26:03 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202606280424</sparkle:version>
-            <sparkle:shortVersionString>1.4.1-beta.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(menubar): survive a hidden icon and let the user hide it by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/40
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1-beta.4...v1.4.1-beta.5
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1-beta.5/LockIME-1.4.1-beta.5-arm64.zip" length="2490328" type="application/octet-stream" sparkle:edSignature="fYNN/nQOUWgAndbvAdNec+fpTNl9ASNmZlx0JKqoZmI/0a4rT5ED/1yhtJ0DTD1+K597cL00BTh+hFk4s084DQ=="/>
         </item>
         <item>
             <title>1.4.1</title>
