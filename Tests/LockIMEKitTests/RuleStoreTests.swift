@@ -62,6 +62,27 @@ struct RuleStoreTests {
         #expect(loaded.urlRules.first?.action == .lock)
     }
 
+    @Test("hasPersistedConfiguration is false until a save happens")
+    func hasPersistedConfigurationStartsFalse() {
+        let store = RuleStore(defaults: freshDefaults())
+        #expect(store.hasPersistedConfiguration == false)
+        store.save(.default)
+        #expect(store.hasPersistedConfiguration == true)
+    }
+
+    // Regression: a returning user who set the global default to "None" persists
+    // `defaultSourceID == nil`, yet the config *is* on disk — so the first-run
+    // seed (which turns a nil default into the live source) must NOT fire for
+    // them. `hasPersistedConfiguration` is what tells the two apart; assert it
+    // reports `true` even though the saved default is nil.
+    @Test("a saved config with a nil default still counts as persisted")
+    func nilDefaultStillCountsAsPersisted() {
+        let store = RuleStore(defaults: freshDefaults())
+        store.save(LockConfiguration(isEnabled: true, defaultSourceID: nil))
+        #expect(store.hasPersistedConfiguration == true)
+        #expect(store.load().defaultSourceID == nil)
+    }
+
     @Test("a later save overwrites an earlier one")
     func overwrite() {
         let defaults = freshDefaults()

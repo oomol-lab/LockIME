@@ -179,6 +179,10 @@ final class AppState {
     /// Build and start the engine. Called once at launch from the app delegate.
     func start() {
         guard engine == nil else { return }
+        // Capture this *before* loading (and before the save below writes one):
+        // it tells a genuine first run apart from a returning user who set the
+        // global default to "None". Both load as `defaultSourceID == nil`.
+        let isFirstRun = !store.hasPersistedConfiguration
         config = store.load()
         activationCount = activationStore.count
 
@@ -210,8 +214,11 @@ final class AppState {
         engine.start()
 
         availableSources = engine.selectableSources()
-        // First run: default the global lock to the currently active source.
-        if config.defaultSourceID == nil, let current = engine.currentSourceID() {
+        // First run only: seed the global lock from the currently active source.
+        // Gated on `isFirstRun` — a returning user who set the default to "None"
+        // persists `nil`, and re-seeding that would silently turn "None" back
+        // into whatever source was active at launch (e.g. ABC) on every relaunch.
+        if isFirstRun, config.defaultSourceID == nil, let current = engine.currentSourceID() {
             config.defaultSourceID = current
         }
         engine.apply(config, reason: .startupApplied)
