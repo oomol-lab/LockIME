@@ -3,6 +3,21 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.5.1-beta.2</title>
+            <pubDate>Thu, 02 Jul 2026 06:00:46 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202607020558</sparkle:version>
+            <sparkle:shortVersionString>1.5.1-beta.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat!: collapse the two-level enable model into one master switch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/50
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1-beta.1...v1.5.1-beta.2
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1-beta.2/LockIME-1.5.1-beta.2-x86_64.zip" length="2610120" type="application/octet-stream" sparkle:edSignature="49DBqW8PKvn+z9XgOYzKXY0Sb7fdcWdOnuaGbhfQleHmu6Ork3gDcRHPGeh6ErMeubR1wT2wSgeAaUuywIpOBA=="/>
+        </item>
+        <item>
             <title>1.5.1-beta.1</title>
             <pubDate>Wed, 01 Jul 2026 10:06:16 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
