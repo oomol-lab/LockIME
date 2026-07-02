@@ -338,7 +338,9 @@ public final class LockEngine {
     private func updateURLPolling() {
         urlPollTask?.cancel()
         urlPollTask = nil
-        guard config.enhancedModeEnabled, urlProvider != nil, !config.urlRules.isEmpty,
+        // The master switch gates observation too: while LockIME is off it
+        // must stop reading browser URLs, not just refrain from acting on them.
+        guard config.isEnabled, config.enhancedModeEnabled, urlProvider != nil, !config.urlRules.isEmpty,
               BrowserBundleIDs.isBrowser(effectiveBundleID)
         else { return }
         urlPollTask = Task { @MainActor [weak self] in
@@ -359,7 +361,10 @@ public final class LockEngine {
     /// attaches to exactly the browser the user is in, and detaches otherwise. A
     /// launcher overlay over a browser suspends it (the overlay isn't a browser).
     private func updateAddressBarMonitoring() {
-        let shouldObserve = config.addressBarFocusEnabled
+        // Gated on the master switch for the same reason as updateURLPolling():
+        // disabled means no AX observation at all, not just no action.
+        let shouldObserve = config.isEnabled
+            && config.addressBarFocusEnabled
             && config.addressBarSourceID != nil
             && BrowserBundleIDs.isBrowser(effectiveBundleID)
         addressBarMonitor.observe(bundleID: shouldObserve ? effectiveBundleID : nil)

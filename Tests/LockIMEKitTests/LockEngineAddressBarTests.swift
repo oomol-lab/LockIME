@@ -204,6 +204,25 @@ struct LockEngineAddressBarTests {
         #expect(provider.current == us)
     }
 
+    @Test("the master switch gates observation: disabled detaches the AX observer entirely")
+    func masterOffStopsObserving() {
+        let (engine, provider, _, ab) = makeEngine(current: us, frontmost: safari)
+        engine.apply(config(action: .lock, source: abc, default: us))
+        #expect(ab.observedBundleID == safari) // enabled → observing
+
+        var off = config(action: .lock, source: abc, default: us)
+        off.isEnabled = false
+        engine.apply(off)
+        #expect(ab.observedBundleID == nil)    // disabled → detached, not merely inert
+
+        ab.setFocused(true)                    // a stray event while off does nothing
+        #expect(provider.current == us)
+
+        var on = off; on.isEnabled = true
+        engine.apply(on)
+        #expect(ab.observedBundleID == safari) // re-enabled → observing again
+    }
+
     @Test("the address bar is observed only while a browser is frontmost")
     func observedOnlyForBrowsers() {
         let (engine, _, monitor, ab) = makeEngine(current: us, frontmost: "com.foo.App")
