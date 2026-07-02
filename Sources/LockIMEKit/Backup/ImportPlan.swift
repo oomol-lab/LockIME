@@ -353,7 +353,7 @@ public struct ImportPlan: Sendable, Equatable {
     // MARK: - Resolution
 
     /// Fold the plan into a final configuration. Pure: the per-device runtime
-    /// flags (`isEnabled`, `lockingEnabled`, `enhancedModeEnabled`) are carried
+    /// flags (`isEnabled`, `enhancedModeEnabled`) are carried
     /// straight from the base config (via `var result = baseConfig` below) and
     /// never imported.
     public func resolvedConfiguration() -> LockConfiguration {

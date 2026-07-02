@@ -4,7 +4,7 @@
 
 LockIME exposes a `lockime://` URL scheme so other apps, scripts, Shortcuts,
 Stream Deck, Alfred/Raycast, AppleScript — anything that can open a URL — can
-drive it: toggle locking, retarget the input source, manage rules, and read
+drive it: turn it on or off, retarget the input source, manage rules, and read
 state back.
 
 Each command is a URL, fire-and-forget by default, with optional
@@ -71,27 +71,26 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 On success LockIME opens:
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-The master (`lock` / `unlock` / `toggle-lock`) turns **LockIME** on or off — it
-gates everything (both locking and switching). The `set-locking` sub-toggle,
-subordinate to the master, controls only the **continuous lock**: turn it off to
-stop pinning any source while one-shot switch rules keep firing — the "act like a
-pure switcher" mode.
+`lock` / `unlock` / `toggle-lock` turn **LockIME** on or off — the single switch
+that gates everything (both locking and switching). To stop pinning globally
+while your per-app/per-site switch rules keep firing — the "act like a pure
+switcher" mode — set the global default source to **None** instead
+(`set-default-source` with no source).
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Turn **LockIME** (the master) **on** — applies your rules. |
-| `unlock` | — | Turn **LockIME** (the master) **off** — fully idle. |
-| `toggle-lock` *(alias `toggle`)* | — | Flip the master on/off. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Turn the **continuous lock** on/off (or flip it). Off ⇒ nothing is pinned, but switch rules still fire. No immediate runtime effect while the master is off. |
+| `lock` | — | Turn **LockIME** **on** — applies your rules. |
+| `unlock` | — | Turn **LockIME** **off** — fully idle. |
+| `toggle-lock` *(alias `toggle`)* | — | Flip LockIME on/off. |
 
 ### Global input source
 
@@ -102,9 +101,9 @@ installed, selectable source or the command returns `unknown_source`.
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | Set the global default source **and** turn locking on. |
+| `lock-to-source` | `id` \| `name` | Set the global default source **and** turn LockIME on. |
 | `set-default-source` | `id` \| `name` *(omit both to clear)* | Set (or clear) the global default source without changing the on/off state. |
-| `cycle-source` | `direction` = `next` \| `previous` | Step the global target to the next/previous installed source (wrapping) and turn locking on. |
+| `cycle-source` | `direction` = `next` \| `previous` | Step the global target to the next/previous installed source (wrapping) and turn LockIME on. |
 | `switch-source` | `id` \| `name` | Switch the current input source **once**, right now — it does **not** turn on or change a continuous lock. If a continuous lock is already active, it wins and switches the source back to its target. |
 
 `direction` also accepts the aliases `prev`, `forward`, `back`, `up`, `down`.
@@ -187,8 +186,6 @@ Query commands return a JSON payload through the `x-success` callback (see
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -202,8 +199,8 @@ Query commands return a JSON payload through the `x-success` callback (see
 }
 ```
 
-`enabled` is the master ("Enable LockIME"); `lockingEnabled` is the continuous-lock
-sub-toggle; `locked` is `true` only when both are on (a lock is actually in force).
+`enabled` is the single "Enable LockIME" switch — when it is on, your rules are
+in force.
 `currentSource`, `defaultSource`, and `frontmostApp` are present only when known.
 
 ---

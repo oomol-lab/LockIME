@@ -17,11 +17,11 @@ struct MenuBarView: View {
         // surface that bypasses the injected `\.locale`, so resolve the status
         // word through `loc` (app's chosen language) rather than a live
         // LocalizedStringKey.
-        let status = state.loc(state.isLocked ? "Locked" : "Unlocked")
+        let status = state.loc(state.isAppEnabled ? "Enabled" : "Disabled")
         let toggleShortcut = state.toggleLockShortcut?.menuDisplayShortcut
 
-        // Status header — the lock state with a padlock glyph (closed when
-        // locked, open when unlocked) and, on the right, the configured global
+        // Status header — the on/off state with a padlock glyph (closed when
+        // enabled, open when disabled) and, on the right, the configured global
         // toggle-lock shortcut. Non-interactive: a *disabled* Button still draws
         // the accelerator natively but can't fire it, so it never clashes with
         // the real global handler — it's a pure hint. The source name is omitted:
@@ -30,7 +30,7 @@ struct MenuBarView: View {
             Label {
                 Text(verbatim: status)
             } icon: {
-                Image(systemName: state.isLocked ? "lock.fill" : "lock.open.fill")
+                Image(systemName: state.isAppEnabled ? "lock.fill" : "lock.open.fill")
             }
         }
         .keyboardShortcut(toggleShortcut)
@@ -40,24 +40,24 @@ struct MenuBarView: View {
 
         // The system input sources, flattened directly into the menu. Each is a
         // Button carrying a leading checkmark in the menu-item *image* column —
-        // visible on the locked source (locking on AND this is the global
+        // visible on the locked source (LockIME on AND this is the global
         // target), kept as a transparent placeholder otherwise. That reserves
         // the gutter at a constant width, so the menu doesn't grow/shrink as the
         // lock toggles. (A `Toggle`'s native checkmark lives in NSMenu's *state*
         // column, which collapses to zero width when nothing is checked — that
         // is what made the menu jump.) Clicking an unchecked source locks to it
-        // (sets the global target + engages master and locking, one commit);
-        // clicking the checked source clears the global target (app and switch
-        // rules stay live). No separate master toggle, no submenu. Source names
-        // are verbatim system strings, not catalog keys. The global toggle-lock
-        // shortcut (Settings ▸ Shortcuts) flips the master (Enable LockIME) on/off.
+        // (sets the global target + turns LockIME on, one commit); clicking the
+        // checked source clears the global target (app and switch rules stay
+        // live). No separate on/off toggle, no submenu. Source names are
+        // verbatim system strings, not catalog keys. The global toggle-lock
+        // shortcut (Settings ▸ Shortcuts) flips LockIME on/off.
         ForEach(state.availableSources) { source in
-            let isLockedTo = state.isLocked && state.config.defaultSourceID == source.id
+            let isLockedTo = state.isAppEnabled && state.config.defaultSourceID == source.id
             Button {
                 if isLockedTo {
                     // Clear just the global lock target — the app and any one-shot
                     // switch rules stay alive. (Use Settings to turn LockIME off
-                    // entirely, or to toggle locking without losing the target.)
+                    // entirely.)
                     state.setDefaultSource(nil)
                 } else {
                     state.lockToSource(source.id)

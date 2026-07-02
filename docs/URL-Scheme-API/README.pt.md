@@ -4,7 +4,7 @@
 
 O LockIME expõe um esquema de URL `lockime://` para que outros apps, scripts, o
 Shortcuts, o Stream Deck, o Alfred/Raycast, o AppleScript — qualquer coisa que
-consiga abrir uma URL — possam controlá-lo: ativar/desativar o bloqueio,
+consiga abrir uma URL — possam controlá-lo: ativá-lo ou desativá-lo,
 redirecionar a fonte de entrada, gerenciar regras e ler o estado de volta.
 
 Cada comando é uma URL, do tipo dispare-e-esqueça por padrão, com callbacks
@@ -75,27 +75,26 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 Em caso de sucesso, o LockIME abre:
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-O mestre (`lock` / `unlock` / `toggle-lock`) liga ou desliga o **LockIME** — ele
-comanda tudo (tanto o bloqueio quanto a alternância). O sub-toggle `set-locking`,
-subordinado ao mestre, controla apenas o **bloqueio contínuo**: desligue-o para
-parar de fixar qualquer fonte enquanto as regras de alternância única continuam
-disparando — o modo "agir como um alternador puro".
+`lock` / `unlock` / `toggle-lock` ligam ou desligam o **LockIME** — o único
+interruptor que comanda tudo (tanto o bloqueio quanto a alternância). Para parar
+de fixar globalmente enquanto suas regras de alternância por app/por site
+continuam disparando — o modo "agir como um alternador puro" — defina a fonte
+padrão global como **Nenhuma** (`set-default-source` sem fonte).
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Liga o **LockIME** (o mestre) — aplica suas regras. |
-| `unlock` | — | Desliga o **LockIME** (o mestre) — totalmente ocioso. |
-| `toggle-lock` *(alias `toggle`)* | — | Inverte o mestre (liga/desliga). |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Liga/desliga o **bloqueio contínuo** (ou o inverte). Desligado ⇒ nada é fixado, mas as regras de alternância ainda disparam. Sem efeito imediato em tempo de execução enquanto o mestre estiver desligado. |
+| `lock` | — | Liga o **LockIME** — aplica suas regras. |
+| `unlock` | — | Desliga o **LockIME** — totalmente ocioso. |
+| `toggle-lock` *(alias `toggle`)* | — | Inverte o LockIME (liga/desliga). |
 
 ### Global input source
 
@@ -107,9 +106,9 @@ instalada e selecionável, ou o comando retorna `unknown_source`.
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | Define a fonte padrão global **e** liga o bloqueio. |
+| `lock-to-source` | `id` \| `name` | Define a fonte padrão global **e** liga o LockIME. |
 | `set-default-source` | `id` \| `name` *(omita ambos para limpar)* | Define (ou limpa) a fonte padrão global sem alterar o estado ligado/desligado. |
-| `cycle-source` | `direction` = `next` \| `previous` | Avança o alvo global para a próxima/anterior fonte instalada (com retorno cíclico) e liga o bloqueio. |
+| `cycle-source` | `direction` = `next` \| `previous` | Avança o alvo global para a próxima/anterior fonte instalada (com retorno cíclico) e liga o LockIME. |
 | `switch-source` | `id` \| `name` | Alterna a fonte de entrada atual **uma vez**, agora — **não** ativa nem modifica nenhum bloqueio contínuo. Se um bloqueio contínuo já estiver ativo, ele prevalece e devolve a fonte ao seu alvo. |
 
 `direction` também aceita os apelidos `prev`, `forward`, `back`, `up`, `down`.
@@ -195,8 +194,6 @@ Os comandos de consulta retornam um payload JSON através do callback
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -210,9 +207,8 @@ Os comandos de consulta retornam um payload JSON através do callback
 }
 ```
 
-`enabled` é o mestre ("Ativar o LockIME"); `lockingEnabled` é o sub-toggle do bloqueio
-contínuo; `locked` é `true` apenas quando ambos estão ligados (um bloqueio está de
-fato em vigor).
+`enabled` é o único interruptor "Ativar o LockIME" — quando ele está ligado, suas
+regras estão em vigor.
 `currentSource`, `defaultSource` e `frontmostApp` estão presentes apenas quando conhecidos.
 
 ---

@@ -647,62 +647,41 @@ struct LockEngineSwitchTests {
         #expect(provider.current == us)
     }
 
-    // MARK: - Lock sub-toggle (`lockingEnabled`) — decoupled from switching
+    // MARK: - Pure-switcher setup — global default None, switch rules only
 
-    @Test("locking off: the global default does not pin (no global lock)")
-    func lockingOffGlobalDefaultInert() {
-        let (engine, provider, _, _) = makeEngine(current: abc, frontmost: "com.foo.App")
-        // Master on, lock sub-toggle off: a set global default must NOT engage.
-        engine.apply(LockConfiguration(isEnabled: true, lockingEnabled: false, defaultSourceID: us))
-        #expect(provider.selectCalls.isEmpty)
-        #expect(provider.current == abc) // left free, not pinned to us
-    }
-
-    @Test("locking off: a switch app rule still fires (Input Source Pro mode)")
-    func lockingOffStillSwitches() {
+    @Test("global default None: nothing pins, but a switch app rule still fires")
+    func noneDefaultStillSwitches() {
         let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
         engine.apply(LockConfiguration(
-            isEnabled: true, lockingEnabled: false, defaultSourceID: us,
+            isEnabled: true, defaultSourceID: nil,
             appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
         ))
-        #expect(provider.current == us) // foo: nothing pinned (global default inert)
+        #expect(provider.current == us) // foo: no default → nothing pinned
+        #expect(provider.selectCalls.isEmpty)
 
         monitor.activate("com.apple.Terminal")
-        #expect(provider.current == abc)       // switched once despite locking off
+        #expect(provider.current == abc)       // switched once, no standing lock
         #expect(provider.selectCalls == [abc])
     }
 
-    @Test("locking off: a lock app rule is inert (only switch survives)")
-    func lockingOffLockRuleInert() {
-        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
-        engine.apply(LockConfiguration(
-            isEnabled: true, lockingEnabled: false,
-            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .locked, lockedSourceID: abc)]
-        ))
-        monitor.activate("com.apple.Terminal")
-        #expect(provider.current == us) // lock rule does not pin
-        #expect(provider.selectCalls.isEmpty)
-    }
-
-    @Test("turning the lock sub-toggle on engages the global default")
-    func togglingLockingOnEngages() {
+    @Test("setting a global default from None engages the lock")
+    func settingDefaultFromNoneEngages() {
         let (engine, provider, _, _) = makeEngine(current: abc, frontmost: "com.foo.App")
-        let base = LockConfiguration(isEnabled: true, lockingEnabled: false, defaultSourceID: us)
+        let base = LockConfiguration(isEnabled: true, defaultSourceID: nil)
         engine.apply(base)
-        #expect(provider.current == abc) // off → not pinned
+        #expect(provider.current == abc) // None → not pinned
 
-        var on = base; on.lockingEnabled = true
+        var on = base; on.defaultSourceID = us
         engine.apply(on, reason: .lockEngaged)
         #expect(provider.current == us)        // now pinned
         #expect(provider.selectCalls == [us])
     }
 
-    @Test("master off gates everything regardless of the lock sub-toggle")
+    @Test("the single switch off gates everything — neither locks nor switches")
     func masterOffGatesEverything() {
         let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.foo.App")
-        // Master off but lock sub-toggle nominally on: still fully idle.
         engine.apply(LockConfiguration(
-            isEnabled: false, lockingEnabled: true, defaultSourceID: abc,
+            isEnabled: false, defaultSourceID: abc,
             appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .switched, lockedSourceID: abc)]
         ))
         #expect(provider.current == us)

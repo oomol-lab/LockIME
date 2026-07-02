@@ -49,16 +49,13 @@ final class URLCommandHandler {
     /// `[[String: Any]]` array) for query commands, `nil` for actions.
     private func perform(_ command: URLCommand) -> Result<Any?, URLCommandError> {
         switch command {
-        // Master ("Enable LockIME") — gates the whole app.
+        // The single on/off ("Enable LockIME") — gates the whole app.
         case .lock:
             state.setMasterEnabled(true); return .success(nil)
         case .unlock:
             state.setMasterEnabled(false); return .success(nil)
         case .toggleLock:
             state.setMasterEnabled(!state.isAppEnabled); return .success(nil)
-        // Lock sub-toggle ("Enable locking").
-        case .setLocking(let flag):
-            state.setLockingEnabled(resolve(flag, current: state.config.lockingEnabled)); return .success(nil)
 
         // Global source targeting
         case .lockToSource(let selector):
@@ -243,11 +240,8 @@ final class URLCommandHandler {
 
     private func statusPayload() -> [String: Any] {
         var payload: [String: Any] = [
-            // `enabled` = the master ("Enable LockIME"); `lockingEnabled` = the
-            // lock sub-toggle; `locked` = both (a continuous lock is in force).
+            // `enabled` = the single "Enable LockIME" switch.
             "enabled": state.isAppEnabled,
-            "lockingEnabled": state.config.lockingEnabled,
-            "locked": state.isLocked,
             "enhancedMode": state.config.enhancedModeEnabled,
             "launchAtLogin": state.launchAtLoginActive,
             "accessibilityGranted": state.accessibilityGranted,

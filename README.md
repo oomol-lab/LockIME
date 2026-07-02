@@ -61,10 +61,10 @@ Either way, the app keeps itself up to date via Sparkle.
 - **Lock or switch** — per-app and per-URL rules can *lock* an input source
   (re-applied whenever it drifts) or just *switch* to it once when you focus the
   app or page, then step out of the way and let you change it freely.
-- **Lock globally, or just switch** — one **Enable LockIME** switch powers
-  everything; a subordinate **Enable locking** toggle controls only the
-  continuous lock. Turn locking off to use LockIME as a pure per-app/per-site
-  switcher — it switches you in, then leaves you free, pinning nothing.
+- **Lock globally, or just switch** — set the global default to one input
+  source to pin it everywhere, or set it to **None** to use LockIME as a pure
+  per-app/per-site switcher — it switches you in, then leaves you free, pinning
+  nothing.
 - **Flexible URL matching** — per-URL rules (enhanced mode) match by a domain and
   its subdomains, an exact domain, a domain keyword, or a regular expression over
   the full URL, and apply in a priority order you drag to arrange — first match
@@ -147,7 +147,7 @@ a GUI switcher).
 ## Automation
 
 LockIME exposes a `lockime://` URL scheme so other apps, scripts, Shortcuts, and
-launchers can drive it — toggle locking, retarget the input source, manage
+launchers can drive it — turn it on or off, retarget the input source, manage
 rules, and read state back with [x-callback-url](https://x-callback-url.com)
 callbacks. It is off by default — turn it on in **Settings ▸ General ▸
 Automation**.

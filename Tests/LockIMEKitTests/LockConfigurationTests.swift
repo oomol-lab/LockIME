@@ -65,28 +65,37 @@ struct LockConfigurationTests {
         let config = try JSONDecoder().decode(LockConfiguration.self, from: Data("{}".utf8))
         #expect(config == LockConfiguration.default)
         #expect(config.isEnabled == false)
-        #expect(config.lockingEnabled == true)
         #expect(config.defaultSourceID == nil)
         #expect(config.appRules.isEmpty)
         #expect(config.enhancedModeEnabled == false)
         #expect(config.urlRules.isEmpty)
     }
 
-    @Test("a pre-existing config (no lockingEnabled key) migrates to locking on")
-    func lockingEnabledDefaultsTrueWhenAbsent() throws {
-        // Any configuration persisted before the field existed lacks the key, so
-        // an upgrade must keep the prior "master on ⇒ locking on" behavior.
-        let json = #"{"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US"}"#
-        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
-        #expect(config.lockingEnabled == true)
-    }
-
-    @Test("an explicit lockingEnabled=false is honored (pure-switch mode persists)")
-    func lockingEnabledFalseIsHonored() throws {
-        let json = #"{"isEnabled": true, "lockingEnabled": false}"#
+    // TODO(legacy-locking-migration): delete this test together with the
+    // decode shim in LockConfiguration.init(from:).
+    @Test("a legacy lockingEnabled=false migrates to a cleared global default")
+    func legacyLockingOffClearsGlobalDefault() throws {
+        // ≤1.5 shipped an "Enable locking" sub-toggle; off disabled every
+        // continuous lock. The single-switch model expresses the global part as
+        // a default of None, so the legacy key migrates there instead of
+        // silently re-engaging the *global* lock on upgrade. Rule-level locks
+        // (`.locked` app rules, `.lock` URL/address-bar rules) are deliberately
+        // NOT demoted: rules now mean what they say, and rewriting the user's
+        // rule modes on a heuristic would be more destructive than re-engaging
+        // the locks they explicitly configured.
+        let json = #"{"isEnabled": true, "lockingEnabled": false, "defaultSourceID": "com.apple.keylayout.US"}"#
         let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
         #expect(config.isEnabled == true)
-        #expect(config.lockingEnabled == false)
+        #expect(config.defaultSourceID == nil)
+    }
+
+    // TODO(legacy-locking-migration): delete this test together with the
+    // decode shim in LockConfiguration.init(from:).
+    @Test("a legacy lockingEnabled=true decodes with its global default intact")
+    func legacyLockingOnKeepsGlobalDefault() throws {
+        let json = #"{"isEnabled": true, "lockingEnabled": true, "defaultSourceID": "com.apple.keylayout.US"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.defaultSourceID == "com.apple.keylayout.US")
     }
 
     @Test("decoding a partial object keeps present keys and defaults the rest")

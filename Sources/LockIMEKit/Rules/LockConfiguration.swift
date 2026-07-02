@@ -161,20 +161,12 @@ public struct URLRule: Codable, Sendable, Hashable, Identifiable {
 
 /// The full persisted locking configuration.
 public struct LockConfiguration: Codable, Sendable, Equatable {
-    /// Master on/off — "Enable LockIME". When off, the app is fully idle: it
-    /// neither **locks** nor **switches**, regardless of any rule. This is the
-    /// single power switch the menu bar and the global toggle shortcut flip.
+    /// The single on/off — "Enable LockIME". When off, the app is fully idle: it
+    /// neither **locks** nor **switches**, regardless of any rule. When on, the
+    /// rules decide what is pinned: a global default of "None" with only switch
+    /// rules pins nothing (the pure per-context switcher setup). This is the
+    /// power switch the menu bar and the global toggle shortcut flip.
     public var isEnabled: Bool
-    /// Whether the **continuous-lock** capability is engaged, *subordinate* to
-    /// `isEnabled` (it only matters while the master is on). When off, no rule
-    /// ever pins a source continuously — the global default, per-app `.locked`
-    /// rules, URL `.lock` rules, and the address-bar lock all go inert — but the
-    /// **one-shot switch** capability is untouched and keeps firing (a `.switched`
-    /// app rule, a `.switchOnce` URL/address-bar rule). That is the "act like
-    /// Input Source Pro" mode: per-context auto-switch with no global lock.
-    /// Defaults **on** so an upgrade preserves the prior behavior (master on ⇒
-    /// locking on), and a missing key decodes to `true` for the same reason.
-    public var lockingEnabled: Bool
     /// Global default locked source, used when no app rule applies.
     public var defaultSourceID: InputSourceID?
     /// Per-app overrides.
@@ -206,7 +198,6 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
 
     public init(
         isEnabled: Bool = false,
-        lockingEnabled: Bool = true,
         defaultSourceID: InputSourceID? = nil,
         appRules: [AppRule] = [],
         enhancedModeEnabled: Bool = false,
@@ -217,7 +208,6 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         addressBarOutranksURLRules: Bool = true
     ) {
         self.isEnabled = isEnabled
-        self.lockingEnabled = lockingEnabled
         self.defaultSourceID = defaultSourceID
         self.appRules = appRules
         self.enhancedModeEnabled = enhancedModeEnabled
@@ -233,9 +223,6 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
-        // Absent (any config persisted before this field existed) ⇒ `true`, so an
-        // upgrade keeps the prior "master on ⇒ locking on" behavior unchanged.
-        lockingEnabled = try container.decodeIfPresent(Bool.self, forKey: .lockingEnabled) ?? true
         defaultSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .defaultSourceID)
         appRules = try container.decodeIfPresent([AppRule].self, forKey: .appRules) ?? []
         enhancedModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .enhancedModeEnabled) ?? false
@@ -249,6 +236,28 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         addressBarAction = rawAddressBarAction.flatMap(RuleAction.init(rawValue:)) ?? .switchOnce
         addressBarSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .addressBarSourceID)
         addressBarOutranksURLRules = try container.decodeIfPresent(Bool.self, forKey: .addressBarOutranksURLRules) ?? true
+        // TODO(legacy-locking-migration): temporary upgrade shim — delete this
+        // block, `LegacyCodingKeys` below, and the two `legacy*` tests in
+        // LockConfigurationTests once several more releases have shipped. It
+        // only matters on the FIRST launch of a user jumping straight from
+        // v1.5.x (the config is rewritten without the key right after), so its
+        // audience shrinks toward zero with every release.
+        //
+        // Legacy (≤ 1.5): the removed "Enable locking" sub-toggle. An explicit
+        // `false` disabled every continuous lock; the single-switch model
+        // expresses the global part as a cleared default, so migrate that.
+        // Rule-level locks (`.locked` app rules, `.lock` URL/address-bar rules)
+        // deliberately re-engage instead of being demoted to switches: rules
+        // now mean what they say, and rewriting the user's rule modes on a
+        // heuristic would be the more destructive migration.
+        let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
+        if try legacy.decodeIfPresent(Bool.self, forKey: .lockingEnabled) == false {
+            defaultSourceID = nil
+        }
+    }
+
+    private enum LegacyCodingKeys: String, CodingKey {
+        case lockingEnabled
     }
 
     public static let `default` = LockConfiguration()

@@ -4,7 +4,7 @@
 
 LockIME expone un esquema de URL `lockime://` para que otras aplicaciones, scripts, Shortcuts,
 Stream Deck, Alfred/Raycast, AppleScript — cualquier cosa que pueda abrir una URL — puedan
-controlarlo: activar o desactivar el bloqueo, recambiar la fuente de entrada, gestionar reglas y leer
+controlarlo: activarlo o desactivarlo, recambiar la fuente de entrada, gestionar reglas y leer
 el estado de vuelta.
 
 Cada comando es una URL, fire-and-forget por defecto, con callbacks opcionales de
@@ -71,27 +71,26 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 Si tiene éxito, LockIME abre:
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-El maestro (`lock` / `unlock` / `toggle-lock`) activa o desactiva **LockIME** — controla
-el acceso a todo (tanto el bloqueo como el cambio). El subconmutador `set-locking`,
-subordinado al maestro, controla únicamente el **bloqueo continuo**: desactívalo para dejar
-de fijar cualquier fuente mientras las reglas de cambio de una sola vez siguen disparándose —
-el modo «actuar como un cambiador puro».
+`lock` / `unlock` / `toggle-lock` activan o desactivan **LockIME** — el único interruptor
+que controla el acceso a todo (tanto el bloqueo como el cambio). Para dejar de fijar
+globalmente mientras tus reglas de cambio por aplicación/por sitio siguen disparándose —
+el modo «actuar como un cambiador puro» — establece en su lugar la fuente predeterminada
+global en **Ninguna** (`set-default-source` sin fuente).
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Activa **LockIME** (el maestro) — aplica tus reglas. |
-| `unlock` | — | Desactiva **LockIME** (el maestro) — totalmente inactivo. |
-| `toggle-lock` *(alias `toggle`)* | — | Invierte el maestro (on/off). |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activa o desactiva el **bloqueo continuo** (o lo invierte). Off ⇒ no se fija nada, pero las reglas de cambio siguen disparándose. Sin efecto inmediato en tiempo de ejecución mientras el maestro esté desactivado. |
+| `lock` | — | Activa **LockIME** — aplica tus reglas. |
+| `unlock` | — | Desactiva **LockIME** — totalmente inactivo. |
+| `toggle-lock` *(alias `toggle`)* | — | Invierte LockIME (on/off). |
 
 ### Global input source
 
@@ -102,9 +101,9 @@ instalada y seleccionable actualmente, o el comando devuelve `unknown_source`.
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | Establece la fuente predeterminada global **y** activa el bloqueo. |
+| `lock-to-source` | `id` \| `name` | Establece la fuente predeterminada global **y** activa LockIME. |
 | `set-default-source` | `id` \| `name` *(omite ambos para borrarla)* | Establece (o borra) la fuente predeterminada global sin cambiar el estado activado/desactivado. |
-| `cycle-source` | `direction` = `next` \| `previous` | Avanza el objetivo global a la fuente instalada siguiente/anterior (con vuelta al inicio) y activa el bloqueo. |
+| `cycle-source` | `direction` = `next` \| `previous` | Avanza el objetivo global a la fuente instalada siguiente/anterior (con vuelta al inicio) y activa LockIME. |
 | `switch-source` | `id` \| `name` | Cambia la fuente de entrada actual **una sola vez**, ahora mismo: **no** activa ni modifica ningún bloqueo continuo. Si ya hay un bloqueo continuo activo, este prevalece y devuelve la fuente a su objetivo. |
 
 `direction` también acepta los alias `prev`, `forward`, `back`, `up`, `down`.
@@ -188,8 +187,6 @@ Los comandos de consulta devuelven una carga útil JSON a través del callback `
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -203,8 +200,8 @@ Los comandos de consulta devuelven una carga útil JSON a través del callback `
 }
 ```
 
-`enabled` es el maestro («Activar LockIME»); `lockingEnabled` es el subconmutador del bloqueo
-continuo; `locked` es `true` solo cuando ambos están activos (hay un bloqueo realmente en vigor).
+`enabled` es el único interruptor «Activar LockIME» — cuando está activado, tus reglas
+están en vigor.
 `currentSource`, `defaultSource` y `frontmostApp` están presentes solo cuando se conocen.
 
 ---

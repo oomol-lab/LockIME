@@ -101,19 +101,11 @@ final class AppState {
     /// pane can route the user to General's single Accessibility grant.
     var settingsTab: SettingsTab = .general
 
-    /// The master on/off — "Enable LockIME". Mirrors `config.isEnabled`; gates
-    /// the whole app (both locking and switching). Bound by the General master
-    /// toggle.
+    /// The single on/off — "Enable LockIME". Mirrors `config.isEnabled`; gates
+    /// the whole app (both locking and switching). Bound by the General toggle,
+    /// and what every state surface reflects (tray/About icon, menu glyph +
+    /// "Enabled/Disabled" header, the locked-source checkmark).
     var isAppEnabled: Bool { config.isEnabled }
-
-    /// Whether a **continuous lock** is in force right now: the master is on *and*
-    /// the lock sub-toggle is on. This is what the padlock surfaces represent
-    /// (tray/About icon, menu glyph + "Locked/Unlocked" header, the locked-source
-    /// checkmark) — they speak to the *lock* capability, not mere app activeness.
-    /// For anyone who leaves locking on (the default) this equals `isEnabled`, so
-    /// those surfaces look exactly as before; only the opt-in pure-switch mode
-    /// (master on, locking off) shows them "unlocked".
-    var isLocked: Bool { config.isEnabled && config.lockingEnabled }
 
     /// The SwiftData container backing the activation log (for `.modelContainer`).
     var modelContainer: ModelContainer { logStore.container }
@@ -229,17 +221,15 @@ final class AppState {
         updateController.onCheckOutcome = { [weak self] outcome in self?.presentUpdateOutcome(outcome) }
         updateController.start()
 
-        // Global toggle-lock shortcut: flips the master ("Enable LockIME") on/off,
-        // the app's quick stop/start. `lockingEnabled` persists across toggles, so
-        // a pure-switch user (locking off) toggling the app off then on stays in
-        // pure-switch mode rather than silently re-engaging the lock.
+        // Global toggle-lock shortcut: flips "Enable LockIME" on/off — the
+        // app's quick stop/start.
         KeyboardShortcuts.onKeyUp(for: .toggleLock) { [weak self] in
             guard let self else { return }
             self.setMasterEnabled(!self.isAppEnabled)
         }
 
         // Global "lock to previous/next source" — cycle the global target
-        // through the input-source list (wrapping), turning locking on.
+        // through the input-source list (wrapping), turning LockIME on.
         KeyboardShortcuts.onKeyUp(for: .globalPreviousSource) { [weak self] in
             self?.cycleGlobalSource(.previous)
         }
@@ -343,39 +333,26 @@ final class AppState {
         commit(reason: .lockEngaged)
     }
 
-    /// Toggle the **continuous-lock** capability (the General "Enable locking"
-    /// sub-toggle), subordinate to the master. Turning it off drops every standing
-    /// lock — the global default, per-app `.locked` rules, URL `.lock` rules, and
-    /// the address-bar lock all go inert — while one-shot switch rules keep firing.
-    /// That is the "act like Input Source Pro" mode: per-context auto-switch with
-    /// no global lock. No effect while the master is off (the app is fully idle).
-    func setLockingEnabled(_ on: Bool) {
-        config.lockingEnabled = on
-        commit(reason: .lockEngaged)
-    }
-
     func setDefaultSource(_ id: InputSourceID?) {
         config.defaultSourceID = id
         commit()
     }
 
     /// Lock to a specific source from the menu bar: make it the global target and
-    /// engage the lock in a single commit — turning **both** the master and the
-    /// lock sub-toggle on, so a one-tap menu pick always pins, even from a
-    /// pure-switch or fully-off state. Clicking the already-locked source instead
-    /// clears the global target via `setDefaultSource(nil)` (leaving the app and
+    /// turn LockIME on in a single commit, so a one-tap menu pick always pins,
+    /// even from an off state. Clicking the already-locked source instead clears
+    /// the global target via `setDefaultSource(nil)` (leaving the app and
     /// switching alive).
     func lockToSource(_ id: InputSourceID) {
         config.defaultSourceID = id
         config.isEnabled = true
-        config.lockingEnabled = true
         commit(reason: .lockEngaged)
     }
 
     // MARK: - Shortcut-driven source cycling
 
     /// Lock the *global* target to the previous/next input source in the list,
-    /// wrapping around the ends, and turn locking on — the same write path as
+    /// wrapping around the ends, and turn LockIME on — the same write path as
     /// `lockToSource`. Never lands on "none", and does nothing when fewer than
     /// two input sources are installed (there's nowhere to cycle).
     func cycleGlobalSource(_ direction: CycleDirection) {
@@ -385,7 +362,6 @@ final class AppState {
         ) else { return }
         config.defaultSourceID = next
         config.isEnabled = true
-        config.lockingEnabled = true
         commit(reason: .lockEngaged)
     }
 

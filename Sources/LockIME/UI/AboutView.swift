@@ -69,7 +69,7 @@ struct AboutView: View {
     }
 
     private var stateIcon: Image {
-        state.isLocked ? Image(nsImage: .lockIMEAppIcon) : Image("AppIconUnlocked")
+        state.isAppEnabled ? Image(nsImage: .lockIMEAppIcon) : Image("AppIconUnlocked")
     }
 }
 

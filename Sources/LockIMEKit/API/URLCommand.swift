@@ -32,14 +32,10 @@ public enum FlagArg: Equatable, Sendable {
 /// values present in the URL; whether a referenced source/rule/app actually
 /// exists is a runtime question answered by the executor, not the parser.
 public enum URLCommand: Equatable, Sendable {
-    // Master ("Enable LockIME") — gates the whole app (locking + switching).
+    // The single on/off ("Enable LockIME") — gates the whole app (locking + switching).
     case lock
     case unlock
     case toggleLock
-
-    // Lock sub-toggle ("Enable locking") — subordinate to the master; off ⇒ no
-    // continuous lock, but one-shot switch rules keep firing (Input Source Pro mode).
-    case setLocking(FlagArg)
 
     // Global source targeting
     case lockToSource(SourceSelector)
@@ -269,8 +265,6 @@ public enum URLCommandParser {
             return .success(.unlock)
         case "toggle-lock", "toggle":
             return .success(.toggleLock)
-        case "set-locking", "locking":
-            return flag(params, "enabled").map { .setLocking($0) }
 
         case "lock-to-source":
             return requiredSource(params).map { .lockToSource($0) }

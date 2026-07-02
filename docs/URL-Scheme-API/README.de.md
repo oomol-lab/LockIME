@@ -4,7 +4,7 @@
 
 LockIME stellt ein `lockime://`-URL-Schema bereit, damit andere Apps, Skripte,
 Kurzbefehle, Stream Deck, Alfred/Raycast, AppleScript — alles, was eine URL
-öffnen kann — es steuern können: das Sperren umschalten, die Eingabequelle neu
+öffnen kann — es steuern können: es ein- oder ausschalten, die Eingabequelle neu
 festlegen, Regeln verwalten und den Zustand auslesen.
 
 Jeder Befehl ist eine URL, standardmäßig nach dem Prinzip „abschicken und vergessen",
@@ -77,28 +77,26 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 Bei Erfolg öffnet LockIME:
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-Der Hauptschalter (`lock` / `unlock` / `toggle-lock`) schaltet **LockIME** ein oder
-aus — er steuert alles (sowohl das Sperren als auch das Wechseln). Der
-`set-locking`-Unterschalter, der dem Hauptschalter untergeordnet ist, steuert allein
-die **kontinuierliche Sperre**: Schalte sie aus, um keine Quelle mehr zu fixieren,
-während einmalige Wechselregeln weiterhin auslösen — der Modus „wie ein reiner
-Umschalter handeln".
+`lock` / `unlock` / `toggle-lock` schalten **LockIME** ein oder aus — der eine
+Schalter, der alles steuert (sowohl das Sperren als auch das Wechseln). Um global
+nichts mehr zu fixieren, während deine Wechselregeln pro App/pro Seite weiterhin
+auslösen — der Modus „wie ein reiner Umschalter handeln" — setze stattdessen die
+globale Standardquelle auf **Keine** (`set-default-source` ohne Quelle).
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | **LockIME** (der Hauptschalter) **einschalten** — wendet deine Regeln an. |
-| `unlock` | — | **LockIME** (der Hauptschalter) **ausschalten** — vollständig untätig. |
-| `toggle-lock` *(alias `toggle`)* | — | Den Hauptschalter ein/aus umschalten. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Die **kontinuierliche Sperre** ein-/ausschalten (oder umschalten). Aus ⇒ nichts wird fixiert, aber Wechselregeln lösen weiterhin aus. Ohne unmittelbare Laufzeitwirkung, solange der Hauptschalter aus ist. |
+| `lock` | — | **LockIME** **einschalten** — wendet deine Regeln an. |
+| `unlock` | — | **LockIME** **ausschalten** — vollständig untätig. |
+| `toggle-lock` *(alias `toggle`)* | — | LockIME ein/aus umschalten. |
 
 ### Global input source
 
@@ -110,9 +108,9 @@ auswählbare Quelle benennen, sonst gibt der Befehl `unknown_source` zurück.
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | Die globale Standardquelle festlegen **und** das Sperren einschalten. |
+| `lock-to-source` | `id` \| `name` | Die globale Standardquelle festlegen **und** LockIME einschalten. |
 | `set-default-source` | `id` \| `name` *(beide weglassen zum Löschen)* | Die globale Standardquelle festlegen (oder löschen), ohne den Ein/Aus-Zustand zu ändern. |
-| `cycle-source` | `direction` = `next` \| `previous` | Das globale Ziel zur nächsten/vorherigen installierten Quelle (umlaufend) weiterschalten und das Sperren einschalten. |
+| `cycle-source` | `direction` = `next` \| `previous` | Das globale Ziel zur nächsten/vorherigen installierten Quelle (umlaufend) weiterschalten und LockIME einschalten. |
 | `switch-source` | `id` \| `name` | Schaltet die aktuelle Eingabequelle **einmalig**, sofort, um — eine kontinuierliche Sperre wird dabei **weder aktiviert noch geändert**. Ist bereits eine kontinuierliche Sperre aktiv, gewinnt sie und schaltet die Quelle auf ihr Ziel zurück. |
 
 `direction` akzeptiert auch die Aliasse `prev`, `forward`, `back`, `up`, `down`.
@@ -198,8 +196,6 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -213,9 +209,8 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 }
 ```
 
-`enabled` ist der Hauptschalter („LockIME aktivieren"); `lockingEnabled` ist der
-Unterschalter für die kontinuierliche Sperre; `locked` ist nur dann `true`, wenn
-beide eingeschaltet sind (tatsächlich eine Sperre in Kraft ist).
+`enabled` ist der eine Schalter („LockIME aktivieren") — ist er eingeschaltet,
+sind deine Regeln in Kraft.
 `currentSource`, `defaultSource` und `frontmostApp` sind nur vorhanden, wenn sie
 bekannt sind.
 

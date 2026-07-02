@@ -30,7 +30,7 @@ struct LockIMEApp: App {
         } label: {
             // Centered monochrome template glyphs let the system supply the
             // menu-bar tint for light, dark, and active states.
-            Image(appState.isLocked ? "TrayLocked" : "TrayUnlocked")
+            Image(appState.isAppEnabled ? "TrayLocked" : "TrayUnlocked")
                 .background(SettingsActionBridge(appState: appState))
         }
         .menuBarExtraStyle(.menu)

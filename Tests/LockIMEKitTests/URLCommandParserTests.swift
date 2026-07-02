@@ -37,16 +37,12 @@ struct URLCommandParserTests {
         #expect(command("lockime://toggle") == .toggleLock)
     }
 
-    @Test("set-locking parses the tri-state flag (with the locking alias)")
-    func setLockingFlag() {
-        #expect(command("lockime://set-locking?enabled=true") == .setLocking(.on))
-        #expect(command("lockime://set-locking?enabled=on") == .setLocking(.on))
-        #expect(command("lockime://set-locking?enabled=false") == .setLocking(.off))
-        #expect(command("lockime://set-locking?enabled=toggle") == .setLocking(.toggle))
-        // `locking` is an accepted alias for the command token.
-        #expect(command("lockime://locking?enabled=off") == .setLocking(.off))
-        #expect(failure("lockime://set-locking") == .missingParameter("enabled"))
-        #expect(failure("lockime://set-locking?enabled=maybe") == .invalidParameter(name: "enabled", value: "maybe"))
+    @Test("the removed set-locking command (and its alias) is rejected as unknown")
+    func setLockingRemoved() {
+        // The "Enable locking" sub-toggle is gone — one state only. The old
+        // verbs must fail loudly instead of silently doing something else.
+        #expect(failure("lockime://set-locking?enabled=true") == .unknownCommand("set-locking"))
+        #expect(failure("lockime://locking?enabled=off") == .unknownCommand("locking"))
     }
 
     @Test("the command token is case-insensitive")

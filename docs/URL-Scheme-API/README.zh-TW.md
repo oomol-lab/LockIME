@@ -4,7 +4,7 @@
 
 LockIME 提供一個 `lockime://` URL scheme，讓其他應用程式、指令稿、「捷徑」（Shortcuts）、
 Stream Deck、Alfred/Raycast、AppleScript——任何能開啟 URL 的東西——都能驅動它：
-切換鎖定、重新指定輸入法、管理規則，並讀回狀態。
+開啟或關閉它、重新指定輸入法、管理規則，並讀回狀態。
 
 每個指令都是一個 URL，預設為發出即不管（fire-and-forget），並可選擇搭配
 [x-callback-url](https://x-callback-url.com) 回呼，用於成功/錯誤，以及從查詢指令回傳資料。
@@ -68,23 +68,22 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 成功時 LockIME 會開啟：
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-主控（`lock` / `unlock` / `toggle-lock`）負責開關 **LockIME**——它把關一切（鎖定與切換皆然）。從屬於主控的 `set-locking` 子切換則只控制**持續鎖定**：把它關掉，就能停止固定任何輸入法，同時一次性的切換規則仍會持續觸發——也就是「像純粹切換器那樣運作」的模式。
+`lock` / `unlock` / `toggle-lock` 負責開關 **LockIME**——這個唯一的開關把關一切（鎖定與切換皆然）。若想在全域停止固定任何輸入法，同時讓你的依應用程式／依站台切換規則繼續觸發——也就是「像純粹切換器那樣運作」的模式——請改為把全域預設輸入法設為**無**（不帶輸入法參數的 `set-default-source`）。
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | 開啟 **LockIME**（主控）——套用你的規則。 |
-| `unlock` | — | 關閉 **LockIME**（主控）——完全閒置。 |
-| `toggle-lock` *(alias `toggle`)* | — | 翻轉主控的開／關。 |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | 開啟／關閉**持續鎖定**（或翻轉它）。關閉 ⇒ 不固定任何輸入法，但切換規則仍會觸發。主控關閉時此指令無即時執行效果。 |
+| `lock` | — | 開啟 **LockIME**——套用你的規則。 |
+| `unlock` | — | 關閉 **LockIME**——完全閒置。 |
+| `toggle-lock` *(alias `toggle`)* | — | 翻轉 LockIME 的開／關。 |
 
 ### Global input source
 
@@ -95,9 +94,9 @@ myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | 設定全域預設輸入法**並**開啟鎖定。 |
+| `lock-to-source` | `id` \| `name` | 設定全域預設輸入法**並**開啟 LockIME。 |
 | `set-default-source` | `id` \| `name` *(omit both to clear)* | 設定（或清除）全域預設輸入法，不改變開/關狀態。 |
-| `cycle-source` | `direction` = `next` \| `previous` | 把全域目標推進到下一個/上一個已安裝的輸入法（循環），並開啟鎖定。 |
+| `cycle-source` | `direction` = `next` \| `previous` | 把全域目標推進到下一個/上一個已安裝的輸入法（循環），並開啟 LockIME。 |
 | `switch-source` | `id` \| `name` | 立刻把目前的輸入法**切換一次**，僅此一次——它**不會**開啟或修改持續鎖定。若此時已有持續鎖定在生效，它會勝出，並把輸入法切回鎖定目標。 |
 
 `direction` 也接受別名 `prev`、`forward`、`back`、`up`、`down`。
@@ -180,8 +179,6 @@ LockIME 刻意**不提供任何開啟其 UI 的指令**（Settings、About、更
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -195,7 +192,7 @@ LockIME 刻意**不提供任何開啟其 UI 的指令**（Settings、About、更
 }
 ```
 
-`enabled` 是主控（「啟用 LockIME」）；`lockingEnabled` 是持續鎖定的子切換；`locked` 只有在兩者皆開啟（確實有鎖定正在生效）時才為 `true`。
+`enabled` 就是那個唯一的「啟用 LockIME」開關——它開啟時，你的規則便會生效。
 `currentSource`、`defaultSource` 和 `frontmostApp` 只在已知時才會出現。
 
 ---

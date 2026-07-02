@@ -4,7 +4,7 @@
 
 LockIME expose un schéma d'URL `lockime://` afin que d'autres applications, scripts,
 Shortcuts, Stream Deck, Alfred/Raycast, AppleScript — tout ce qui peut ouvrir une URL —
-puissent le piloter : activer/désactiver le verrouillage, recibler la source de saisie,
+puissent le piloter : l'activer ou le désactiver, recibler la source de saisie,
 gérer les règles et relire l'état.
 
 Chaque commande est une URL, par défaut sans attente de réponse, avec des rappels
@@ -72,23 +72,22 @@ lockime://status?x-success=myapp%3A%2F%2Fgot-status
 En cas de succès, LockIME ouvre :
 
 ```
-myapp://got-status?result=%7B%22locked%22%3Atrue%2C…%7D
+myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 ```
 
 ---
 
 ## Command reference
 
-### Enable & locking
+### Enable & disable
 
-Le verrou principal (`lock` / `unlock` / `toggle-lock`) active ou désactive **LockIME** — il conditionne tout (le verrouillage comme la bascule). Le sous-commutateur `set-locking`, subordonné au verrou principal, ne contrôle que le **verrou continu** : désactivez-le pour cesser d'épingler toute source tandis que les règles de bascule ponctuelle continuent de se déclencher — le mode « se comporter comme un simple commutateur ».
+`lock` / `unlock` / `toggle-lock` activent ou désactivent **LockIME** — l'interrupteur unique qui conditionne tout (le verrouillage comme la bascule). Pour cesser d'épingler globalement tandis que vos règles de bascule par application/par site continuent de se déclencher — le mode « se comporter comme un simple commutateur » — réglez plutôt la source par défaut globale sur **Aucune** (`set-default-source` sans source).
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock` | — | Activer **LockIME** (le verrou principal) — applique vos règles. |
-| `unlock` | — | Désactiver **LockIME** (le verrou principal) — totalement inactif. |
-| `toggle-lock` *(alias `toggle`)* | — | Inverser l'état du verrou principal. |
-| `set-locking` *(alias `locking`)* | `enabled` = `true` \| `false` \| `toggle` | Activer/désactiver le **verrou continu** (ou l'inverser). Désactivé ⇒ rien n'est épinglé, mais les règles de bascule se déclenchent quand même. Sans effet immédiat à l'exécution tant que le verrou principal est désactivé. |
+| `lock` | — | Activer **LockIME** — applique vos règles. |
+| `unlock` | — | Désactiver **LockIME** — totalement inactif. |
+| `toggle-lock` *(alias `toggle`)* | — | Inverser l'état de LockIME. |
 
 ### Global input source
 
@@ -99,9 +98,9 @@ actuellement installée et sélectionnable, sinon la commande renvoie `unknown_s
 
 | Command | Parameters | Effect |
 |---|---|---|
-| `lock-to-source` | `id` \| `name` | Définir la source par défaut globale **et** activer le verrouillage. |
+| `lock-to-source` | `id` \| `name` | Définir la source par défaut globale **et** activer LockIME. |
 | `set-default-source` | `id` \| `name` *(omit both to clear)* | Définir (ou effacer) la source par défaut globale sans changer l'état activé/désactivé. |
-| `cycle-source` | `direction` = `next` \| `previous` | Faire passer la cible globale à la source installée suivante/précédente (avec bouclage) et activer le verrouillage. |
+| `cycle-source` | `direction` = `next` \| `previous` | Faire passer la cible globale à la source installée suivante/précédente (avec bouclage) et activer LockIME. |
 | `switch-source` | `id` \| `name` | Change la source de saisie actuelle **une seule fois**, maintenant — cela n'**active ni ne modifie** aucun verrou continu. Si un verrou continu est déjà actif, il l'emporte et rétablit la source sur sa cible. |
 
 `direction` accepte aussi les alias `prev`, `forward`, `back`, `up`, `down`.
@@ -185,8 +184,6 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 ```json
 {
   "enabled": true,
-  "lockingEnabled": true,
-  "locked": true,
   "enhancedMode": false,
   "launchAtLogin": true,
   "accessibilityGranted": true,
@@ -200,7 +197,7 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 }
 ```
 
-`enabled` est le verrou principal (« Activer LockIME ») ; `lockingEnabled` est le sous-commutateur de verrou continu ; `locked` vaut `true` uniquement lorsque les deux sont activés (un verrou est réellement en vigueur).
+`enabled` est l'unique interrupteur « Activer LockIME » — lorsqu'il est activé, vos règles sont en vigueur.
 `currentSource`, `defaultSource` et `frontmostApp` ne sont présents que lorsqu'ils sont connus.
 
 ---
