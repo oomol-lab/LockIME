@@ -1,10 +1,12 @@
 name: Nightly (Beta)
 
 # The beta channel is the nightly build: every day at 01:00 UTC we build the
-# tip of main and publish it as <latest stable>-beta.N — a real tag plus a
-# GitHub pre-release (pre-releases are never "Latest"). Stable releases are
-# dispatched manually (see release.yml). Manual runs of this workflow are
-# allowed via the Run button.
+# tip of main and publish it as the next patch of the latest stable +
+# "-beta.N" (stable 1.2.3 -> 1.2.4-beta.N, so nightlies version-sort above
+# the stable they follow) — a real tag plus a GitHub pre-release
+# (pre-releases are never "Latest"). Stable releases are dispatched manually
+# (see release.yml). Manual runs of this workflow are allowed via the Run
+# button.
 on:
   schedule:
     - cron: "0 1 * * *"

@@ -16,8 +16,17 @@ versions, and the workflows create them — you never push a tag by hand.
   `LockIME.app` / `com.oomol.LockIME`, so local development has independent
   TCC permissions, defaults, and app-support storage.
 - **Stable** versions are `X.Y.Z`; **beta** versions are
-  `X.Y.Z-beta.N`, where `X.Y.Z` is the latest stable tag and `N` continues
-  from the highest existing `-beta.*` tag for that base.
+  `X.Y.(Z+1)-beta.N` — the **next patch** of the latest stable tag, so a
+  nightly always version-sorts above the stable it was built after (stable
+  `1.2.3` → nightly `1.2.4-beta.1`, and semver agrees: `1.2.4-beta.1 >
+  1.2.3`). `N` continues from the highest existing `-beta.*` tag for that
+  base; every new stable moves the base and resets `N`. A later stable in
+  turn sorts above all earlier nightlies (`1.3.0 > 1.2.4-beta.N`, and even
+  `1.2.4 > 1.2.4-beta.N` — release beats pre-release), so within the
+  versions these two flows mint, version order matches build order. Only
+  within them: the manual pre-release escape hatch below and betas that
+  predate this scheme sit outside the guarantee — and Sparkle never relies
+  on it, because updates are ordered by the date-stamped build number.
 - Every published build creates the matching `vX.Y.Z[-beta.N]` git tag and a
   GitHub Release carrying a zip and a notarized `.dmg` **per architecture**
   (`LockIME-<version>-arm64.*` and `LockIME-<version>-x86_64.*`). Beta
@@ -41,7 +50,8 @@ reusable workflow (build, test, notarize, staple, tag, release, appcast):
   `patch` by default, or `minor` / `major`).
 - **Beta** — the **nightly build**. `nightly.yml` runs every day at
   **01:00 UTC** (and on manual dispatch), builds the tip of `main`, and
-  publishes it as `X.Y.Z-beta.N` to the beta channel. Scheduled runs are
+  publishes it as `X.Y.(Z+1)-beta.N` (the next patch of the latest stable)
+  to the beta channel. Scheduled runs are
   skipped when no commits landed since the last tagged build (every build
   tags its commit, so this means "nothing new to ship") and while no stable
   tag exists yet; manual dispatches always build.
@@ -245,7 +255,12 @@ counted as the latest version and you would silently skip a number.
 Do **not** re-run an old failed publish after a *newer* version has shipped:
 the build number is stamped with the current time, so the re-run would sit on
 top of the appcast and Sparkle would offer the older version as an "update".
-Delete the stale tag/release and cut a new version instead.
+Leave the stale tag/release in place and cut a new version instead — never
+delete them. Releases are immutable, so a published tag name is burned
+forever (re-creating a release on it 422s), and `compute_version.sh` derives
+both the stable auto-bump and the beta base from whatever tags currently
+exist — deleting a tag makes the next run recompute exactly that burned
+name and fail on every attempt until a newer version moves it past.
 
 ## Testing the update flow locally
 

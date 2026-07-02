@@ -16,9 +16,12 @@
 #          VERSION_BUMP      segment to bump when EXPECTED_VERSION is empty:
 #                            patch | minor | major (default patch).
 #   compute_version.sh beta
-#     Latest stable tag + "-beta.N" where N continues from the highest
-#     existing vX.Y.Z-beta.* tag for that base. Errors when no stable tag
-#     exists yet — dispatch the first stable release to set the baseline.
+#     Next patch of the latest stable tag + "-beta.N" (stable 1.2.3 ->
+#     1.2.4-beta.N), so a nightly always version-sorts above the stable it
+#     was built after. N continues from the highest existing
+#     vX.Y.Z-beta.* tag for that base (the base moves whenever a new
+#     stable ships, resetting N). Errors when no stable tag exists yet —
+#     dispatch the first stable release to set the beta baseline.
 #
 # Output (appended to $GITHUB_OUTPUT when set, always echoed):
 #   version=1.2.3[-pre]    display version (MARKETING_VERSION)
@@ -85,6 +88,14 @@ beta)
         echo "error: no stable tag exists yet — dispatch the first stable release (Actions -> Release) to set the beta baseline" >&2
         exit 1
     fi
+    # The beta base is the *next patch* of the latest stable, so a nightly
+    # always version-sorts above the stable it was built after (Sparkle
+    # orders by the date-stamped build number regardless; this keeps the
+    # marketing version telling the same story). The base can never collide
+    # with an existing stable tag: if vX.Y.(Z+1) existed, it — not vX.Y.Z —
+    # would be the latest stable.
+    IFS=. read -r major minor patch <<<"$base"
+    base="${major}.${minor}.$((patch + 1))"
     max=0
     for t in $(git tag -l "v${base}-beta.*"); do
         n="${t#v"${base}"-beta.}"
