@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.6.0</title>
+            <pubDate>Thu, 02 Jul 2026 06:11:43 +0000</pubDate>
+            <sparkle:version>202607020609</sparkle:version>
+            <sparkle:shortVersionString>1.6.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* fix(menubar): realign tray icon geometry by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/49
+* feat!: collapse the two-level enable model into one master switch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/50
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1...v1.6.0
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.0/LockIME-1.6.0-arm64.zip" length="2491579" type="application/octet-stream" sparkle:edSignature="lamiJVcmd36IQ2rZEG0FE2jRPnKpN/UpL7YmdV6zQNrwTa5ORzYRmZwK30FkCBNPUF1+6WWBMvN4ipfz/6Z3Ag=="/>
+        </item>
+        <item>
             <title>1.5.1-beta.2</title>
             <pubDate>Thu, 02 Jul 2026 06:00:46 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -17,22 +33,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1-beta.1...v1.5.1-beta.2
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1-beta.2/LockIME-1.5.1-beta.2-arm64.zip" length="2491612" type="application/octet-stream" sparkle:edSignature="emT+0oleDNdmiYC0+y3tTj2NCEjjNRzvC1IziOWYH2NOqPQALh78Nl9gbd0kYxGMtZyxH3EnI82mAZZdMot1Ag=="/>
-        </item>
-        <item>
-            <title>1.5.1-beta.1</title>
-            <pubDate>Wed, 01 Jul 2026 10:06:16 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607011004</sparkle:version>
-            <sparkle:shortVersionString>1.5.1-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(menubar): realign tray icon geometry by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/49
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.3...v1.5.1-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1-beta.1/LockIME-1.5.1-beta.1-arm64.zip" length="2494359" type="application/octet-stream" sparkle:edSignature="JZQXYnYAj/Wln5zfvVeDSUT0LKtPsd83dArX9Ud5s36iSgnKsnwVtBWpCuMoQAzx3pkoefr3WUQ68xBNptLiAA=="/>
         </item>
         <item>
             <title>1.5.1</title>
@@ -52,22 +52,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0...v1.5.1
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1/LockIME-1.5.1-arm64.zip" length="2494552" type="application/octet-stream" sparkle:edSignature="eXGVDySDlsv6it0qWcKNEPKRgoOYSrRrKMbn8smRaBnLVwyvGz80BbPdzJU5Cmzn4olIgy4KIo7AwSURjf8XAQ=="/>
-        </item>
-        <item>
-            <title>1.5.0-beta.3</title>
-            <pubDate>Wed, 01 Jul 2026 08:18:57 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607010816</sparkle:version>
-            <sparkle:shortVersionString>1.5.0-beta.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(rules): keep a global default of None across relaunch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/48
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0-beta.2...v1.5.0-beta.3
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0-beta.3/LockIME-1.5.0-beta.3-arm64.zip" length="2494551" type="application/octet-stream" sparkle:edSignature="oU0xa6ohyiubOue437XRnzgv/AL8T8HNPtz7pWHp0q2UUF1cuY7sWCdFT/IFjgwLHLRaC6LkjEmXaRzDZcumDA=="/>
         </item>
         <item>
             <title>1.5.0</title>
@@ -93,21 +77,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1...v1.5.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0/LockIME-1.5.0-arm64.zip" length="2490349" type="application/octet-stream" sparkle:edSignature="pD7wUdtsl7PLc+pYfU01hs9MoLV7JS7suEu8oWw2xMJEtHZUiO+emoUIALFWGallQ/7tIgzwwMRylAN1iq9/AQ=="/>
-        </item>
-        <item>
-            <title>1.4.1</title>
-            <pubDate>Mon, 22 Jun 2026 05:26:41 +0000</pubDate>
-            <sparkle:version>202606220524</sparkle:version>
-            <sparkle:shortVersionString>1.4.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(rules): add address-bar focus lock/switch rule by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/29
-* docs(readme): regenerate settings screenshots for new UI ([`ec25adc`](https://github.com/oomol-lab/LockIME/commit/ec25adc2b427128c02b427d6d1d02f0e7f6bd47e))
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.0...v1.4.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.4.1/LockIME-1.4.1-arm64.zip" length="2478023" type="application/octet-stream" sparkle:edSignature="7+m+f4gXzWToDNWcR7fhHXY6+3fzpZwlu0kmv8b+vK9MD6HqL3kPp1PKfo2BFbvXs3mqGK95of5nH171GIDtAg=="/>
         </item>
         <item>
             <title>1.0.2</title>
