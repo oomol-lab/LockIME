@@ -280,4 +280,25 @@ struct LockConfigurationTests {
         #expect(decoded == original)
         #expect(decoded.urlRules.map(\.matchType) == [.domain, .domainKeyword, .urlRegex])
     }
+
+    @Test("revertsInSecureInput defaults off and round-trips through Codable")
+    func revertsInSecureInputRoundTrips() throws {
+        #expect(LockConfiguration.default.revertsInSecureInput == false)
+
+        let original = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            revertsInSecureInput: true // non-default, to prove it round-trips
+        )
+        let decoded = try JSONDecoder().decode(LockConfiguration.self, from: try JSONEncoder().encode(original))
+        #expect(decoded == original)
+        #expect(decoded.revertsInSecureInput == true)
+    }
+
+    @Test("a config predating revertsInSecureInput decodes to the off default")
+    func decodesLegacyWithoutSecureInputFlag() throws {
+        let json = #"{"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.revertsInSecureInput == false)
+    }
 }

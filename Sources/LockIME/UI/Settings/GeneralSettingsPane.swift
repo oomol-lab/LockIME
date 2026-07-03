@@ -47,6 +47,18 @@ struct GeneralSettingsPane: View {
             }
 
             Section {
+                let secureInputBinding = Binding(
+                    get: { state.config.revertsInSecureInput },
+                    set: { state.setRevertsInSecureInput($0) }
+                )
+                Toggle("Enforce in password fields", isOn: secureInputBinding)
+            } header: {
+                Text("Password Fields")
+            } footer: {
+                SectionFooter("By default, LockIME respects macOS secure input and doesn't change your input source in password fields. Turn this on to keep enforcing the locked source even there.")
+            }
+
+            Section {
                 let hideIconBinding = Binding(
                     get: { state.menuBarIconHidden },
                     set: { newValue in

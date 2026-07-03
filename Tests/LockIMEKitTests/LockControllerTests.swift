@@ -12,7 +12,10 @@ struct LockControllerTests {
 
     private func make(
         current: InputSourceID,
-        enabled: Bool = false
+        enabled: Bool = false,
+        revertsInSecureInput: Bool = false,
+        secureInput: FakeSecureInput = FakeSecureInput(),
+        scheduler: FakeScheduler = FakeScheduler()
     ) -> (LockController, MockInputSourceProvider, FakeUptime) {
         let provider = MockInputSourceProvider(
             current: current,
@@ -22,7 +25,10 @@ struct LockControllerTests {
         let controller = LockController(
             provider: provider,
             isEnabled: enabled,
-            uptime: uptime.read
+            revertsInSecureInput: revertsInSecureInput,
+            uptime: uptime.read,
+            isSecureInputEnabled: secureInput.read,
+            scheduler: scheduler.schedule
         )
         return (controller, provider, uptime)
     }
@@ -184,6 +190,159 @@ struct LockControllerTests {
         uptime.advance(by: LockController.suppressionWindow + 0.01)
         controller.selectedSourceDidChange()
         #expect(provider.selectCalls.count == 2)
+    }
+
+    // MARK: - Trailing reconciliation (the deferred re-check)
+
+    @Test("a force that doesn't take is re-forced by the trailing reconcile, with no new notification")
+    func reconcileReForcesWithoutNotification() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us) // already on target → no force, nothing scheduled yet
+        #expect(scheduler.pendingCount == 0)
+
+        // A drift whose force does not take (a no-op select), leaving a *stable*
+        // mismatch that raises NO further "source changed" notification — exactly
+        // the case a notification-only design misses (see `reForcesAfterWindow`,
+        // which needs a second notification to recover).
+        provider.selectIsNoOp = true
+        provider.current = abc
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()      // force #1, arms one reconcile
+        #expect(provider.selectCalls.count == 1)
+        #expect(scheduler.pendingCount == 1)
+        // Armed just past the suppression window, not inside it.
+        #expect((scheduler.scheduledDelays.first ?? 0) > LockController.suppressionWindow)
+
+        // No notification arrives; only the deferred re-check fires. It must re-force.
+        uptime.advance(by: LockController.suppressionWindow + 0.01) // clear the settle window
+        #expect(scheduler.fire())
+        #expect(provider.selectCalls.count == 2)  // second force with NO selectedSourceDidChange
+    }
+
+    @Test("the trailing reconcile is bounded by maxReconcileRetries, not an unbounded fight")
+    func reconcileRetryCapBounds() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us)
+
+        // A mismatch the force can never win (every select is a no-op): the OS
+        // keeps coercing the source right back.
+        provider.selectIsNoOp = true
+        provider.current = abc
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()      // force #1, arms reconcile #1
+        #expect(provider.selectCalls.count == 1)
+
+        // Drain the reconcile chain. Each fired reconcile re-forces and, until the
+        // cap, arms the next. A bounded design must stop arming and terminate.
+        var reconciles = 0
+        while scheduler.pendingCount > 0 {
+            reconciles += 1
+            if reconciles > 20 { break } // safety valve: an unbounded fight never drains
+            uptime.advance(by: LockController.suppressionWindow + 0.01)
+            scheduler.fire()
+        }
+        #expect(reconciles <= LockController.maxReconcileRetries) // capped, didn't run away
+        #expect(scheduler.pendingCount == 0)                     // no dangling reconcile
+        #expect(provider.selectCalls.count == 1 + reconciles)    // one force per fired reconcile
+    }
+
+    // MARK: - Secure-input gate (password-field policy)
+
+    @Test("default policy: a secure-input coercion is respected (no revert), a later blur re-asserts")
+    func secureInputDefaultRespectsCoercion() {
+        let secure = FakeSecureInput()
+        let (controller, provider, uptime) = make(current: us, enabled: true, revertsInSecureInput: false, secureInput: secure)
+        controller.setTarget(us) // on target, no force
+
+        // Secure event input is active (a password field coerced us → abc). The
+        // default policy leaves the OS coercion alone.
+        secure.isEnabled = true
+        provider.current = abc
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls.isEmpty) // gate held — nothing forced
+        #expect(provider.current == abc)
+
+        // On blur secure input ends; the lock re-asserts normally (settleUntil was
+        // never set, since the gate returned before any force).
+        secure.isEnabled = false
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls == [us])
+        #expect(provider.current == us)
+    }
+
+    @Test("opt-in policy: the lock forces even while secure input is active")
+    func secureInputOptInEnforcesThrough() {
+        let secure = FakeSecureInput(true) // password field active from the start
+        let (controller, provider, uptime) = make(current: us, enabled: true, revertsInSecureInput: true, secureInput: secure)
+        controller.setTarget(us)
+
+        provider.current = abc
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls == [us]) // enforced through secure input
+        #expect(provider.current == us)
+    }
+
+    @Test("default policy: an autonomous one-shot switch is suppressed while secure input is active")
+    func switchOnceRespectsSecureInputByDefault() {
+        // A `.switched` app rule / `.switchOnce` URL rule is autonomous LockIME
+        // behavior, so it honors "respect secure input" like the continuous lock.
+        let secure = FakeSecureInput(true) // password field active
+        let (controller, provider, _) = make(current: abc, enabled: true, revertsInSecureInput: false, secureInput: secure)
+        controller.switchOnce(us)
+        #expect(provider.selectCalls.isEmpty) // gate held — the one-shot did not fire
+        #expect(provider.current == abc)
+        #expect(controller.target == nil)     // and it left no standing lock
+
+        // Opt-in policy fires the one-shot even through secure input.
+        let secureOn = FakeSecureInput(true)
+        let (optIn, optInProvider, _) = make(current: abc, enabled: true, revertsInSecureInput: true, secureInput: secureOn)
+        optIn.switchOnce(us)
+        #expect(optInProvider.selectCalls == [us])
+        #expect(optInProvider.current == us)
+    }
+
+    @Test("default policy: the lock re-asserts after secure input ends, even with NO blur notification")
+    func secureInputWatchReAssertsOnBlurWithoutNotification() {
+        // The blur that ends secure input does not reliably post a source-change
+        // notification, so recovery must come from the secure-input poll, not an
+        // event. This is the fix for the residual gap in respect mode.
+        let secure = FakeSecureInput()
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(
+            current: us, enabled: true, revertsInSecureInput: false, secureInput: secure, scheduler: scheduler
+        )
+        controller.setTarget(us) // on target, no force
+
+        // Enter a password field: secure input on, source coerced to abc, a
+        // notification fires. Respect mode declines to revert — and arms a watch.
+        secure.isEnabled = true
+        provider.current = abc
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls.isEmpty)   // respected — nothing forced
+        #expect(provider.current == abc)
+        #expect(scheduler.pendingCount == 1)     // secure-input watch armed
+        #expect((scheduler.scheduledDelays.last ?? -1) == LockController.secureInputPollInterval)
+
+        // A watch tick while still in the field: still gated → re-arms, no force.
+        #expect(scheduler.fire())
+        #expect(provider.selectCalls.isEmpty)
+        #expect(scheduler.pendingCount == 1)
+
+        // Leave the field: secure input ends, but NO source-change notification
+        // fires. The next watch tick detects it and re-asserts the lock.
+        secure.isEnabled = false
+        #expect(scheduler.fire())
+        #expect(provider.selectCalls == [us])    // re-asserted with no notification
+        #expect(provider.current == us)
+
+        // The re-assert armed a reconcile; draining it is a no-op (on target) and
+        // no further watch is armed — the poll has stopped.
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us])
     }
 
     @Test("changing the target supersedes the suppression window")

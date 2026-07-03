@@ -180,7 +180,20 @@ the grant watcher.
   Animates with `withAnimation(DS.Motion.toggle)`. Then current source +
   activation count via `LabeledContent`, launch-at-login, language. The padlock
   surfaces (tray/About icon, menu glyph/header, checkmark) track
-  `isAppEnabled = config.isEnabled`.
+  `isAppEnabled = config.isEnabled`. A **Password Fields** section carries the
+  **Enforce in password fields** toggle (`config.revertsInSecureInput`, **off by
+  default**): off, LockIME respects macOS **secure event input** and leaves the
+  OS's ASCII coercion alone in password/secure fields; on, it keeps enforcing
+  the locked source even there. Leaving the field ends secure input but does
+  **not** reliably post a source-change notification, so respect mode re-asserts
+  the lock on blur by **polling** `IsSecureEventInputEnabled()`
+  (`secureInputPollInterval`) only while a secure field keeps it gated, stopping
+  the instant secure input ends. Detection is the
+  process-global `IsSecureEventInputEnabled()` — permission-free, so unlike the
+  Accessibility-gated rules this row is never `.disabled`. The gate lives in
+  `LockController` and covers the continuous lock and autonomous one-shot
+  switches alike; the explicit `lockime://switch-source` API is deliberately not
+  gated.
 - **App / URL Rules:** rows via shared `AppRowLabel(bundleID:)` (icon 22 + name
   `.body` + bundle ID `.caption2 .secondary`). Empty state =
   `ContentUnavailableView` with an action. Rows `.transition(.move(edge:.top)

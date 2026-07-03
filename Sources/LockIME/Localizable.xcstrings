@@ -2,6 +2,162 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+    "By default, LockIME respects macOS secure input and doesn't change your input source in password fields. Turn this on to keep enforcing the locked source even there.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardmäßig respektiert LockIME die sichere Eingabe von macOS und ändert deine Eingabequelle in Passwortfeldern nicht. Aktiviere diese Option, um die gesperrte Eingabequelle auch dort weiterhin zu erzwingen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De forma predeterminada, LockIME respeta la entrada segura de macOS y no cambia tu fuente de entrada en los campos de contraseña. Activa esta opción para seguir forzando la fuente bloqueada incluso ahí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Par défaut, LockIME respecte la saisie sécurisée de macOS et ne change pas votre source de saisie dans les champs de mot de passe. Activez cette option pour continuer à imposer la source verrouillée même à cet endroit."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルトでは、LockIME は macOS のセキュア入力を尊重し、パスワード入力欄では入力ソースを変更しません。オンにすると、パスワード入力欄でもロックした入力ソースを強制し続けます。"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por padrão, o LockIME respeita a entrada segura do macOS e não altera a sua fonte de entrada em campos de senha. Ative esta opção para continuar forçando a fonte bloqueada mesmo aí."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По умолчанию LockIME учитывает безопасный ввод macOS и не меняет источник ввода в полях паролей. Включите этот параметр, чтобы продолжать применять заблокированный источник даже там."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认情况下，LockIME 会尊重 macOS 的安全输入，不会在密码框中更改你的输入源。开启此项可在密码框中也强制保持锁定的输入源。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預設情況下，LockIME 會尊重 macOS 的安全輸入，不會在密碼框中變更你的輸入來源。開啟此項可在密碼框中也強制維持鎖定的輸入來源。"
+          }
+        }
+      }
+    },
+    "Enforce in password fields": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Passwortfeldern erzwingen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forzar en campos de contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forcer dans les champs de mot de passe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワード入力欄でも強制する"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forçar em campos de senha"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Применять в полях паролей"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在密码框中强制生效"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在密碼框中強制生效"
+          }
+        }
+      }
+    },
+    "Password Fields": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwortfelder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campos de contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Champs de mot de passe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワード入力欄"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campos de senha"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поля паролей"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密码框"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密碼框"
+          }
+        }
+      }
+    },
     "A rule with this pattern already exists.": {
       "localizations": {
         "de": {

@@ -1,3 +1,4 @@
+import Carbon
 import Foundation
 
 /// The heart of LockIME: a small state machine that keeps the active input
@@ -9,10 +10,48 @@ import Foundation
 ///  2. Otherwise, if we are still inside the suppression window of a recent
 ///     force, do nothing (let the switch settle).
 ///  3. Only a *verified* mismatch outside the window triggers a re-force.
+///
+/// Because the machine is otherwise purely event-driven (it acts only when the
+/// system posts a "selected source changed" notification), a mismatch that goes
+/// *stable* with no follow-up notification — a flaky CJKV `select` that didn't
+/// take, or a secure/password field re-coercing ABC — would sit off-target
+/// forever. Every `force` therefore arms a bounded **trailing reconcile** that
+/// re-checks once the settle window closes, even absent any new notification.
 @MainActor
 public final class LockController {
     /// How long after a forced switch to ignore further change notifications.
     public static let suppressionWindow: TimeInterval = 0.30
+
+    /// Cap on consecutive reconcile-driven re-forces before the controller stops
+    /// re-arming, so a target the OS keeps overriding (a secure field that keeps
+    /// re-coercing) degrades to a brief flicker instead of an unbounded fight.
+    /// The budget refills when the lock is observed satisfied or the target
+    /// changes.
+    public static let maxReconcileRetries = 3
+
+    /// How often to poll for macOS secure event input turning off while we are
+    /// respecting it (default policy). Leaving a password field *ends* secure
+    /// input but does **not** reliably post a source-change notification, so the
+    /// lock cannot re-assert on the event path alone — we poll instead, but only
+    /// while a secure field keeps us gated, and stop as soon as it ends. Cheap
+    /// (an `IsSecureEventInputEnabled()` syscall) and short-lived (a password
+    /// field's focus lifetime).
+    public static let secureInputPollInterval: TimeInterval = 0.5
+
+    /// Production default for the secure-input probe: the process-GLOBAL Carbon
+    /// flag. Injected (see `init`) so tests drive it deterministically. Declared
+    /// `public static` so it can serve as a default argument at external call
+    /// sites (e.g. `LockEngine.init`).
+    public static let defaultIsSecureInputEnabled: @MainActor () -> Bool = { IsSecureEventInputEnabled() }
+
+    /// Production default for the reconcile scheduler: run `work` on the main
+    /// actor after `delay` (mirrors `LockEngine.urlPollTask`'s Task+sleep style).
+    public static let defaultScheduler: @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> Void = { delay, work in
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            work()
+        }
+    }
 
     private let provider: any InputSourceProviding
     private let uptime: @MainActor () -> TimeInterval
@@ -27,6 +66,22 @@ public final class LockController {
 
     private var settleUntil: TimeInterval = 0
 
+    /// Whether the lock keeps enforcing while macOS **secure event input** is
+    /// active. `false` (default) respects the OS's ASCII coercion in
+    /// password/secure fields. Set from config via `setSecureInputPolicy`.
+    private var revertsInSecureInput: Bool
+    /// Process-global "is secure event input on right now" probe.
+    private let isSecureInputEnabled: @MainActor () -> Bool
+    /// Defers the trailing reconcile past the settle window.
+    private let scheduler: @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> Void
+    /// Consecutive reconcile-driven re-forces since the lock was last satisfied
+    /// or the target last changed. Bounded by `maxReconcileRetries`.
+    private var reconcileRetries = 0
+    /// Coalesces overlapping reconcile schedules into a single in-flight check.
+    private var pendingRecheck = false
+    /// Coalesces overlapping secure-input watches into a single in-flight poll.
+    private var secureWatchPending = false
+
     /// Context describing where the current `target` came from, set alongside it
     /// by `setTarget` and attached to every event the target produces (including
     /// later reverts), so a log row can name the app and rule behind the lock.
@@ -37,13 +92,19 @@ public final class LockController {
     public init(
         provider: any InputSourceProviding,
         isEnabled: Bool = false,
+        revertsInSecureInput: Bool = false,
         uptime: @escaping @MainActor () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
-        clock: @escaping @MainActor () -> Date = { Date() }
+        clock: @escaping @MainActor () -> Date = { Date() },
+        isSecureInputEnabled: @escaping @MainActor () -> Bool = LockController.defaultIsSecureInputEnabled,
+        scheduler: @escaping @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> Void = LockController.defaultScheduler
     ) {
         self.provider = provider
         self.isEnabled = isEnabled
+        self.revertsInSecureInput = revertsInSecureInput
         self.uptime = uptime
         self.clock = clock
+        self.isSecureInputEnabled = isSecureInputEnabled
+        self.scheduler = scheduler
     }
 
     // MARK: - Public commands
@@ -56,6 +117,14 @@ public final class LockController {
         isEnabled = on
         guard on else { return }
         enforceIfNeeded(reason: reason)
+    }
+
+    /// Thread the secure-input policy from config. `false` (default) respects the
+    /// OS's ASCII coercion in password/secure fields; `true` keeps enforcing the
+    /// locked target even while secure event input is active. Pure policy — it
+    /// does not itself force; the next enforcement honors the new value.
+    public func setSecureInputPolicy(revertsInSecureInput: Bool) {
+        self.revertsInSecureInput = revertsInSecureInput
     }
 
     /// Set (or clear) the locked target, plus the context describing where it
@@ -75,7 +144,8 @@ public final class LockController {
         targetMatchedHost = matchedHost
         // A genuinely new target supersedes any in-flight suppression window
         // (which only guarded re-forcing the *previous* target), so enforce now.
-        if changed { settleUntil = 0 }
+        // It is also a fresh enforcement context, so refill the reconcile budget.
+        if changed { settleUntil = 0; reconcileRetries = 0 }
         enforceIfNeeded(reason: reason)
     }
 
@@ -103,6 +173,14 @@ public final class LockController {
         targetRuleSource = ruleSource
         targetMatchedHost = matchedHost
         settleUntil = 0
+        // Respect macOS secure input the same way the continuous lock does: in
+        // the default policy, an autonomous one-shot (a `.switched` app rule or a
+        // `.switchOnce` URL rule) must not change the source while a secure/
+        // password field holds focus. The standing lock is still cleared above,
+        // so this only declines the switch, never leaves a stale lock. (The
+        // explicit `lockime://switch-source` API — `commandSwitch` — is a
+        // deliberate external command and is intentionally *not* gated.)
+        if !revertsInSecureInput, isSecureInputEnabled() { return }
         guard let current = provider.currentSourceID() else { return }
         guard current != id else { return } // already there → nothing to switch
         force(id, reason: reason, from: current)
@@ -153,10 +231,75 @@ public final class LockController {
 
     private func enforceIfNeeded(reason: ActivationReason) {
         guard isEnabled, let target else { return }
+        // Respect macOS secure event input unless the user opted into enforcing
+        // in password fields. While a secure field holds focus the OS coerces
+        // the layout to ASCII; by default we leave that alone. NOTE:
+        // `IsSecureEventInputEnabled()` is process-GLOBAL — true whenever *any*
+        // app holds secure input, not scoped to our frontmost field. This single
+        // gate covers both the notification path and the reconcile path.
+        //
+        // Crucially, leaving the field *ends* secure input but does NOT reliably
+        // post a source-change notification, so the event path alone would leave
+        // the lock un-asserted (stuck on ABC) after blur. Arm a poll that
+        // re-checks once secure input turns off; it self-cancels the moment the
+        // field is gone (enforceIfNeeded then falls through and re-asserts).
+        if !revertsInSecureInput, isSecureInputEnabled() {
+            scheduleSecureInputWatch()
+            return
+        }
         guard let current = provider.currentSourceID() else { return }
-        if current == target { return }        // (1) idempotent — absorbs our echo
+        if current == target {                 // (1) idempotent — absorbs our echo;
+            reconcileRetries = 0               //     lock satisfied → refill budget
+            return
+        }
         if uptime() < settleUntil { return }   // (2) recent force still settling
         force(target, reason: reason, from: current) // (3) verified mismatch → re-force
+    }
+
+    /// Arm one deferred re-check just past the settle window. Skipped when there
+    /// is no standing target (a one-shot switch releases the lock), a check is
+    /// already pending (coalesce a burst into one), or the retry budget is spent
+    /// (bound a losing fight). Called from `force`, so every lock force gets a
+    /// trailing "did it actually stick?" probe.
+    private func scheduleReconcileCheck() {
+        guard target != nil, !pendingRecheck else { return }
+        guard reconcileRetries < Self.maxReconcileRetries else { return }
+        reconcileRetries += 1
+        pendingRecheck = true
+        scheduler(Self.suppressionWindow + 0.02) { [weak self] in
+            self?.performReconcileCheck()
+        }
+    }
+
+    /// The deferred re-check. Clears the pending flag *first* (so a re-force may
+    /// arm the next link in the chain), then re-runs the enforcement decision.
+    /// Routed through `enforceIfNeeded` — never a raw `force` — so it honors the
+    /// secure-input gate, the settle window, and the satisfied-lock budget reset.
+    private func performReconcileCheck() {
+        pendingRecheck = false
+        enforceIfNeeded(reason: .revertedSwitch)
+    }
+
+    /// Arm a single poll for secure event input turning off. Only ever called
+    /// from the respect-mode gate, so it runs exclusively while a secure field
+    /// keeps the lock suppressed. Coalesced to one in-flight poll.
+    private func scheduleSecureInputWatch() {
+        guard !secureWatchPending else { return }
+        secureWatchPending = true
+        scheduler(Self.secureInputPollInterval) { [weak self] in
+            self?.performSecureInputWatch()
+        }
+    }
+
+    /// A poll tick: re-run the enforcement decision. If secure input is still on
+    /// (still gated), `enforceIfNeeded` re-arms this watch and returns; once it
+    /// has turned off, `enforceIfNeeded` falls through the gate and re-asserts
+    /// the lock (no re-arm), so the poll naturally stops. This is what recovers
+    /// the lock after leaving a password field despite the missing blur
+    /// notification.
+    private func performSecureInputWatch() {
+        secureWatchPending = false
+        enforceIfNeeded(reason: .revertedSwitch)
     }
 
     private func force(_ id: InputSourceID, reason: ActivationReason, from: InputSourceID?) {
@@ -165,6 +308,11 @@ public final class LockController {
         let fromName = from.flatMap { provider.source(for: $0)?.localizedName ?? $0.rawValue }
         let ok = provider.select(id)
         settleUntil = uptime() + Self.suppressionWindow
+        // Arm a bounded trailing re-check so a switch that silently didn't take
+        // (a flaky CJKV select) or is immediately re-coerced (a secure field)
+        // with no follow-up notification is still reconciled, instead of sitting
+        // stuck off-target until the next unrelated event.
+        scheduleReconcileCheck()
         guard ok else { return }
         activationCount += 1
         let name = provider.source(for: id)?.localizedName ?? id.rawValue

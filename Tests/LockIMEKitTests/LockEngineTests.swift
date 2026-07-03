@@ -915,3 +915,38 @@ struct LockEngineSwitchTests {
         #expect(provider.selectCalls == [abc])
     }
 }
+
+@MainActor
+@Suite("LockEngine secure input")
+struct LockEngineSecureInputTests {
+    private let us: InputSourceID = "com.apple.keylayout.US"
+    private let abc: InputSourceID = "com.apple.keylayout.ABC"
+
+    @Test("apply threads revertsInSecureInput into the controller's secure-input gate")
+    func applyThreadsSecureInputPolicy() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        // Record-only scheduler keeps the trailing reconcile off the run loop, so
+        // the test is hermetic (no lingering async re-force).
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            isSecureInputEnabled: { true }, // a password field is active
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+
+        // DEFAULT policy respects secure input: enabling on a mismatch does NOT force.
+        engine.apply(LockConfiguration(isEnabled: true, defaultSourceID: us, revertsInSecureInput: false))
+        #expect(provider.selectCalls.isEmpty)
+        #expect(provider.current == abc)
+
+        // OPT-IN policy forces through secure input: the same apply now enforces.
+        engine.apply(LockConfiguration(isEnabled: true, defaultSourceID: us, revertsInSecureInput: true))
+        #expect(provider.selectCalls == [us])
+        #expect(provider.current == us)
+    }
+}

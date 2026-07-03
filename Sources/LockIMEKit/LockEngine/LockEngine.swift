@@ -76,11 +76,17 @@ public final class LockEngine {
         appMonitor: (any FrontmostAppMonitoring)? = nil,
         floatingAppMonitor: (any FloatingAppMonitoring)? = nil,
         addressBarMonitor: (any AddressBarFocusMonitoring)? = nil,
-        urlProvider: (any BrowserURLProviding)? = nil
+        urlProvider: (any BrowserURLProviding)? = nil,
+        isSecureInputEnabled: @escaping @MainActor () -> Bool = LockController.defaultIsSecureInputEnabled,
+        scheduler: @escaping @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> Void = LockController.defaultScheduler
     ) {
         let provider = provider ?? TISInputSourceProvider()
         self.provider = provider
-        self.controller = LockController(provider: provider)
+        self.controller = LockController(
+            provider: provider,
+            isSecureInputEnabled: isSecureInputEnabled,
+            scheduler: scheduler
+        )
         self.observer = InputSourceChangeObserver()
         self.enabledSourcesObserver = InputSourceChangeObserver(.enabledSourcesChanged)
         self.appMonitor = appMonitor ?? AppActivationMonitor()
@@ -131,6 +137,10 @@ public final class LockEngine {
     /// since whichever fires is the one that emits the activation event.
     public func apply(_ config: LockConfiguration, reason: ActivationReason = .configChanged) {
         self.config = config
+        // Thread the secure-input policy to the controller BEFORE any enforce
+        // this apply may trigger (reevaluate / setEnabled below both can force),
+        // so the very first enforcement already honors the current policy.
+        controller.setSecureInputPolicy(revertsInSecureInput: config.revertsInSecureInput)
         // The single "Enable LockIME" switch gates everything — continuous
         // locking and one-shot switching alike. Whether anything is actually
         // *pinned* is the rules' business: a global default of "None" with only

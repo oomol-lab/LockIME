@@ -195,6 +195,14 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     /// to let URL rules win instead. (Has no effect when the address bar isn't
     /// focused, or when no URL rule matches the page.)
     public var addressBarOutranksURLRules: Bool
+    /// Whether LockIME keeps forcing the locked target while macOS **secure
+    /// event input** is active (a password/secure field has coerced the source
+    /// to ABC). Default `false` — "respect secure input": the OS's ASCII
+    /// coercion stands and the lock only re-asserts on blur. Set `true` to
+    /// enforce the lock even through secure input. Threaded to
+    /// `LockController` via `LockEngine.apply`; the controller pairs it with an
+    /// injected `IsSecureEventInputEnabled()` probe.
+    public var revertsInSecureInput: Bool
 
     public init(
         isEnabled: Bool = false,
@@ -205,7 +213,8 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         addressBarFocusEnabled: Bool = false,
         addressBarAction: RuleAction = .switchOnce,
         addressBarSourceID: InputSourceID? = nil,
-        addressBarOutranksURLRules: Bool = true
+        addressBarOutranksURLRules: Bool = true,
+        revertsInSecureInput: Bool = false
     ) {
         self.isEnabled = isEnabled
         self.defaultSourceID = defaultSourceID
@@ -216,6 +225,7 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         self.addressBarAction = addressBarAction
         self.addressBarSourceID = addressBarSourceID
         self.addressBarOutranksURLRules = addressBarOutranksURLRules
+        self.revertsInSecureInput = revertsInSecureInput
     }
 
     // Forward/backward-compatible decoding: missing keys fall back to defaults
@@ -236,6 +246,10 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         addressBarAction = rawAddressBarAction.flatMap(RuleAction.init(rawValue:)) ?? .switchOnce
         addressBarSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .addressBarSourceID)
         addressBarOutranksURLRules = try container.decodeIfPresent(Bool.self, forKey: .addressBarOutranksURLRules) ?? true
+        // A plain `Bool`, so (unlike `addressBarAction`) no raw-string leniency
+        // is needed: a config written before this field decodes to `false`
+        // ("respect secure input"), the safe default.
+        revertsInSecureInput = try container.decodeIfPresent(Bool.self, forKey: .revertsInSecureInput) ?? false
         // TODO(legacy-locking-migration): temporary upgrade shim — delete this
         // block, `LegacyCodingKeys` below, and the two `legacy*` tests in
         // LockConfigurationTests once several more releases have shipped. It

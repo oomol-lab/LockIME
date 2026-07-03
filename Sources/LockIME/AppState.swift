@@ -427,6 +427,16 @@ final class AppState {
         commit()
     }
 
+    /// Choose whether the lock keeps enforcing its target inside a macOS
+    /// secure/password field. **Off by default** (`revertsInSecureInput == false`):
+    /// LockIME respects secure input, leaves the OS's ASCII coercion in place, and
+    /// re-asserts the lock on blur. On, it forces the locked source even through
+    /// secure input. Persists + re-applies so the policy reaches the LockController.
+    func setRevertsInSecureInput(_ enabled: Bool) {
+        config.revertsInSecureInput = enabled
+        commit()
+    }
+
     // MARK: - Address-bar focus rule
 
     /// Turn the address-bar focus rule on or off. Enabling with no target yet
