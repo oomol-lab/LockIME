@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.6.1-beta.1</title>
+            <pubDate>Fri, 03 Jul 2026 01:43:38 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202607030141</sparkle:version>
+            <sparkle:shortVersionString>1.6.1-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* ci(nightly): version betas as the next patch of the latest stable by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/51
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1-beta.2...v1.6.1-beta.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1-beta.1/LockIME-1.6.1-beta.1-arm64.zip" length="2491626" type="application/octet-stream" sparkle:edSignature="wljgp11WydbnLq5XlyoZLU3M/+586HjVAdkNZ4+rBveKfQ+acZZzxGI6VcIu944haVt3X8wQhqB+y1Y5/jCbBw=="/>
+        </item>
+        <item>
             <title>1.6.0</title>
             <pubDate>Thu, 02 Jul 2026 06:11:43 +0000</pubDate>
             <sparkle:version>202607020609</sparkle:version>
