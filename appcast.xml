@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.6.1</title>
+            <pubDate>Fri, 03 Jul 2026 15:02:08 +0000</pubDate>
+            <sparkle:version>202607031500</sparkle:version>
+            <sparkle:shortVersionString>1.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* ci(nightly): version betas as the next patch of the latest stable by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/51
+* feat(lock): add secure-input policy for password fields by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/53
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.0...v1.6.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1/LockIME-1.6.1-arm64.zip" length="2496321" type="application/octet-stream" sparkle:edSignature="3miVuiZBWGUWkVaXaZQqBsxDu0DS8JV5zHjbfYSlUS1WZFSHIwJbn8EjD4IoqVHDqWR4RokmaL1Qf2PhtMvXBg=="/>
+        </item>
+        <item>
             <title>1.6.1-beta.2</title>
             <pubDate>Fri, 03 Jul 2026 14:56:58 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -19,22 +35,6 @@
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1-beta.2/LockIME-1.6.1-beta.2-arm64.zip" length="2496330" type="application/octet-stream" sparkle:edSignature="9UrwqQdgAd8mtIPya57C1WuQCR2nPopZf5juTzReZxqnzF6TQYA4k5hBkPOGEG8Os26AXI0ayxCJnpFahO4sCg=="/>
         </item>
         <item>
-            <title>1.6.1-beta.1</title>
-            <pubDate>Fri, 03 Jul 2026 01:43:38 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607030141</sparkle:version>
-            <sparkle:shortVersionString>1.6.1-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* ci(nightly): version betas as the next patch of the latest stable by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/51
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1-beta.2...v1.6.1-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1-beta.1/LockIME-1.6.1-beta.1-arm64.zip" length="2491626" type="application/octet-stream" sparkle:edSignature="wljgp11WydbnLq5XlyoZLU3M/+586HjVAdkNZ4+rBveKfQ+acZZzxGI6VcIu944haVt3X8wQhqB+y1Y5/jCbBw=="/>
-        </item>
-        <item>
             <title>1.6.0</title>
             <pubDate>Thu, 02 Jul 2026 06:11:43 +0000</pubDate>
             <sparkle:version>202607020609</sparkle:version>
@@ -49,22 +49,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1...v1.6.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.0/LockIME-1.6.0-arm64.zip" length="2491579" type="application/octet-stream" sparkle:edSignature="lamiJVcmd36IQ2rZEG0FE2jRPnKpN/UpL7YmdV6zQNrwTa5ORzYRmZwK30FkCBNPUF1+6WWBMvN4ipfz/6Z3Ag=="/>
-        </item>
-        <item>
-            <title>1.5.1-beta.2</title>
-            <pubDate>Thu, 02 Jul 2026 06:00:46 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607020558</sparkle:version>
-            <sparkle:shortVersionString>1.5.1-beta.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat!: collapse the two-level enable model into one master switch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/50
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1-beta.1...v1.5.1-beta.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1-beta.2/LockIME-1.5.1-beta.2-arm64.zip" length="2491612" type="application/octet-stream" sparkle:edSignature="emT+0oleDNdmiYC0+y3tTj2NCEjjNRzvC1IziOWYH2NOqPQALh78Nl9gbd0kYxGMtZyxH3EnI82mAZZdMot1Ag=="/>
         </item>
         <item>
             <title>1.5.1</title>
@@ -84,31 +68,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.0...v1.5.1
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.1/LockIME-1.5.1-arm64.zip" length="2494552" type="application/octet-stream" sparkle:edSignature="eXGVDySDlsv6it0qWcKNEPKRgoOYSrRrKMbn8smRaBnLVwyvGz80BbPdzJU5Cmzn4olIgy4KIo7AwSURjf8XAQ=="/>
-        </item>
-        <item>
-            <title>1.5.0</title>
-            <pubDate>Mon, 29 Jun 2026 00:51:34 +0000</pubDate>
-            <sparkle:version>202606290049</sparkle:version>
-            <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(backup): timestamp the exported config filename by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/30
-* fix(ci): upload release assets to a draft before publishing by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/31
-* ci: add Dependabot for GitHub Actions and Swift deps by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/32
-* fix(about): drop stale swift-markdown-ui acknowledgement by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/34
-* ci(deps): bump actions/checkout from 6 to 7 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/33
-* docs: add SECURITY.md vulnerability disclosure policy by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/35
-* docs(readme): regenerate settings screenshots with address-bar rule by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/36
-* feat: separate the app master switch from locking by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/39
-* feat(menubar): survive a hidden icon and let the user hide it by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/40
-
-## New Contributors
-* @dependabot[bot] made their first contribution in https://github.com/oomol-lab/LockIME/pull/33
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.4.1...v1.5.0
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.5.0/LockIME-1.5.0-arm64.zip" length="2490349" type="application/octet-stream" sparkle:edSignature="pD7wUdtsl7PLc+pYfU01hs9MoLV7JS7suEu8oWw2xMJEtHZUiO+emoUIALFWGallQ/7tIgzwwMRylAN1iq9/AQ=="/>
         </item>
         <item>
             <title>1.0.2</title>
