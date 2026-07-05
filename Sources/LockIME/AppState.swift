@@ -41,6 +41,19 @@ final class AppState {
     private(set) var menuBarIconHidden: Bool = false
     @ObservationIgnored static let menuBarIconHiddenKey = "menuBarIconHidden"
 
+    /// The `AppRuleMode` a newly added per-app rule starts in — the seed the App
+    /// Rules pane applies when you add an app, so someone who mostly wants
+    /// "Switch to" (or "Ignore") never has to re-pick it on every rule. Per-device
+    /// like `apiEnabled`/`menuBarIconHidden`: its own `UserDefaults` key,
+    /// deliberately **not** part of `LockConfiguration`, so it never travels
+    /// through config export/import (importing a shared config must not silently
+    /// change your authoring default) and carries **no runtime locking effect** —
+    /// it only templates new rows. Defaults to `.locked`, preserving the original
+    /// behavior. The source a new rule targets stays the global default; this
+    /// picks only the mode.
+    private(set) var newAppRuleMode: AppRuleMode = .locked
+    @ObservationIgnored private static let newAppRuleModeKey = "newAppRuleMode"
+
     /// The configured global toggle-lock shortcut, mirrored as observable state
     /// so the menu-bar header re-renders the moment the user binds or clears it
     /// in Settings (a plain `getShortcut` read isn't tracked by `@Observable`).
@@ -118,6 +131,11 @@ final class AppState {
         languagePreference = .load()
         apiEnabled = UserDefaults.standard.bool(forKey: Self.apiEnabledKey) // absent ⇒ false (opt-in)
         menuBarIconHidden = UserDefaults.standard.bool(forKey: Self.menuBarIconHiddenKey) // absent ⇒ false (icon shown)
+        // Stored as the raw string; an absent OR unrecognized value maps to
+        // `.locked` (the historical default), matching the lenient rawValue
+        // decoding used for `AppRuleMode` on disk.
+        newAppRuleMode = UserDefaults.standard.string(forKey: Self.newAppRuleModeKey)
+            .flatMap(AppRuleMode.init(rawValue:)) ?? .locked
         ThirdPartyBundleLocalization.apply(language: languagePreference.effectiveLanguage)
     }
 
@@ -136,6 +154,15 @@ final class AppState {
     func setMenuBarIconHidden(_ hidden: Bool) {
         menuBarIconHidden = hidden
         UserDefaults.standard.set(hidden, forKey: Self.menuBarIconHiddenKey)
+    }
+
+    /// Choose the `AppRuleMode` a newly added app rule starts in. Persisted
+    /// immediately (its own key) so the choice survives relaunch. It only seeds
+    /// the next "Add App…"; it never rewrites an existing rule and never
+    /// re-applies the engine (nothing about the live lock changed).
+    func setNewAppRuleMode(_ mode: AppRuleMode) {
+        newAppRuleMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: Self.newAppRuleModeKey)
     }
 
     /// GitHub URL of the URL-scheme API reference, in the app's current language

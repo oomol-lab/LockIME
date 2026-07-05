@@ -11,6 +11,10 @@ struct AppRulesSettingsPane: View {
             get: { state.config.defaultSourceID },
             set: { state.setDefaultSource($0) }
         )
+        let newRuleModeBinding = Binding<AppRuleMode>(
+            get: { state.newAppRuleMode },
+            set: { state.setNewAppRuleMode($0) }
+        )
 
         Form {
             Section {
@@ -24,6 +28,19 @@ struct AppRulesSettingsPane: View {
                 Text("Global default")
             } footer: {
                 SectionFooter("Used whenever the frontmost app has no rule of its own.")
+            }
+
+            Section {
+                Picker("Default behavior", selection: newRuleModeBinding) {
+                    Text("Lock to").tag(AppRuleMode.locked)
+                    Text("Switch to").tag(AppRuleMode.switched)
+                    Text("Ignore").tag(AppRuleMode.ignored)
+                    Text("Use default").tag(AppRuleMode.useDefault)
+                }
+            } header: {
+                Text("New app rules")
+            } footer: {
+                SectionFooter("The behavior a newly added app rule starts with. You can change any rule afterward.")
             }
 
             Section {
@@ -62,8 +79,15 @@ struct AppRulesSettingsPane: View {
         .sheet(isPresented: $isPickingApp) {
             AppPickerSheet { app in
                 withAnimation(DS.Motion.list) {
+                    // Seed the row with the user's chosen default mode (issue #54);
+                    // the source stays the global default, so switching the seeded
+                    // mode to a non-pinning one later just ignores it.
                     state.upsertRule(
-                        AppRule(bundleID: app.bundleID, mode: .locked, lockedSourceID: state.config.defaultSourceID)
+                        AppRule(
+                            bundleID: app.bundleID,
+                            mode: state.newAppRuleMode,
+                            lockedSourceID: state.config.defaultSourceID
+                        )
                     )
                 }
             }
