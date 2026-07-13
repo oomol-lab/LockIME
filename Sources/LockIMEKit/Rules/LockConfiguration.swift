@@ -169,6 +169,12 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     public var isEnabled: Bool
     /// Global default locked source, used when no app rule applies.
     public var defaultSourceID: InputSourceID?
+    /// Whether the global default **continuously locks** its source (the original
+    /// behavior) or **switches to it once** on entering an app with no rule of its
+    /// own — then releases, so the user may change it, and re-fires on each new
+    /// no-rule app. Mirrors `URLRule.action` / `addressBarAction`. Only meaningful
+    /// when `defaultSourceID` is set. Default `.lock`.
+    public var defaultAction: RuleAction
     /// Per-app overrides.
     public var appRules: [AppRule]
     /// Whether the Accessibility-gated enhanced mode is on.
@@ -207,6 +213,7 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     public init(
         isEnabled: Bool = false,
         defaultSourceID: InputSourceID? = nil,
+        defaultAction: RuleAction = .lock,
         appRules: [AppRule] = [],
         enhancedModeEnabled: Bool = false,
         urlRules: [URLRule] = [],
@@ -218,6 +225,7 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
     ) {
         self.isEnabled = isEnabled
         self.defaultSourceID = defaultSourceID
+        self.defaultAction = defaultAction
         self.appRules = appRules
         self.enhancedModeEnabled = enhancedModeEnabled
         self.urlRules = urlRules
@@ -234,6 +242,14 @@ public struct LockConfiguration: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
         defaultSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .defaultSourceID)
+        // Decode the action as a raw *string* and map it (same rationale as
+        // `addressBarAction` / `URLRule`): a missing key (a config written before
+        // the global default carried an action) OR an unrecognized value (a newer
+        // build wrote an action this one doesn't know, then a downgrade reads it)
+        // both fall back to `.lock` — fully backward compatible — instead of
+        // throwing and dropping the whole config.
+        let rawDefaultAction = try container.decodeIfPresent(String.self, forKey: .defaultAction)
+        defaultAction = rawDefaultAction.flatMap(RuleAction.init(rawValue:)) ?? .lock
         appRules = try container.decodeIfPresent([AppRule].self, forKey: .appRules) ?? []
         enhancedModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .enhancedModeEnabled) ?? false
         urlRules = try container.decodeIfPresent([URLRule].self, forKey: .urlRules) ?? []

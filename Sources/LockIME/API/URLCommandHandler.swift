@@ -60,9 +60,9 @@ final class URLCommandHandler {
         // Global source targeting
         case .lockToSource(let selector):
             return withResolved(selector) { state.lockToSource($0) }
-        case .setDefaultSource(let selector):
-            guard let selector else { state.setDefaultSource(nil); return .success(nil) }
-            return withResolved(selector) { state.setDefaultSource($0) }
+        case .setDefaultSource(let selector, let action):
+            guard let selector else { state.setDefault(source: nil, action: action); return .success(nil) }
+            return withResolved(selector) { state.setDefault(source: $0, action: action) }
         case .cycleSource(let direction):
             state.cycleGlobalSource(direction); return .success(nil)
         case .switchSource(let selector):
@@ -251,7 +251,12 @@ final class URLCommandHandler {
             "build": Bundle.main.buildVersion,
         ]
         if let id = state.currentSourceID { payload["currentSource"] = sourceDict(id) }
-        if let id = state.config.defaultSourceID { payload["defaultSource"] = sourceDict(id) }
+        if let id = state.config.defaultSourceID {
+            payload["defaultSource"] = sourceDict(id)
+            // Mirror the global default's lock/switch behavior, matching the
+            // `defaultAction` field `get-config` re-encodes from the config.
+            payload["defaultAction"] = state.config.defaultAction.rawValue
+        }
         if let frontmost = state.liveFrontmostBundleID { payload["frontmostApp"] = frontmost }
         return payload
     }

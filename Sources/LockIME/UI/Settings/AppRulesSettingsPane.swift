@@ -11,6 +11,10 @@ struct AppRulesSettingsPane: View {
             get: { state.config.defaultSourceID },
             set: { state.setDefaultSource($0) }
         )
+        let defaultActionBinding = Binding<RuleAction>(
+            get: { state.config.defaultAction },
+            set: { state.setDefaultAction($0) }
+        )
         let newRuleModeBinding = Binding<AppRuleMode>(
             get: { state.newAppRuleMode },
             set: { state.setNewAppRuleMode($0) }
@@ -18,10 +22,18 @@ struct AppRulesSettingsPane: View {
 
         Form {
             Section {
-                Picker("Locked input source", selection: defaultBinding) {
+                Picker("Input source", selection: defaultBinding) {
                     Text("None").tag(InputSourceID?.none)
                     ForEach(state.availableSources) { source in
                         Text(source.localizedName).tag(InputSourceID?.some(source.id))
+                    }
+                }
+                // Lock vs one-shot switch only matters once a source is set — the
+                // picker is inert (and hidden) while the default is "None".
+                if state.config.defaultSourceID != nil {
+                    Picker("Behavior", selection: defaultActionBinding) {
+                        Text("Lock to").tag(RuleAction.lock)
+                        Text("Switch to").tag(RuleAction.switchOnce)
                     }
                 }
             } header: {

@@ -82,6 +82,39 @@ struct ConfigBackupTests {
         #expect(decoded.payload.sourceNames["com.apple.keylayout.ABC"] == "ABC")
     }
 
+    @Test("the global default's action round-trips through make→encode→read")
+    func defaultActionRoundTrips() throws {
+        // make() defaults to lock when the config's action is lock.
+        let lockBackup = ConfigBackup.make(from: sampleConfig(), appVersion: "1", sourceNames: names)
+        #expect(lockBackup.payload.defaultAction == .lock)
+
+        // A switch-action default survives export→read.
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            defaultAction: .switchOnce
+        )
+        let decoded = try ConfigBackup.read(ConfigBackup.make(from: config, appVersion: "1", sourceNames: names).encoded()).get()
+        #expect(decoded.payload.defaultSourceID == "com.apple.keylayout.US")
+        #expect(decoded.payload.defaultAction == .switchOnce)
+    }
+
+    @Test("a backup missing defaultAction reads as .lock (lenient)")
+    func defaultActionMissingDecodesAsLock() throws {
+        let json = """
+        {"format": "\(ConfigBackup.formatIdentifier)", "minReader": 1, "appVersion": "1",
+         "payload": {"defaultSourceID": "com.apple.keylayout.US"}}
+        """
+        let backup = try ConfigBackup.read(Data(json.utf8)).get()
+        #expect(backup.payload.defaultAction == .lock)
+        // An unknown value likewise degrades to lock rather than mis-reporting the file.
+        let unknown = """
+        {"format": "\(ConfigBackup.formatIdentifier)", "minReader": 1, "appVersion": "1",
+         "payload": {"defaultSourceID": "com.apple.keylayout.US", "defaultAction": "teleport"}}
+        """
+        #expect(try ConfigBackup.read(Data(unknown.utf8)).get().payload.defaultAction == .lock)
+    }
+
     @Test("a .lockime URL rule without an action decodes to .lock (lenient)")
     func urlRuleWithoutActionDecodesAsLock() throws {
         let json = """
@@ -244,6 +277,7 @@ struct ConfigBackupTests {
     func payloadEmptyDefaults() throws {
         let payload = try JSONDecoder().decode(BackupPayload.self, from: Data("{}".utf8))
         #expect(payload.defaultSourceID == nil)
+        #expect(payload.defaultAction == .lock)
         #expect(payload.appRules.isEmpty)
         #expect(payload.urlRules.isEmpty)
         #expect(payload.sourceNames.isEmpty)

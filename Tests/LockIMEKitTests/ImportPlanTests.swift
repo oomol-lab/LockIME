@@ -18,12 +18,14 @@ struct ImportPlanTests {
 
     private func backup(
         defaultSourceID: InputSourceID? = nil,
+        defaultAction: RuleAction = .lock,
         appRules: [AppRule] = [],
         urlRules: [BackupURLRule] = [],
         sourceNames: [String: String] = [:]
     ) -> ConfigBackup {
         ConfigBackup(appVersion: "1", payload: BackupPayload(
-            defaultSourceID: defaultSourceID, appRules: appRules, urlRules: urlRules, sourceNames: sourceNames
+            defaultSourceID: defaultSourceID, defaultAction: defaultAction,
+            appRules: appRules, urlRules: urlRules, sourceNames: sourceNames
         ))
     }
 
@@ -649,6 +651,96 @@ struct ImportPlanTests {
         #expect(replaced.rule(for: "com.a")?.mode == .switched)
         #expect(replaced.urlRules.first?.action == .switchOnce)
         #expect(replaced.urlRules.first?.lockedSourceID == "US")
+    }
+
+    // MARK: - Global default action
+
+    @Test("a new switch-action global default carries its action into the resolved config")
+    func newSwitchDefaultCarriesAction() {
+        let plan = ImportPlan(current: .default, backup: backup(
+            defaultSourceID: "US", defaultAction: .switchOnce
+        ), installedSources: installed)
+        #expect(item(plan, "default")?.status == .new)
+        let resolved = plan.resolvedConfiguration()
+        #expect(resolved.defaultSourceID == "US")
+        #expect(resolved.defaultAction == .switchOnce)
+    }
+
+    @Test("the default's action travels only with a winning file binding")
+    func defaultActionTravelsWithWinningBinding() {
+        // Local default US/lock; the file's default is a *different* source with a
+        // switch action → a conflict. Keep-local (the merge default) keeps both the
+        // local source AND the local action; useFile takes the file's source AND action.
+        let current = LockConfiguration(defaultSourceID: "US", defaultAction: .lock)
+        var plan = ImportPlan(current: current, backup: backup(
+            defaultSourceID: "ABC", defaultAction: .switchOnce
+        ), installedSources: installed)
+        #expect(item(plan, "default")?.status == .conflict)
+        // Keep local → local source and local action stand.
+        let kept = plan.resolvedConfiguration()
+        #expect(kept.defaultSourceID == "US")
+        #expect(kept.defaultAction == .lock)
+        // Use file → the file's source and its action both apply.
+        plan.items[0].resolution = .useFile
+        let used = plan.resolvedConfiguration()
+        #expect(used.defaultSourceID == "ABC")
+        #expect(used.defaultAction == .switchOnce)
+    }
+
+    @Test("a file with no default never overwrites the local default's action")
+    func noFileDefaultKeepsLocalAction() {
+        let current = LockConfiguration(defaultSourceID: "US", defaultAction: .switchOnce)
+        var plan = ImportPlan(current: current, backup: backup(
+            appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "ABC")]
+        ), installedSources: installed)
+        plan.mode = .replace // even Replace keeps the local default (file specifies none)
+        let resolved = plan.resolvedConfiguration()
+        #expect(resolved.defaultSourceID == "US")
+        #expect(resolved.defaultAction == .switchOnce)
+    }
+
+    @Test("round-trip of a switch-action default is a no-op in merge; Replace re-asserts it")
+    func switchDefaultRoundTrip() {
+        let config = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "US",
+            defaultAction: .switchOnce,
+            appRules: [AppRule(bundleID: "com.a", mode: .locked, lockedSourceID: "ABC")]
+        )
+        let exported = ConfigBackup.make(from: config, appVersion: "1", sourceNames: ["US": "U.S.", "ABC": "ABC"])
+        var plan = ImportPlan(current: config, backup: exported, installedSources: installed)
+        #expect(!plan.summary().hasEffect)
+        #expect(plan.resolvedConfiguration() == config)          // merge no-op
+        plan.mode = .replace
+        #expect(plan.resolvedConfiguration().defaultAction == .switchOnce) // action re-asserted
+    }
+
+    @Test("a same-source, different-action default is a conflict that applies, not a silently-dropped no-op")
+    func sameSourceDifferentActionDefaultIsConflict() {
+        // Local default US/lock; file default US/switchOnce — same source, different
+        // action. Before the fix the default was keyed on source alone, so this read
+        // as `.unchanged`: Merge silently dropped the switch action and Replace left
+        // `hasEffect == false`, disabling Apply so the action could never persist.
+        let current = LockConfiguration(defaultSourceID: "US", defaultAction: .lock)
+        var plan = ImportPlan(current: current, backup: backup(
+            defaultSourceID: "US", defaultAction: .switchOnce
+        ), installedSources: installed)
+        #expect(item(plan, "default")?.status == .conflict)
+
+        // Merge keep-local (the default resolution) is a genuine no-op: local stands.
+        #expect(plan.resolvedConfiguration().defaultAction == .lock)
+
+        // Merge use-file adopts the file's switch action on the same source, and the
+        // action-only change now registers as an effect (Apply is enabled).
+        plan.items[0].resolution = .useFile
+        #expect(plan.resolvedConfiguration().defaultSourceID == "US")
+        #expect(plan.resolvedConfiguration().defaultAction == .switchOnce)
+        #expect(plan.summary().hasEffect)
+
+        // Replace applies the file's action even when it is the ONLY difference.
+        plan.mode = .replace
+        #expect(plan.resolvedConfiguration().defaultAction == .switchOnce)
+        #expect(plan.summary().hasEffect)
     }
 
     // MARK: - Match type

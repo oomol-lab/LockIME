@@ -94,7 +94,7 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | 设置全局默认输入源**并**开启 LockIME。 |
-| `set-default-source` | `id` \| `name` *(omit both to clear)* | 设置（或清除）全局默认输入源，而不改变开/关状态。 |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | 设置（或清除）全局默认输入源，而不改变开/关状态。`action` 决定该默认项是**锁定**（持续强制该输入源）还是在进入一个没有自己规则的应用时**切换**一次到它、随后放手；在清除路径上它会被忽略。 |
 | `cycle-source` | `direction` = `next` \| `previous` | 将全局目标切换到下一个/上一个已安装的输入源（循环），并开启 LockIME。 |
 | `switch-source` | `id` \| `name` | 立即将当前输入源切换**一次**，仅此一次——它**不会**开启或修改持续锁定。若此时已有持续锁定在生效，它会胜出，并把输入源切回锁定目标。 |
 
@@ -186,12 +186,14 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
   "build": "20260615",
   "currentSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
   "defaultSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
+  "defaultAction": "lock",
   "frontmostApp": "com.apple.Safari"
 }
 ```
 
 `enabled` 即那个唯一的“启用 LockIME”开关——它开启时，你的规则即处于生效状态。
-`currentSource`、`defaultSource` 和 `frontmostApp` 仅在已知时才会出现。
+`currentSource`、`defaultSource` 和 `frontmostApp` 仅在已知时才会出现；
+当设置了全局默认输入源时，`defaultAction`（`lock` \| `switch`）会伴随 `defaultSource` 一同出现。
 
 ---
 
@@ -223,6 +225,7 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 ```sh
 open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"

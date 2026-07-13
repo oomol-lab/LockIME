@@ -15,6 +15,60 @@ struct RuleResolverTests {
         #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.Bar") == .lock(us, .globalDefault))
     }
 
+    @Test("a switch-action global default yields a one-shot switch")
+    func globalDefaultSwitch() {
+        let config = LockConfiguration(
+            isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce, appRules: []
+        )
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.Bar") == .switchOnce(us, .globalDefault))
+        // No frontmost app still resolves against the default.
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: nil) == .switchOnce(us, .globalDefault))
+    }
+
+    @Test("the default action defaults to lock (backward compatible)")
+    func globalDefaultActionDefaultsToLock() {
+        // Constructed without specifying defaultAction → the original lock behavior.
+        let config = LockConfiguration(isEnabled: true, defaultSourceID: us)
+        #expect(config.defaultAction == .lock)
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.Bar") == .lock(us, .globalDefault))
+    }
+
+    @Test("a useDefault app rule honors the default's switch action")
+    func useDefaultRuleHonorsSwitchDefault() {
+        let config = LockConfiguration(
+            isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce,
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .useDefault)]
+        )
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.foo.App") == .switchOnce(us, .globalDefault))
+    }
+
+    @Test("a sourceless locked/switched app rule falls through, honoring the switch default")
+    func sourcelessRuleFallsThroughToSwitchDefault() {
+        // A `.locked` rule with no source set falls through to the switch default.
+        let lockedFallthrough = LockConfiguration(
+            isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce,
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .locked, lockedSourceID: nil)]
+        )
+        #expect(RuleResolver.resolve(config: lockedFallthrough, frontmostBundleID: "com.foo.App") == .switchOnce(us, .globalDefault))
+        // Likewise a `.switched` rule with no source set.
+        let switchedFallthrough = LockConfiguration(
+            isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce,
+            appRules: [AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: nil)]
+        )
+        #expect(RuleResolver.resolve(config: switchedFallthrough, frontmostBundleID: "com.foo.App") == .switchOnce(us, .globalDefault))
+    }
+
+    @Test("an explicit app rule still overrides a switch-action global default")
+    func appRuleOverridesSwitchDefault() {
+        let config = LockConfiguration(
+            isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce,
+            appRules: [AppRule(bundleID: "com.apple.Terminal", mode: .locked, lockedSourceID: abc)]
+        )
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.apple.Terminal") == .lock(abc, .appRule))
+        // A different app takes the switch default.
+        #expect(RuleResolver.resolve(config: config, frontmostBundleID: "com.other.App") == .switchOnce(us, .globalDefault))
+    }
+
     @Test("no default and no rule yields noTarget")
     func noTarget() {
         let config = LockConfiguration(isEnabled: true, defaultSourceID: nil, appRules: [])

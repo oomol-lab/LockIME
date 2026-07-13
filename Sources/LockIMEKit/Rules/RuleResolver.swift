@@ -18,8 +18,8 @@ public enum LockResolution: Equatable, Sendable {
     /// Continuously enforce this source, produced by the given rule branch.
     case lock(InputSourceID, RuleSource)
     /// Switch to this source **once** (no standing enforcement), produced by the
-    /// given rule branch. A per-app `.switched` rule or a per-URL `.switchOnce`
-    /// rule yields this; the global default never does (it is lock-only).
+    /// given rule branch. A per-app `.switched` rule, a per-URL `.switchOnce`
+    /// rule, or a global default whose `defaultAction` is `.switchOnce` yields this.
     case switchOnce(InputSourceID, RuleSource)
     /// The frontmost app is explicitly ignored — do not enforce.
     case ignore
@@ -80,15 +80,18 @@ public enum RuleResolver {
                     return .switchOnce(id, .appRule)
                 }
                 // "switched" with no source set → fall through to the default
-                // (which is always a lock).
+                // (which honors `defaultAction`).
             case .useDefault:
                 break
             }
         }
 
-        // 3. Global default (always a lock; never a one-shot switch).
+        // 3. Global default. Continuously locks (the original behavior) or fires a
+        //    one-shot switch on entering a no-rule app, per `config.defaultAction`.
         if let def = config.defaultSourceID {
-            return .lock(def, .globalDefault)
+            return config.defaultAction == .switchOnce
+                ? .switchOnce(def, .globalDefault)
+                : .lock(def, .globalDefault)
         }
         return .noTarget
     }

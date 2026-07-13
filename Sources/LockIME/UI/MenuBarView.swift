@@ -45,8 +45,9 @@ struct MenuBarView: View {
         // the gutter at a constant width, so the menu doesn't grow/shrink as the
         // lock toggles. (A `Toggle`'s native checkmark lives in NSMenu's *state*
         // column, which collapses to zero width when nothing is checked — that
-        // is what made the menu jump.) Clicking an unchecked source locks to it
-        // (sets the global target + turns LockIME on, one commit); clicking the
+        // is what made the menu jump.) Clicking an unchecked source targets it
+        // (sets the global source + turns LockIME on, one commit, preserving the
+        // configured lock/switch default behavior); clicking the
         // checked source clears the global target (app and switch rules stay
         // live). No separate on/off toggle, no submenu. Source names are
         // verbatim system strings, not catalog keys. The global toggle-lock

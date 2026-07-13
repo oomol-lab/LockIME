@@ -102,7 +102,7 @@ instalada y seleccionable actualmente, o el comando devuelve `unknown_source`.
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Establece la fuente predeterminada global **y** activa LockIME. |
-| `set-default-source` | `id` \| `name` *(omite ambos para borrarla)* | Establece (o borra) la fuente predeterminada global sin cambiar el estado activado/desactivado. |
+| `set-default-source` | `id` \| `name` *(omite ambos para borrarla)*, `action` = `lock` \| `switch` *(default `lock`)* | Establece (o borra) la fuente predeterminada global sin cambiar el estado activado/desactivado. `action` elige si la predeterminada **bloquea** (aplica la fuente de forma continua) o **cambia** a ella una sola vez al entrar en una aplicación sin regla propia y luego la suelta; se ignora en la vía de borrado. |
 | `cycle-source` | `direction` = `next` \| `previous` | Avanza el objetivo global a la fuente instalada siguiente/anterior (con vuelta al inicio) y activa LockIME. |
 | `switch-source` | `id` \| `name` | Cambia la fuente de entrada actual **una sola vez**, ahora mismo: **no** activa ni modifica ningún bloqueo continuo. Si ya hay un bloqueo continuo activo, este prevalece y devuelve la fuente a su objetivo. |
 
@@ -196,13 +196,16 @@ Los comandos de consulta devuelven una carga útil JSON a través del callback `
   "build": "20260615",
   "currentSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
   "defaultSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
+  "defaultAction": "lock",
   "frontmostApp": "com.apple.Safari"
 }
 ```
 
 `enabled` es el único interruptor «Activar LockIME» — cuando está activado, tus reglas
 están en vigor.
-`currentSource`, `defaultSource` y `frontmostApp` están presentes solo cuando se conocen.
+`currentSource`, `defaultSource` y `frontmostApp` están presentes solo cuando se conocen;
+`defaultAction` (`lock` \| `switch`) acompaña a `defaultSource` cuando hay una predeterminada
+global establecida.
 
 ---
 
@@ -235,6 +238,7 @@ localiza.
 ```sh
 open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"

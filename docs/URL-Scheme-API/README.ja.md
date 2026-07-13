@@ -102,7 +102,7 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | グローバルのデフォルトソースを設定し、**かつ** LockIME をオンにします。 |
-| `set-default-source` | `id` \| `name` *(omit both to clear)* | オン/オフの状態を変えずに、グローバルのデフォルトソースを設定（またはクリア）します。 |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | オン/オフの状態を変えずに、グローバルのデフォルトソースを設定（またはクリア）します。`action` は、デフォルトがソースを**ロック**する（ソースを継続的に強制する）か、それとも独自のルールを持たないアプリに入ったときに一度だけそのソースへ**切り替えて**から解放するかを選びます。クリア処理の際には無視されます。 |
 | `cycle-source` | `direction` = `next` \| `previous` | グローバルのターゲットをインストール済みの次/前のソースへ（循環して）進め、LockIME をオンにします。 |
 | `switch-source` | `id` \| `name` | 現在の入力ソースを今ここで**一度だけ**切り替えます——継続ロックを有効化したり変更したりは**しません**。すでに継続ロックがアクティブな場合は、そちらが優先され、入力ソースをロックの目標に戻します。 |
 
@@ -197,6 +197,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
   "build": "20260615",
   "currentSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
   "defaultSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
+  "defaultAction": "lock",
   "frontmostApp": "com.apple.Safari"
 }
 ```
@@ -204,6 +205,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 `enabled` は唯一の「LockIME を有効にする」スイッチです——オンのとき、あなたのルールが
 効いています。
 `currentSource`、`defaultSource`、`frontmostApp` は、判明している場合にのみ含まれます。
+`defaultAction`（`lock` \| `switch`）は、グローバルのデフォルトが設定されているとき `defaultSource` に伴って含まれます。
 
 ---
 
@@ -235,6 +237,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 ```sh
 open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"

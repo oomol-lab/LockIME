@@ -66,10 +66,23 @@ struct URLCommandParserTests {
         #expect(failure("lockime://lock-to-source") == .missingParameter("id"))
     }
 
-    @Test("set-default-source with no selector clears the default")
+    @Test("set-default-source parses the source, the optional action, and the clear path")
     func setDefaultSourceClear() {
-        #expect(command("lockime://set-default-source") == .setDefaultSource(nil))
-        #expect(command("lockime://set-default-source?id=com.apple.keylayout.ABC") == .setDefaultSource(.id(abc)))
+        // No selector clears the default; the action defaults to lock (back-compat).
+        #expect(command("lockime://set-default-source") == .setDefaultSource(source: nil, action: .lock))
+        #expect(command("lockime://set-default-source?id=com.apple.keylayout.ABC")
+            == .setDefaultSource(source: .id(abc), action: .lock))
+        // An explicit switch action rides alongside the source.
+        #expect(command("lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch")
+            == .setDefaultSource(source: .id(abc), action: .switchOnce))
+        #expect(command("lockime://set-default-source?id=com.apple.keylayout.ABC&action=lock")
+            == .setDefaultSource(source: .id(abc), action: .lock))
+        // The action is parsed even on the clear path (the executor ignores it there).
+        #expect(command("lockime://set-default-source?action=switch")
+            == .setDefaultSource(source: nil, action: .switchOnce))
+        // An unrecognized action is a parameter error.
+        #expect(failure("lockime://set-default-source?id=com.apple.keylayout.ABC&action=hop")
+            == .invalidParameter(name: "action", value: "hop"))
     }
 
     @Test("cycle-source parses direction and its aliases")

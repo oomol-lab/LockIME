@@ -39,7 +39,9 @@ public enum URLCommand: Equatable, Sendable {
 
     // Global source targeting
     case lockToSource(SourceSelector)
-    case setDefaultSource(SourceSelector?)   // nil clears the global default
+    // `source` nil clears the global default; `action` picks lock vs one-shot
+    // switch (default `.lock`, ignored on the clear path).
+    case setDefaultSource(source: SourceSelector?, action: RuleAction)
     case cycleSource(CycleDirection)
     case switchSource(SourceSelector)        // transient one-shot, no standing lock
 
@@ -269,7 +271,15 @@ public enum URLCommandParser {
         case "lock-to-source":
             return requiredSource(params).map { .lockToSource($0) }
         case "set-default-source":
-            return .success(.setDefaultSource(optionalSource(params)))
+            let source = optionalSource(params)
+            let rawAction = params["action"] ?? "lock"
+            let action: RuleAction
+            switch rawAction.lowercased() {
+            case "lock": action = .lock
+            case "switch", "switchonce", "switch-once": action = .switchOnce
+            default: return .failure(.invalidParameter(name: "action", value: rawAction))
+            }
+            return .success(.setDefaultSource(source: source, action: action))
         case "cycle-source":
             return direction(params).map { .cycleSource($0) }
         case "switch-source":

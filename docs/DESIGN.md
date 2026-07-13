@@ -141,15 +141,19 @@ menu**, bracketed by one divider above and one below — no master toggle, no
 submenu. Each source is a `Button` carrying a leading checkmark **image** (the
 `CheckmarkSlot` NSImages), shown on the locked one and a same-size transparent
 slot otherwise; a source is checked iff LockIME is on **and** it is the global
-target (`config.defaultSourceID`). The image (not a `Toggle`'s native checkmark,
+target (`config.defaultSourceID`) — the checkmark tracks the target regardless of
+`config.defaultAction` (lock vs switch). The image (not a `Toggle`'s native checkmark,
 which lives in NSMenu's *state* column and collapses to zero width when nothing
 is checked) keeps the gutter reserved at a constant width, so the menu never
 grows or shrinks as the lock toggles — and NSMenu drops SwiftUI's `.opacity` on a
 Label's system-image icon, so the slot must swap the image itself, not hide a
-symbol. Clicking an unchecked source locks to it (`AppState.lockToSource` sets
-the target *and* turns LockIME on in one commit,
-re-resolving and flipping the active source immediately); clicking the checked
-source clears just the global lock target (`setDefaultSource(nil)`) — the app and
+symbol. Clicking an unchecked source targets it (`AppState.lockToSource` sets
+the global source *and* turns LockIME on in one commit,
+re-resolving and flipping the active source immediately); it **preserves** the
+configured global-default `defaultAction`, so under a *switch* default the pick
+switches you into that source once rather than pinning it — the lock/switch mode
+stays a deliberate Settings choice the menu never flips. Clicking the checked
+source clears just the global target (`setDefaultSource(nil)`) — the app and
 any one-shot switch rules stay live. This is the same
 write path as the App Rules "Global default" picker. Source names are
 `Text(verbatim:)` system strings, not catalog keys. The
@@ -204,7 +208,12 @@ the grant watcher.
   switch on entry and then releases, so the user may change the source and is
   never reverted. App rules express it as a fourth mode-picker option ("Switch
   to", beside Lock to / Ignore / Use default); URL rows carry a small Lock to /
-  Switch to picker. The **global default stays lock-only**. The one-shot's
+  Switch to picker. The **global default carries the same lock/switch action**
+  (`config.defaultAction`, default `.lock`, fully backward compatible): the App
+  Rules **Global default** section shows a Lock to / Switch to picker once a
+  source is set, so a *switch* default switches you into each no-rule app once
+  then releases (re-firing on the next no-rule app), while a *lock* default is the
+  original continuous enforcement. The one-shot's
   fire-exactly-once-per-entry is owned by `LockEngine` (an in-memory transition
   key, with a separate slot for a launcher overlay's own switch so an excursion
   never re-yanks the underlying app); the kit's `LockController.switchOnce`

@@ -456,8 +456,9 @@ struct ImportReviewSheet: View {
     /// The file-side binding as composable `Text`. A source-pinning rule reads as
     /// "Lock to %@" / "Switch to %@" so lock and switch are visibly parallel (and
     /// a same-source lock-vs-switch conflict is distinguishable); a non-pinning
-    /// app mode reads as its mode word; the global default (always a lock, no
-    /// ambiguity) and a sourceless binding read as the bare name / "Default".
+    /// app mode reads as its mode word; the global default now reads the same
+    /// "Lock to"/"Switch to" way too (it carries a lock/switch action); a
+    /// sourceless binding reads "Default".
     /// Returning `Text` keeps it recolorable inside `HStack`s while resolving
     /// catalog keys against the injected `\.locale`.
     private func fileBindingText(_ item: ImportItem) -> Text {
@@ -477,8 +478,11 @@ struct ImportReviewSheet: View {
     ) -> Text {
         switch subject {
         case .globalDefault:
-            if let source { return Text(verbatim: model.displayName(for: source)) }
-            return Text("Default")
+            // The global default now carries a lock/switch action, so render it as
+            // "Lock to %@" / "Switch to %@" too — parallel to app/URL rules, so a
+            // same-source lock-vs-switch conflict stays distinguishable.
+            guard let source else { return Text("Default") }
+            return pinnedBindingText(isSwitch: action == .switchOnce, source: source)
         case .app:
             if let mode, !mode.pinsSource { return Text(modeKey(mode)) } // ignore / use default
             guard let source else { return Text("Default") }

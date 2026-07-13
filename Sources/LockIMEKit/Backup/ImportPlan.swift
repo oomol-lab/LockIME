@@ -153,6 +153,11 @@ public struct ImportPlan: Sendable, Equatable {
     /// from. Held so `resolvedConfiguration()` can keep `isEnabled` and
     /// `enhancedModeEnabled` untouched.
     public let baseConfig: LockConfiguration
+    /// The file's global-default lock/switch action. The diff keys the global
+    /// default on its source alone (see the `.globalDefault` item), so the action
+    /// travels alongside — applied at the same site the file's default source is,
+    /// and only when that binding wins (never on keep-local).
+    public let fileDefaultAction: RuleAction
     /// Local app rules absent from the file — removed by Replace.
     public let localOnlyAppRuleCount: Int
     /// Local URL rules absent from the file — removed by Replace.
@@ -186,6 +191,7 @@ public struct ImportPlan: Sendable, Equatable {
     ) {
         self.mode = mode
         self.baseConfig = current
+        self.fileDefaultAction = backup.payload.defaultAction
         self.installedSourceIDs = Set(installedSources.map(\.id))
 
         var names: [InputSourceID: String] = [:]
@@ -199,12 +205,18 @@ public struct ImportPlan: Sendable, Equatable {
 
         var items: [ImportItem] = []
 
-        // Global default.
+        // Global default. Both the source AND its lock/switch action are part of
+        // the binding, so a same-source/different-action file default is a
+        // `.conflict` (not `.unchanged`) — mirroring how app rules compare `mode`
+        // and URL rules compare `action`. The action rides on `fileAction`/
+        // `localAction` so the Review row can render "Lock to"/"Switch to" and
+        // `resolvedConfiguration()` / `summary()` see the change.
         if let fileDefault = backup.payload.defaultSourceID {
+            let fileAction = backup.payload.defaultAction
             let status: ImportItem.Status
             if current.defaultSourceID == nil {
                 status = .new
-            } else if current.defaultSourceID == fileDefault {
+            } else if current.defaultSourceID == fileDefault && current.defaultAction == fileAction {
                 status = .unchanged
             } else {
                 status = .conflict
@@ -213,7 +225,9 @@ public struct ImportPlan: Sendable, Equatable {
                 id: "default", subject: .globalDefault, status: status,
                 fileMode: nil, fileSource: fileDefault,
                 localMode: nil, localSource: current.defaultSourceID,
-                include: true, resolution: .keepLocal, missingDisposition: .keep
+                include: true, resolution: .keepLocal, missingDisposition: .keep,
+                fileAction: fileAction,
+                localAction: current.defaultSourceID != nil ? current.defaultAction : nil
             ))
         }
 
@@ -359,6 +373,9 @@ public struct ImportPlan: Sendable, Equatable {
     public func resolvedConfiguration() -> LockConfiguration {
         var appRules: [String: AppRule]
         var defaultSource: InputSourceID?
+        // The default's action rides with its source: it changes only when a file
+        // default binding actually wins below, otherwise the local action stands.
+        var defaultAction: RuleAction = baseConfig.defaultAction
 
         // URL rules carry an explicit user-controlled priority (first match wins),
         // so unlike app rules they are never alphabetized. `urlMap` holds the
@@ -390,7 +407,10 @@ public struct ImportPlan: Sendable, Equatable {
                 // A missing default set to "remove" falls back to the local
                 // default rather than clearing it (clearing the global default
                 // would strip the lock's target — too destructive to do here).
-                if !drop { defaultSource = item.fileSource }
+                if !drop {
+                    defaultSource = item.fileSource
+                    defaultAction = fileDefaultAction
+                }
             case .app(let bundleID):
                 if drop {
                     appRules[bundleID] = nil
@@ -419,6 +439,7 @@ public struct ImportPlan: Sendable, Equatable {
         result.appRules = appRules.values.sorted { $0.bundleID < $1.bundleID }
         result.urlRules = resolvedURLOrder(present: urlMap)
         result.defaultSourceID = defaultSource
+        result.defaultAction = defaultAction
         return result
     }
 
@@ -505,7 +526,10 @@ public struct ImportPlan: Sendable, Equatable {
     /// `"default"`; app rules `"app:<id>"`; URL rules `"url:<host>"`.
     private func bindingKeys(of config: LockConfiguration, includeURLPosition: Bool) -> [String: String] {
         var map: [String: String] = [:]
-        if let def = config.defaultSourceID { map["default"] = def.rawValue }
+        // The default's action is part of its binding (like an app rule's mode or a
+        // URL rule's action), so an action-only change on the same source still
+        // reads as an update and flips `hasEffect` on.
+        if let def = config.defaultSourceID { map["default"] = "\(config.defaultAction.rawValue)|\(def.rawValue)" }
         for rule in config.appRules {
             // The mode rawValue already separates lock from switch; only a
             // source-pinning mode contributes a source.

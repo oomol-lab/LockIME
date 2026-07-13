@@ -365,11 +365,30 @@ final class AppState {
         commit()
     }
 
-    /// Lock to a specific source from the menu bar: make it the global target and
-    /// turn LockIME on in a single commit, so a one-tap menu pick always pins,
-    /// even from an off state. Clicking the already-locked source instead clears
-    /// the global target via `setDefaultSource(nil)` (leaving the app and
-    /// switching alive).
+    /// Set the global default's lock/switch behavior (the App Rules "Behavior"
+    /// picker write path). Inert until a default source is set.
+    func setDefaultAction(_ action: RuleAction) {
+        config.defaultAction = action
+        commit()
+    }
+
+    /// Set the global default source **and** its behavior in one commit — the
+    /// URL-scheme `set-default-source` write path. Clearing the source (`nil`)
+    /// leaves `defaultAction` untouched (it is inert without a source anyway).
+    func setDefault(source id: InputSourceID?, action: RuleAction) {
+        config.defaultSourceID = id
+        if id != nil { config.defaultAction = action }
+        commit()
+    }
+
+    /// Set the global target from the menu bar: make `id` the global default source
+    /// and turn LockIME on in a single commit, so a one-tap menu pick engages even
+    /// from an off state. It sets only the *source* and **preserves** the configured
+    /// `defaultAction` — under a `.switched` global default this switches you into
+    /// `id` once (then leaves you free); under the default `.lock` it pins `id`. The
+    /// lock/switch mode is a deliberate Settings choice, so the menu never silently
+    /// flips it. Clicking the already-targeted source instead clears the global
+    /// target via `setDefaultSource(nil)` (leaving the app and switching alive).
     func lockToSource(_ id: InputSourceID) {
         config.defaultSourceID = id
         config.isEnabled = true
@@ -378,10 +397,12 @@ final class AppState {
 
     // MARK: - Shortcut-driven source cycling
 
-    /// Lock the *global* target to the previous/next input source in the list,
+    /// Move the *global* target to the previous/next input source in the list,
     /// wrapping around the ends, and turn LockIME on — the same write path as
-    /// `lockToSource`. Never lands on "none", and does nothing when fewer than
-    /// two input sources are installed (there's nowhere to cycle).
+    /// `lockToSource`, so it likewise sets only the source and **preserves** the
+    /// configured `defaultAction` (lock or switch). Never lands on "none", and does
+    /// nothing when fewer than two input sources are installed (there's nowhere to
+    /// cycle).
     func cycleGlobalSource(_ direction: CycleDirection) {
         let reference = config.defaultSourceID ?? engine?.currentSourceID()
         guard let next = SourceCycler.step(

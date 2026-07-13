@@ -100,7 +100,7 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Задать глобальный источник по умолчанию **и** включить LockIME. |
-| `set-default-source` | `id` \| `name` *(omit both to clear)* | Задать (или сбросить) глобальный источник по умолчанию, не меняя состояние вкл/выкл. |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Задать (или сбросить) глобальный источник по умолчанию, не меняя состояние вкл/выкл. `action` определяет, будет ли значение по умолчанию **блокировать** (непрерывно применять источник) или **переключаться** на него один раз при входе в приложение, не имеющее собственного правила, а затем отпускать; на пути сброса он игнорируется. |
 | `cycle-source` | `direction` = `next` \| `previous` | Перейти к следующему/предыдущему установленному источнику в глобальной цели (по кругу) и включить LockIME. |
 | `switch-source` | `id` \| `name` | Переключает текущий источник ввода **один раз**, прямо сейчас — это **не** включает и не изменяет непрерывную блокировку. Если непрерывная блокировка уже активна, она берёт верх и возвращает источник к своей цели. |
 
@@ -195,12 +195,14 @@ LockIME намеренно не предоставляет **никаких ко
   "build": "20260615",
   "currentSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
   "defaultSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
+  "defaultAction": "lock",
   "frontmostApp": "com.apple.Safari"
 }
 ```
 
 `enabled` — это единственный переключатель «Включить LockIME»: когда он включён, действуют ваши правила.
-`currentSource`, `defaultSource` и `frontmostApp` присутствуют только когда известны.
+`currentSource`, `defaultSource` и `frontmostApp` присутствуют только когда известны;
+`defaultAction` (`lock` \| `switch`) сопровождает `defaultSource`, когда задан глобальный источник по умолчанию.
 
 ---
 
@@ -233,6 +235,7 @@ LockIME намеренно не предоставляет **никаких ко
 ```sh
 open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"

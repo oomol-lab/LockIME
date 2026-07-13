@@ -257,6 +257,40 @@ struct LockConfigurationTests {
         #expect(config.addressBarSourceID == "com.apple.keylayout.ABC")
     }
 
+    @Test("defaultAction defaults to lock and round-trips through Codable")
+    func defaultActionRoundTrips() throws {
+        // Default is lock (the original behavior; fully backward compatible).
+        #expect(LockConfiguration.default.defaultAction == .lock)
+
+        let original = LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: "com.apple.keylayout.US",
+            defaultAction: .switchOnce // non-default, to prove it round-trips
+        )
+        let decoded = try JSONDecoder().decode(LockConfiguration.self, from: try JSONEncoder().encode(original))
+        #expect(decoded == original)
+        #expect(decoded.defaultAction == .switchOnce)
+    }
+
+    @Test("a config predating defaultAction decodes to the lock default")
+    func decodesLegacyWithoutDefaultAction() throws {
+        let json = #"{"isEnabled": true, "defaultSourceID": "com.apple.keylayout.US"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(json.utf8))
+        #expect(config.defaultAction == .lock)
+    }
+
+    @Test("defaultAction maps a known switch value and degrades an unknown one to lock")
+    func decodesDefaultActionLeniently() throws {
+        // A known "switchOnce" value maps through.
+        let known = #"{"defaultSourceID": "com.apple.keylayout.US", "defaultAction": "switchOnce"}"#
+        #expect(try JSONDecoder().decode(LockConfiguration.self, from: Data(known.utf8)).defaultAction == .switchOnce)
+        // An unknown value degrades to lock rather than aborting the whole decode.
+        let unknown = #"{"defaultSourceID": "com.apple.keylayout.US", "defaultAction": "teleport"}"#
+        let config = try JSONDecoder().decode(LockConfiguration.self, from: Data(unknown.utf8))
+        #expect(config.defaultAction == .lock)
+        #expect(config.defaultSourceID == "com.apple.keylayout.US")
+    }
+
     @Test("URLMatchType.id is its raw value (the stable persisted token)")
     func urlMatchTypeID() {
         #expect(URLMatchType.domainSuffix.rawValue == "domain-suffix")

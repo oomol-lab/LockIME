@@ -48,27 +48,34 @@ public struct BackupURLRule: Codable, Equatable, Sendable {
 }
 
 /// The portable part of a `LockConfiguration` — the "rules and binding intent"
-/// a backup carries between machines: the global default source, per-app rules,
-/// and per-URL rules. Per-device *runtime* state (the master lock, enhanced
-/// mode, language preference, the login item) is deliberately **not** here, so
-/// importing never flips those on someone else's machine.
+/// a backup carries between machines: the global default source (and its
+/// lock/switch action), per-app rules, and per-URL rules. Per-device *runtime*
+/// state (the master lock, enhanced mode, language preference, the login item)
+/// is deliberately **not** here, so importing never flips those on someone
+/// else's machine.
 ///
 /// `sourceNames` is a display-name catalog (input-source identifier → its name
 /// at export time) so a target machine that is missing an input source can
 /// still show a human-readable label instead of a bare identifier.
 public struct BackupPayload: Codable, Equatable, Sendable {
     public var defaultSourceID: InputSourceID?
+    /// The global default's lock/switch behavior; travels with `defaultSourceID`
+    /// on import. Default `.lock` (fully backward compatible). Mirrors
+    /// `LockConfiguration.defaultAction`.
+    public var defaultAction: RuleAction
     public var appRules: [AppRule]
     public var urlRules: [BackupURLRule]
     public var sourceNames: [String: String]
 
     public init(
         defaultSourceID: InputSourceID? = nil,
+        defaultAction: RuleAction = .lock,
         appRules: [AppRule] = [],
         urlRules: [BackupURLRule] = [],
         sourceNames: [String: String] = [:]
     ) {
         self.defaultSourceID = defaultSourceID
+        self.defaultAction = defaultAction
         self.appRules = appRules
         self.urlRules = urlRules
         self.sourceNames = sourceNames
@@ -80,6 +87,12 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         defaultSourceID = try container.decodeIfPresent(InputSourceID.self, forKey: .defaultSourceID)
+        // Decode the action as a raw *string* and map it (same rationale as
+        // `BackupURLRule.action`): a missing key (a backup written before the
+        // global default carried an action) OR an unrecognized value both fall
+        // back to `.lock` rather than throwing and mis-reporting the file.
+        let rawDefaultAction = try container.decodeIfPresent(String.self, forKey: .defaultAction)
+        defaultAction = rawDefaultAction.flatMap(RuleAction.init(rawValue:)) ?? .lock
         appRules = try container.decodeIfPresent([AppRule].self, forKey: .appRules) ?? []
         urlRules = try container.decodeIfPresent([BackupURLRule].self, forKey: .urlRules) ?? []
         sourceNames = try container.decodeIfPresent([String: String].self, forKey: .sourceNames) ?? [:]
@@ -225,6 +238,7 @@ public extension ConfigBackup {
 
         let payload = BackupPayload(
             defaultSourceID: config.defaultSourceID,
+            defaultAction: config.defaultAction,
             appRules: config.appRules,
             urlRules: config.urlRules.map { BackupURLRule(hostPattern: $0.hostPattern, lockedSourceID: $0.lockedSourceID, action: $0.action, matchType: $0.matchType) },
             sourceNames: catalog

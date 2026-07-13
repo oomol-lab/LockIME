@@ -889,6 +889,80 @@ struct LockEngineSwitchTests {
         #expect(events2.last?.inputSource == abc)
     }
 
+    // MARK: - Global default action (issue #56)
+
+    // The requester's scenario: with the global default set to *switch*, entering
+    // a no-rule app switches you to the default once, then leaves you free; each
+    // new no-rule app re-fires, and returning to a previous one re-fires too.
+    @Test("a switch-action global default fires once per no-rule app and re-arms across apps")
+    func switchDefaultFiresPerNoRuleApp() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.a.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true, defaultSourceID: abc, defaultAction: .switchOnce
+        ))
+        #expect(provider.current == abc)          // switched into A once (no standing lock)
+        #expect(provider.selectCalls == [abc])
+
+        // Manual switch away — a one-shot installs no lock, so it sticks; the same
+        // app re-activating does not re-fire (same SwitchKey context).
+        provider.current = us
+        monitor.activate("com.a.App")
+        #expect(provider.current == us)
+        #expect(provider.selectCalls == [abc])
+
+        // A different no-rule app re-fires the switch to the default.
+        monitor.activate("com.b.App")
+        #expect(provider.current == abc)
+        #expect(provider.selectCalls == [abc, abc])
+
+        // Switch away, then return to A → a genuine re-entry re-fires again.
+        provider.current = us
+        monitor.activate("com.a.App")
+        #expect(provider.current == abc)
+        #expect(provider.selectCalls == [abc, abc, abc])
+    }
+
+    // The lock default is the original behavior: it installs a standing lock, so
+    // it continuously re-pins the source on every no-rule app (here shown by a
+    // round-trip through a rule for a different source — each step is a genuine
+    // target change, so it enforces regardless of the settle window).
+    @Test("a lock-action global default keeps pinning the source (continuous enforcement)")
+    func lockDefaultRePins() {
+        let (engine, provider, monitor, _) = makeEngine(current: us, frontmost: "com.a.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true, defaultSourceID: abc, defaultAction: .lock,
+            appRules: [AppRule(bundleID: "com.lock.App", mode: .locked, lockedSourceID: pinyin)]
+        ))
+        #expect(provider.current == abc)          // pinned to the default on A
+
+        monitor.activate("com.lock.App")
+        #expect(provider.current == pinyin)       // the app rule pins pinyin
+
+        // Back to a no-rule app: the lock default re-pins abc.
+        monitor.activate("com.a.App")
+        #expect(provider.current == abc)
+        #expect(provider.selectCalls == [abc, pinyin, abc])
+    }
+
+    // A launcher overlay over a no-rule app under a switch default: the switch
+    // fires for the overlay via its OWN dedup slot, and dismissing it must not
+    // re-yank the user who had switched away in the underlying app.
+    @Test("a launcher over a no-rule app under a switch default does not re-yank on dismiss")
+    func launcherOverSwitchDefaultDoesNotReYank() {
+        let (engine, provider, _, floating) = makeEngine(current: us, frontmost: "com.a.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true, defaultSourceID: abc, defaultAction: .switchOnce
+        ))
+        #expect(provider.current == abc)          // switch default fired for the underlying app
+
+        provider.current = us                     // user manually switches away
+        floating.setLauncher(spotlight)           // overlay (no rule) → switch default fires via its own slot
+        #expect(provider.current == abc)
+        provider.current = us                      // user switches away again in the overlay
+        floating.setLauncher(nil)                  // dismiss → underlying app's key intact → no re-fire
+        #expect(provider.current == us)            // NOT re-yanked to abc
+    }
+
     @Test("a switch is deferred (not lost) when the current source is unreadable")
     func switchDeferredWhenCurrentUnknown() {
         // currentSourceID() can transiently fail (TIS); the one-shot must stay

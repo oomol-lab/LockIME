@@ -102,7 +102,7 @@ installed, selectable source or the command returns `unknown_source`.
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Set the global default source **and** turn LockIME on. |
-| `set-default-source` | `id` \| `name` *(omit both to clear)* | Set (or clear) the global default source without changing the on/off state. |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Set (or clear) the global default source without changing the on/off state. `action` picks whether the default **locks** (continuously enforces the source) or **switches** to it once on entering an app with no rule of its own, then releases; it is ignored on the clear path. |
 | `cycle-source` | `direction` = `next` \| `previous` | Step the global target to the next/previous installed source (wrapping) and turn LockIME on. |
 | `switch-source` | `id` \| `name` | Switch the current input source **once**, right now — it does **not** turn on or change a continuous lock. If a continuous lock is already active, it wins and switches the source back to its target. |
 
@@ -195,13 +195,16 @@ Query commands return a JSON payload through the `x-success` callback (see
   "build": "20260615",
   "currentSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
   "defaultSource": { "id": "com.apple.keylayout.ABC", "name": "ABC" },
+  "defaultAction": "lock",
   "frontmostApp": "com.apple.Safari"
 }
 ```
 
 `enabled` is the single "Enable LockIME" switch — when it is on, your rules are
 in force.
-`currentSource`, `defaultSource`, and `frontmostApp` are present only when known.
+`currentSource`, `defaultSource`, and `frontmostApp` are present only when known;
+`defaultAction` (`lock` \| `switch`) accompanies `defaultSource` when a global
+default is set.
 
 ---
 
@@ -234,6 +237,7 @@ localized.
 ```sh
 open "lockime://lock"
 open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
+open "lockime://set-default-source?id=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&action=switch"
 open "lockime://set-url-rule?host=github.com&source=com.apple.keylayout.ABC&match-type=domain"
