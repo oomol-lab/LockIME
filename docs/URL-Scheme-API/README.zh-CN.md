@@ -94,7 +94,7 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | 设置全局默认输入源**并**开启 LockIME。 |
-| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | 设置（或清除）全局默认输入源，而不改变开/关状态。`action` 决定该默认项是**锁定**（持续强制该输入源）还是在进入一个没有自己规则的应用时**切换**一次到它、随后放手；在清除路径上它会被忽略。 |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | 设置（或清除）全局默认输入源，而不改变开/关状态。`action` 决定该默认项是**锁定**（持续强制该输入源）还是在某个应用回退到全局默认（没有更高优先级的 URL 或应用规则固定某个输入源）时**切换**一次到它、随后放手；在清除路径上它会被忽略。 |
 | `cycle-source` | `direction` = `next` \| `previous` | 将全局目标切换到下一个/上一个已安装的输入源（循环），并开启 LockIME。 |
 | `switch-source` | `id` \| `name` | 立即将当前输入源切换**一次**，仅此一次——它**不会**开启或修改持续锁定。若此时已有持续锁定在生效，它会胜出，并把输入源切回锁定目标。 |
 

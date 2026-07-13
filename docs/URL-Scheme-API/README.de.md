@@ -109,7 +109,7 @@ auswählbare Quelle benennen, sonst gibt der Befehl `unknown_source` zurück.
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Die globale Standardquelle festlegen **und** LockIME einschalten. |
-| `set-default-source` | `id` \| `name` *(beide weglassen zum Löschen)*, `action` = `lock` \| `switch` *(Standard `lock`)* | Die globale Standardquelle festlegen (oder löschen), ohne den Ein/Aus-Zustand zu ändern. `action` bestimmt, ob der Standard **sperrt** (die Quelle kontinuierlich erzwingt) oder beim Betreten einer App ohne eigene Regel einmalig zu ihr **wechselt** und dann freigibt; auf dem Löschpfad wird er ignoriert. |
+| `set-default-source` | `id` \| `name` *(beide weglassen zum Löschen)*, `action` = `lock` \| `switch` *(Standard `lock`)* | Die globale Standardquelle festlegen (oder löschen), ohne den Ein/Aus-Zustand zu ändern. `action` bestimmt, ob der Standard **sperrt** (die Quelle kontinuierlich erzwingt) oder zu ihr **wechselt**, sobald eine App auf die globale Standardquelle zurückfällt (keine höherpriorisierte URL- oder App-Regel legt eine Quelle fest), und dann freigibt; auf dem Löschpfad wird er ignoriert. |
 | `cycle-source` | `direction` = `next` \| `previous` | Das globale Ziel zur nächsten/vorherigen installierten Quelle (umlaufend) weiterschalten und LockIME einschalten. |
 | `switch-source` | `id` \| `name` | Schaltet die aktuelle Eingabequelle **einmalig**, sofort, um — eine kontinuierliche Sperre wird dabei **weder aktiviert noch geändert**. Ist bereits eine kontinuierliche Sperre aktiv, gewinnt sie und schaltet die Quelle auf ihr Ziel zurück. |
 
@@ -210,7 +210,7 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 }
 ```
 
-`enabled` ist der eine Schalter („LockIME aktivieren") — ist er eingeschaltet,
+`enabled` ist der eine Schalter („LockIME aktivieren“) — ist er eingeschaltet,
 sind deine Regeln in Kraft.
 `currentSource`, `defaultSource` und `frontmostApp` sind nur vorhanden, wenn sie
 bekannt sind; `defaultAction` (`lock` \| `switch`) begleitet `defaultSource`, wenn

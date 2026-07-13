@@ -63,10 +63,11 @@ Either way, the app keeps itself up to date via Sparkle.
   app or page, then step out of the way and let you change it freely.
 - **Lock globally, or just switch** — give the global default input source one of
   three behaviors: *lock* to pin it everywhere; *switch* to switch you into it
-  once on entering any app with no rule of its own, then leave you free (re-firing
-  on each new no-rule app); or **None** to pin nothing at all and act as a pure
-  per-app/per-site switcher. *Switch* actively switches you in on every no-rule
-  app; **None** does nothing globally.
+  once whenever an app falls back to the global default (it has no rule of its
+  own, or its rule is *Use default*), then leave you free; or **None** for no
+  global behavior at all — LockIME then acts only through your per-app and per-URL
+  rules. *Switch* actively switches you in whenever the default applies; **None**
+  does nothing globally.
 - **Flexible URL matching** — per-URL rules (enhanced mode) match by a domain and
   its subdomains, an exact domain, a domain keyword, or a regular expression over
   the full URL, and apply in a priority order you drag to arrange — first match

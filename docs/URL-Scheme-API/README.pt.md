@@ -107,7 +107,7 @@ instalada e selecionável, ou o comando retorna `unknown_source`.
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Define a fonte padrão global **e** liga o LockIME. |
-| `set-default-source` | `id` \| `name` *(omita ambos para limpar)*, `action` = `lock` \| `switch` *(padrão `lock`)* | Define (ou limpa) a fonte padrão global sem alterar o estado ligado/desligado. `action` escolhe se o padrão **bloqueia** (impõe a fonte continuamente) ou **alterna** para ela uma vez ao entrar em um app que não tem regra própria e depois libera; é ignorado no caminho de limpeza. |
+| `set-default-source` | `id` \| `name` *(omita ambos para limpar)*, `action` = `lock` \| `switch` *(padrão `lock`)* | Define (ou limpa) a fonte padrão global sem alterar o estado ligado/desligado. `action` escolhe se o padrão **bloqueia** (impõe a fonte continuamente) ou **alterna** para ela sempre que um app recorre ao padrão global (nenhuma regra por URL ou por app de prioridade mais alta fixa uma fonte) e depois libera; é ignorado no caminho de limpeza. |
 | `cycle-source` | `direction` = `next` \| `previous` | Avança o alvo global para a próxima/anterior fonte instalada (com retorno cíclico) e liga o LockIME. |
 | `switch-source` | `id` \| `name` | Alterna a fonte de entrada atual **uma vez**, agora — **não** ativa nem modifica nenhum bloqueio contínuo. Se um bloqueio contínuo já estiver ativo, ele prevalece e devolve a fonte ao seu alvo. |
 

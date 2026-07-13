@@ -99,7 +99,7 @@ actuellement installée et sélectionnable, sinon la commande renvoie `unknown_s
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Définir la source par défaut globale **et** activer LockIME. |
-| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Définir (ou effacer) la source par défaut globale sans changer l'état activé/désactivé. `action` détermine si la valeur par défaut **verrouille** (impose continuellement la source) ou **bascule** vers elle une seule fois à l'entrée dans une application sans règle propre, puis relâche ; il est ignoré sur le chemin d'effacement. |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Définir (ou effacer) la source par défaut globale sans changer l'état activé/désactivé. `action` détermine si la valeur par défaut **verrouille** (impose continuellement la source) ou **bascule** vers elle une seule fois chaque fois qu'une application retombe sur la valeur par défaut globale (aucune règle d'URL ou d'application de priorité supérieure n'épingle de source), puis relâche ; il est ignoré sur le chemin d'effacement. |
 | `cycle-source` | `direction` = `next` \| `previous` | Faire passer la cible globale à la source installée suivante/précédente (avec bouclage) et activer LockIME. |
 | `switch-source` | `id` \| `name` | Change la source de saisie actuelle **une seule fois**, maintenant — cela n'**active ni ne modifie** aucun verrou continu. Si un verrou continu est déjà actif, il l'emporte et rétablit la source sur sa cible. |
 

@@ -102,7 +102,7 @@ installed, selectable source or the command returns `unknown_source`.
 | Command | Parameters | Effect |
 |---|---|---|
 | `lock-to-source` | `id` \| `name` | Set the global default source **and** turn LockIME on. |
-| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Set (or clear) the global default source without changing the on/off state. `action` picks whether the default **locks** (continuously enforces the source) or **switches** to it once on entering an app with no rule of its own, then releases; it is ignored on the clear path. |
+| `set-default-source` | `id` \| `name` *(omit both to clear)*, `action` = `lock` \| `switch` *(default `lock`)* | Set (or clear) the global default source without changing the on/off state. `action` picks whether the default **locks** (continuously enforces the source) or **switches** to it once whenever an app falls back to the global default (no higher-priority URL or app rule pins a source), then releases; it is ignored on the clear path. |
 | `cycle-source` | `direction` = `next` \| `previous` | Step the global target to the next/previous installed source (wrapping) and turn LockIME on. |
 | `switch-source` | `id` \| `name` | Switch the current input source **once**, right now — it does **not** turn on or change a continuous lock. If a continuous lock is already active, it wins and switches the source back to its target. |
 
