@@ -362,7 +362,7 @@ jobs:
         # ... to an immutable release" partway through the upload — softprops'
         # own hint is exactly this: "keep the release as a draft with
         # draft: true, then publish it later from that draft."
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           tag_name: ${{ inputs.tag }}
           # Pin the tag to the commit that was actually built, not whatever
