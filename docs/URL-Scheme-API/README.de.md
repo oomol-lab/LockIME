@@ -186,7 +186,7 @@ Abfragebefehle geben eine JSON-Nutzlast über den `x-success`-Rückruf zurück
 | `list-sources` *(alias `sources`)* | Array installierter Quellen: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Array von `{ "bundleID", "mode", "source"? }`. |
 | `list-url-rules` *(alias `url-rules`)* | Array von `{ "id", "host", "action", "matchType", "source" }`, in Prioritätsreihenfolge (der erste Treffer gewinnt). |
-| `list-log` *(aliases `log`, `recent-activations`)* | Die letzten 24 h an Zwangsumschaltungs-Einträgen, neueste zuerst: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. Zeilen mit `"reason": "conflictPaused"` sind diagnostisch (Durchsetzung nach einem Tauziehen mit einem anderen IME-Verwalter pausiert) — es fand keine Umschaltung statt und `durationMs` ist `0`. |
+| `list-log` *(aliases `log`, `recent-activations`)* | Die letzten 24 h an Einträgen des Aktivierungsprotokolls, neueste zuerst: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. Zeilen mit `"reason": "conflictPaused"` sind diagnostisch (Durchsetzung nach einem Tauziehen mit einem anderen IME-Verwalter pausiert) — es fand keine Umschaltung statt und `durationMs` ist `0`. |
 | `get-config` *(alias `config`)* | Das vollständige persistierte Konfigurationsobjekt. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }` — eine günstige Präsenz-/Versionssonde. |

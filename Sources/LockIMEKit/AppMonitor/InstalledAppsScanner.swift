@@ -55,16 +55,16 @@ public enum InstalledAppsScanner {
                   let url = running.bundleURL ?? running.executableURL
             else { continue }
             // …but not XPC service helpers (WebKit's per-app "Web Content"
-            // renderers and the like, which also surface as bare processes):
-            // they can never become the frontmost app, so a rule could never
-            // apply — listing them would only mislead. Matched structurally by
-            // the `.xpc` bundle in the executable path, plus the WebKit helper
-            // ID prefix — some WebContent processes report only a *relative*
-            // executable path, which the structural check cannot see.
-            if running.bundleURL == nil,
-               url.path.contains(".xpc/") || id.hasPrefix("com.apple.WebKit.") {
-                continue
+            // renderers and the like): they can never become the frontmost
+            // app, so a rule could never apply — listing them would only
+            // mislead. Matched structurally by an `.xpc` bundle in *either*
+            // URL (some services do report a bundle URL), plus the WebKit
+            // helper ID prefix — some WebContent processes report only a
+            // *relative* executable path, which the structural check cannot see.
+            let isXPCService = [running.bundleURL, running.executableURL].contains { candidate in
+                candidate?.pathComponents.contains { $0.hasSuffix(".xpc") } ?? false
             }
+            if isXPCService || id.hasPrefix("com.apple.WebKit.") { continue }
             guard seen.insert(id).inserted else { continue }
             apps.append(InstalledApp(bundleID: id, name: running.localizedName ?? id, path: url.path))
         }

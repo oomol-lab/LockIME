@@ -167,7 +167,7 @@ LockIME 刻意**不提供任何打开其 UI 的命令**（设置、关于、更�
 | `list-sources` *(alias `sources`)* | 已安装输入源的数组：`{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`。 |
 | `list-app-rules` *(alias `app-rules`)* | `{ "bundleID", "mode", "source"? }` 的数组。 |
 | `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "matchType", "source" }` 的数组，按优先级排序（第一个命中者胜出）。 |
-| `list-log` *(aliases `log`, `recent-activations`)* | 最近 24 小时的强制切换记录，最新的在前：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。其中 `"reason": "conflictPaused"` 的行是诊断记录（与其他输入法管理者拉锯后暂停执行）——未发生任何切换，`durationMs` 为 `0`。 |
+| `list-log` *(aliases `log`, `recent-activations`)* | 最近 24 小时的激活日志记录，最新的在前：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。其中 `"reason": "conflictPaused"` 的行是诊断记录（与其他输入法管理者拉锯后暂停执行）——未发生任何切换，`durationMs` 为 `0`。 |
 | `get-config` *(alias `config`)* | 完整的持久化配置对象。 |
 | `version` | `{ "version": "x.y.z", "build": "n" }`。 |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }`——一个廉价的存在性/版本探测。 |
