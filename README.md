@@ -63,6 +63,10 @@ Either way, the app keeps itself up to date via Sparkle.
   tug-of-war and briefly stands down instead of flip-flopping forever,
   recording *Conflict detected* in the activation log; give such an app its
   own *Ignore* or *Switch to* rule for a lasting fix.
+- **Bare-process rules** — programs that run from a bare executable rather than
+  an `.app` bundle (say, Minecraft's `java`, spawned by a third-party launcher)
+  can get rules too: while they are running, the app picker lists them under a
+  synthetic `process:<executable>` identity (e.g. `process:java`).
 - **Lock or switch** — per-app and per-URL rules can *lock* an input source
   (re-applied whenever it drifts) or just *switch* to it once when you focus the
   app or page, then step out of the way and let you change it freely.

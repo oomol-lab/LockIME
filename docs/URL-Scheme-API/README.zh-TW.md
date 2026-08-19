@@ -111,6 +111,8 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | `remove-frontmost-app-rule` | — | 刪除目前最前方應用程式的規則。 |
 | `clear-app-rules` | — | 移除**所有**依應用程式規則。 |
 
+`bundle` 也接受合成的 `process:<executable>` 身分，用於那些因為直接從裸可執行檔（而非 `.app`）執行而沒有 bundle ID 的程序——例如由第三方啟動器啟動的 Minecraft 對應 `process:java`。它與應用程式內挑選器為這類程序顯示的字串完全相同。
+
 ### General settings
 
 | Command | Parameters | Effect |

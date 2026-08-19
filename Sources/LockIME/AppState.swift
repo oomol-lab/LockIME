@@ -460,7 +460,10 @@ final class AppState {
     /// right after launch) — a global hotkey doesn't steal focus, so this is the
     /// same app the engine resolves rules against.
     private var frontmostApplicationBundleID: String? {
-        NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        // `ruleIdentity`, matching `AppActivationMonitor`: a hotkey fired while
+        // a bundle-less process (Minecraft's `java`) is frontmost must address
+        // the same `process:<name>` identity the engine resolves rules against.
+        NSWorkspace.shared.frontmostApplication?.ruleIdentity
     }
 
     func upsertRule(_ rule: AppRule) {

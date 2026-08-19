@@ -46,14 +46,24 @@ public enum InstalledAppsScanner {
         }
 
         for running in NSWorkspace.shared.runningApplications {
-            // `bundleURL` is nil for a process launched from a bare executable
-            // rather than an `.app` wrapper — e.g. Minecraft's `java`, whose
-            // bundle ID comes from the binary's embedded Info.plist. Those are
-            // exactly the processes a user can't find anywhere else, so fall
-            // back to the executable path instead of dropping them.
-            guard let id = running.bundleIdentifier,
-                  let url = running.bundleURL ?? running.executableURL
-            else { continue }
+            // `ruleIdentity`, not `bundleIdentifier`: a process launched from a
+            // bare executable rather than an `.app` wrapper — e.g. Minecraft's
+            // `java`, spawned by a third-party launcher — has NO bundle ID (and
+            // no `bundleURL`), yet is exactly the process a user can't find
+            // anywhere else. It gets the same synthetic `process:<name>`
+            // identity the frontmost monitor reports, so a rule keyed on this
+            // row actually matches at runtime.
+            guard let id = running.ruleIdentity else { continue }
+            // Purely informational (`InstalledApp.path` has no consumer beyond
+            // construction — the manual bundle-ID escape hatch passes "" too),
+            // so a URL-less process still gets its row rather than vanishing
+            // from the picker while the monitor would happily match it.
+            let url = running.bundleURL ?? running.executableURL
+            // A bundle-less process that can't be activated can never be the
+            // frontmost app, so a rule could never apply (same argument as the
+            // XPC helpers below). Bundled apps keep the old behavior — listed
+            // regardless of policy.
+            if running.bundleIdentifier == nil, running.activationPolicy == .prohibited { continue }
             // …but not XPC service helpers (WebKit's per-app "Web Content"
             // renderers and the like): they can never become the frontmost
             // app, so a rule could never apply — listing them would only
@@ -66,7 +76,15 @@ public enum InstalledAppsScanner {
             }
             if isXPCService || id.hasPrefix("com.apple.WebKit.") { continue }
             guard seen.insert(id).inserted else { continue }
-            apps.append(InstalledApp(bundleID: id, name: running.localizedName ?? id, path: url.path))
+            apps.append(
+                InstalledApp(
+                    bundleID: id,
+                    // For a nameless bundle-less process, the bare executable
+                    // name reads better than the raw `process:`-prefixed ID.
+                    name: running.localizedName ?? ProcessIdentity.executableName(from: id) ?? id,
+                    path: url?.path ?? ""
+                )
+            )
         }
 
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

@@ -261,12 +261,25 @@ centered with semantic color + text.
 Searchable list, rows reuse `AppRowLabel` (icon 32). Sorted by name. Standard sheet
 footer (Add / Cancel). No glass. One **flat** list: bare-executable processes
 (e.g. Minecraft's `java`, discoverable only while running) are listed alongside
-apps, not sectioned apart — packaging is an implementation detail. XPC service
-helpers (WebKit's per-app "Web Content" renderers) are excluded — they can never
-be the frontmost app, so a rule could never apply. Below the list, a bundle-ID
-row (text field + Add) is the escape hatch for anything the scan can't discover
-(say, a process that isn't running right now), added by typing its bundle
-identifier.
+apps, not sectioned apart — packaging is an implementation detail. A process
+with **no bundle identifier at all** (Minecraft's `java` again — spawned by a
+launcher, `NSRunningApplication.bundleIdentifier == nil`) is keyed by a
+synthetic `process:<executable-name>` identity instead (`ProcessIdentity`):
+the executable *basename* (falling back to the process name when the
+executable URL is unreadable), not its versioned path, so the identity
+survives JVM upgrades; the `:` makes collision with a real
+`CFBundleIdentifier` impossible.
+Every identity reader — the picker scan, the frontmost monitor, hotkey
+targeting, display-name lookup — goes through `NSRunningApplication
+.ruleIdentity`, so the string a picker row offers is byte-identical to what the
+engine resolves at runtime (and what the activation log shows, instead of "—").
+XPC service helpers (WebKit's per-app "Web Content" renderers) are excluded —
+they can never be the frontmost app, so a rule could never apply; bundle-less
+processes whose activation policy is `.prohibited` are excluded on the same
+argument. Below the list, a bundle-ID row (text field + Add) is the escape
+hatch for anything the scan can't discover (say, a process that isn't running
+right now), added by typing its bundle identifier — or a `process:<name>`
+identity.
 
 ### 4.6 Toast replacement — DELETE `ToastPresenter`/`ToastView`
 The black capsule is the single most off-brand element (ignores light/dark, accent,

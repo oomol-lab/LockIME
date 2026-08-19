@@ -118,6 +118,11 @@ instalada y seleccionable actualmente, o el comando devuelve `unknown_source`.
 | `remove-frontmost-app-rule` | — | Elimina la regla de la aplicación que esté en primer plano. |
 | `clear-app-rules` | — | Elimina **todas** las reglas por aplicación. |
 
+`bundle` también acepta la identidad sintética `process:<executable>` de un proceso que no
+tiene identificador de bundle porque se ejecuta desde un ejecutable suelto en lugar de un
+`.app` — p. ej. `process:java` para Minecraft iniciado por un launcher de terceros. Es la
+misma cadena que el selector integrado en la aplicación muestra para un proceso así.
+
 ### General settings
 
 | Command | Parameters | Effect |

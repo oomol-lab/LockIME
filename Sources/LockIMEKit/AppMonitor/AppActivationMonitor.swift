@@ -13,7 +13,11 @@ public final class AppActivationMonitor: FrontmostAppMonitoring {
     }
 
     public func currentBundleID() -> String? {
-        NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        // `ruleIdentity`, not `bundleIdentifier`: a bundle-less process (e.g.
+        // Minecraft's `java`) reports its synthetic `process:<name>` identity,
+        // the same string the picker offers — otherwise it could never be
+        // matched by a rule (and the log would show "—" for it).
+        NSWorkspace.shared.frontmostApplication?.ruleIdentity
     }
 
     public func start(onChange: @escaping @MainActor (String?) -> Void) {
@@ -26,7 +30,7 @@ public final class AppActivationMonitor: FrontmostAppMonitoring {
             for await _ in activations {
                 try? await Task.sleep(for: debounce)
                 if Task.isCancelled { break }
-                onChange(NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+                onChange(NSWorkspace.shared.frontmostApplication?.ruleIdentity)
             }
         }
     }

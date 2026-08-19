@@ -125,6 +125,12 @@ auswählbare Quelle benennen, sonst gibt der Befehl `unknown_source` zurück.
 | `remove-frontmost-app-rule` | — | Die Regel für die jeweils vorderste App löschen. |
 | `clear-app-rules` | — | **Alle** Regeln pro App entfernen. |
 
+`bundle` akzeptiert auch die synthetische `process:<executable>`-Identität
+eines Prozesses, der keine Bundle-ID hat, weil er aus einer bloßen
+ausführbaren Datei statt aus einer `.app` läuft — z. B. `process:java` für ein
+von einem Drittanbieter-Launcher gestartetes Minecraft. Es ist dieselbe
+Zeichenkette, die die Auswahl in der App für einen solchen Prozess anzeigt.
+
 ### General settings
 
 | Command | Parameters | Effect |

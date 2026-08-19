@@ -100,11 +100,15 @@ struct AppPickerSheet: View {
         .buttonStyle(.plain)
     }
 
-    /// The typed bundle ID with surrounding whitespace stripped; empty (the Add
+    /// The typed identity with surrounding whitespace stripped; empty (the Add
     /// button stays disabled) when blank or containing internal whitespace — a
     /// bundle ID never has any, so this catches an accidental app *name* early.
+    /// A synthetic `process:` identity is exempt from the internal-whitespace
+    /// guard: its executable name may legitimately contain spaces, and this
+    /// field is the only way to re-enter one while its process isn't running.
     private var trimmedManualBundleID: String {
         let trimmed = manualBundleID.trimmingCharacters(in: .whitespacesAndNewlines)
+        if ProcessIdentity.isSynthetic(trimmed) { return trimmed }
         guard trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else { return "" }
         return trimmed
     }

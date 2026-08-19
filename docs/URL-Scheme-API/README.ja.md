@@ -118,6 +118,12 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | `remove-frontmost-app-rule` | — | 最前面にあるアプリのルールを削除します。 |
 | `clear-app-rules` | — | **すべて**のアプリごとのルールを削除します。 |
 
+`bundle` は、`.app` ではなく素の実行ファイルから実行されているためにバンドル
+識別子を持たないプロセスの、合成された `process:<executable>` 識別子も
+受け付けます——たとえばサードパーティのランチャーから起動された Minecraft の
+場合は `process:java` です。これは、そのようなプロセスに対してアプリ内の
+ピッカーが表示するのと同じ文字列です。
+
 ### General settings
 
 | Command | Parameters | Effect |

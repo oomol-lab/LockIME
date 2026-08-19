@@ -118,6 +118,12 @@ installed, selectable source or the command returns `unknown_source`.
 | `remove-frontmost-app-rule` | — | Delete the rule for whichever app is frontmost. |
 | `clear-app-rules` | — | Remove **all** per-app rules. |
 
+`bundle` also accepts the synthetic `process:<executable>` identity of a
+process that has no bundle identifier because it runs from a bare executable
+rather than an `.app` — e.g. `process:java` for Minecraft started by a
+third-party launcher. It is the same string the in-app picker shows for such a
+process.
+
 ### General settings
 
 | Command | Parameters | Effect |

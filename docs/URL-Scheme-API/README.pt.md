@@ -123,6 +123,12 @@ instalada e selecionável, ou o comando retorna `unknown_source`.
 | `remove-frontmost-app-rule` | — | Exclui a regra do app que estiver em primeiro plano. |
 | `clear-app-rules` | — | Remove **todas** as regras por app. |
 
+`bundle` também aceita a identidade sintética `process:<executable>` de um
+processo que não tem identificador de bundle porque roda a partir de um
+executável avulso em vez de um `.app` — p. ex. `process:java` para o Minecraft
+iniciado por um launcher de terceiros. É a mesma string que o seletor dentro
+do app mostra para esse tipo de processo.
+
 ### General settings
 
 | Command | Parameters | Effect |

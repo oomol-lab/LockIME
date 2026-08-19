@@ -1,4 +1,5 @@
 import AppKit
+import LockIMEKit
 
 extension NSImage {
     /// LockIME's own app icon, loaded robustly from the bundled `AppIcon.icns`
@@ -34,8 +35,12 @@ enum AppDisplay {
     static func name(for bundleID: String) -> String {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
             // Not an installed `.app` — a bare-executable process (e.g.
-            // Minecraft's `java`) still shows its live name while running.
-            return runningApplication(for: bundleID)?.localizedName ?? bundleID
+            // Minecraft's `java`) still shows its live name while running; a
+            // synthetic `process:<name>` identity that is NOT running falls
+            // back to its bare executable name, not the raw prefixed ID.
+            return runningApplication(for: bundleID)?.localizedName
+                ?? ProcessIdentity.executableName(from: bundleID)
+                ?? bundleID
         }
         let bundle = Bundle(url: url)
         return (bundle?.localizedInfoDictionary?["CFBundleDisplayName"] as? String)
@@ -52,6 +57,8 @@ enum AppDisplay {
     }
 
     private static func runningApplication(for bundleID: String) -> NSRunningApplication? {
-        NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleID }
+        // `ruleIdentity` covers both real bundle IDs and the synthetic
+        // `process:<name>` identities of bundle-less processes (`java`).
+        NSWorkspace.shared.runningApplications.first { $0.ruleIdentity == bundleID }
     }
 }

@@ -110,6 +110,10 @@ myapp://got-status?result=%7B%22enabled%22%3Atrue%2C…%7D
 | `remove-frontmost-app-rule` | — | 删除当前最前台应用的规则。 |
 | `clear-app-rules` | — | 移除**所有**按应用规则。 |
 
+`bundle` 还接受合成的 `process:<executable>` 身份，用于那些以裸可执行文件而非
+`.app` 包运行、因而没有 bundle ID 的进程，例如由第三方启动器启动的 Minecraft
+所对应的 `process:java`。它与应用内选择器为这类进程显示的字符串完全相同。
+
 ### General settings
 
 | Command | Parameters | Effect |
