@@ -30,17 +30,19 @@ public enum ProcessIdentity {
         return prefix + executableName
     }
 
-    /// The synthetic identity for a bundle-less process's coordinates. Prefers
-    /// the executable's basename; falls back to the process name
-    /// (`localizedName`), which for a bare executable is not localized — it
-    /// *is* the basename. Pure so the preference order is directly testable.
-    public static func syntheticID(executableURL: URL?, processName: String?) -> String? {
-        syntheticID(executableName: executableURL?.lastPathComponent ?? processName)
+    /// The synthetic identity for a bundle-less process's executable URL. The
+    /// basename is the *only* identity source: it is locale-invariant and
+    /// stable across relaunches, unlike a display name (`localizedName` can
+    /// vary with the target's localization), so a persisted rule keeps
+    /// matching. No URL means no identity — such a process stays untargetable
+    /// rather than getting an unstable key.
+    public static func syntheticID(executableURL: URL?) -> String? {
+        syntheticID(executableName: executableURL?.lastPathComponent)
     }
 
     /// The synthetic identity for a running bundle-less process.
     public static func syntheticID(for app: NSRunningApplication) -> String? {
-        syntheticID(executableURL: app.executableURL, processName: app.localizedName)
+        syntheticID(executableURL: app.executableURL)
     }
 
     /// The executable name inside a synthetic identity, or `nil` for a real

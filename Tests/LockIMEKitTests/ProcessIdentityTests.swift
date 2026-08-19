@@ -58,18 +58,17 @@ struct ProcessIdentityTests {
         #expect(current.ruleIdentity == current.bundleIdentifier)
     }
 
-    /// The synthesis prefers the executable basename — the stable key that
-    /// survives JVM/launcher upgrades (the *path* is versioned) — over the
-    /// process name, and takes the basename, never the full path.
-    @Test func synthesisPrefersExecutableBasenameOverProcessName() {
+    /// The synthesis keys on the executable basename — the stable,
+    /// locale-invariant key that survives JVM/launcher upgrades (the *path*
+    /// is versioned) — never the full path.
+    @Test func synthesisUsesExecutableBasename() {
         let url = URL(fileURLWithPath: "/Library/Java/mojang-25.0.1.bundle/Contents/Home/bin/java")
-        #expect(ProcessIdentity.syntheticID(executableURL: url, processName: "Java Game") == "process:java")
+        #expect(ProcessIdentity.syntheticID(executableURL: url) == "process:java")
     }
 
-    /// Without an executable URL, the process name still yields an identity —
-    /// for a bare executable it is not localized, it *is* the basename.
-    @Test func synthesisFallsBackToProcessName() {
-        #expect(ProcessIdentity.syntheticID(executableURL: nil, processName: "java") == "process:java")
-        #expect(ProcessIdentity.syntheticID(executableURL: nil, processName: nil) == nil)
+    /// Without an executable URL there is no identity — a display name would
+    /// be an unstable (localizable) key, so none is minted at all.
+    @Test func synthesisRequiresAnExecutableURL() {
+        #expect(ProcessIdentity.syntheticID(executableURL: nil) == nil)
     }
 }

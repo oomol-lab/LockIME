@@ -265,9 +265,10 @@ apps, not sectioned apart — packaging is an implementation detail. A process
 with **no bundle identifier at all** (Minecraft's `java` again — spawned by a
 launcher, `NSRunningApplication.bundleIdentifier == nil`) is keyed by a
 synthetic `process:<executable-name>` identity instead (`ProcessIdentity`):
-the executable *basename* (falling back to the process name when the
-executable URL is unreadable), not its versioned path, so the identity
-survives JVM upgrades; the `:` makes collision with a real
+the executable *basename*, not its versioned path, so the identity survives
+JVM upgrades — and *only* the basename, never a display name, which could
+vary with localization and silently break a persisted rule (no readable
+executable URL → no identity); the `:` makes collision with a real
 `CFBundleIdentifier` impossible.
 Every identity reader — the picker scan, the frontmost monitor, hotkey
 targeting, display-name lookup — goes through `NSRunningApplication
