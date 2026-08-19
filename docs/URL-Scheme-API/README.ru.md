@@ -176,7 +176,7 @@ LockIME намеренно не предоставляет **никаких ко
 | `list-sources` *(alias `sources`)* | Массив установленных источников: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Массив `{ "bundleID", "mode", "source"? }`. |
 | `list-url-rules` *(alias `url-rules`)* | Массив `{ "id", "host", "action", "matchType", "source" }`, в порядке приоритета (побеждает первое совпадение). |
-| `list-log` *(aliases `log`, `recent-activations`)* | Записи о принудительных переключениях за последние 24 ч, новейшие сначала: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
+| `list-log` *(aliases `log`, `recent-activations`)* | Записи о принудительных переключениях за последние 24 ч, новейшие сначала: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. Строки с `"reason": "conflictPaused"` — диагностические (принудительное применение приостановлено после перетягивания с другим менеджером IME): переключение не выполнялось, а `durationMs` равно `0`. |
 | `get-config` *(alias `config`)* | Полный сохранённый объект конфигурации. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }` — дешёвая проверка присутствия/версии. |

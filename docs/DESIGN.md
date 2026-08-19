@@ -259,7 +259,14 @@ centered with semantic color + text.
 
 ### 4.5 App picker (sheet)
 Searchable list, rows reuse `AppRowLabel` (icon 32). Sorted by name. Standard sheet
-footer (Add / Cancel). No glass.
+footer (Add / Cancel). No glass. One **flat** list: bare-executable processes
+(e.g. Minecraft's `java`, discoverable only while running) are listed alongside
+apps, not sectioned apart — packaging is an implementation detail. XPC service
+helpers (WebKit's per-app "Web Content" renderers) are excluded — they can never
+be the frontmost app, so a rule could never apply. Below the list, a bundle-ID
+row (text field + Add) is the escape hatch for anything the scan can't discover
+(say, a process that isn't running right now), added by typing its bundle
+identifier.
 
 ### 4.6 Toast replacement — DELETE `ToastPresenter`/`ToastView`
 The black capsule is the single most off-brand element (ignores light/dark, accent,

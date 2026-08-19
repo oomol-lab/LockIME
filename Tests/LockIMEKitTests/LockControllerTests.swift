@@ -506,4 +506,203 @@ struct LockControllerTests {
         #expect(events.first?.matchedHost == "github.com")
         #expect(events.first?.fromSourceName == abc.rawValue)
     }
+
+    // MARK: - Conflict backoff (dueling IME managers)
+
+    /// Drive one full fight burst: an opponent that re-asserts `abc` the moment
+    /// we force `us` back (a game's built-in IME switcher). Runs
+    /// `maxConflictReverts` corrected reverts plus the one more attempt that
+    /// fills the window and pauses; extra rounds inside an already-active pause
+    /// are harmless no-ops, so the helper works mid-test too. Leaves the
+    /// opponent holding `abc`.
+    private func fight(_ controller: LockController, _ provider: MockInputSourceProvider, _ uptime: FakeUptime) {
+        for _ in 0...LockController.maxConflictReverts {
+            provider.current = abc
+            uptime.advance(by: LockController.suppressionWindow + 0.01)
+            controller.selectedSourceDidChange()
+        }
+    }
+
+    @Test("a programmatic revert fight trips the conflict detector and pauses enforcement")
+    func conflictFightPausesEnforcement() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        controller.setTarget(us, bundleID: "net.java.openjdk.cmd", ruleSource: .globalDefault) // on target, no force
+
+        // Each revert is corrected while the window is still filling…
+        for round in 1...LockController.maxConflictReverts {
+            provider.current = abc
+            uptime.advance(by: LockController.suppressionWindow + 0.01)
+            controller.selectedSourceDidChange()
+            #expect(provider.selectCalls.count == round)
+        }
+
+        // …then the window is full: the next revert pauses instead of forcing.
+        provider.current = abc
+        uptime.advance(by: LockController.suppressionWindow + 0.01)
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls.count == LockController.maxConflictReverts)
+        #expect(provider.current == abc)               // the opponent keeps the source
+
+        // The pause is announced as the one non-switch diagnostic event, carrying
+        // the lock's context — and it is NOT counted as an activation.
+        let pause = events.last
+        #expect(pause?.reason == .conflictPaused)
+        #expect(pause?.inputSource == us)
+        #expect(pause?.fromSourceName == nil)
+        #expect(pause?.triggeringBundleID == "net.java.openjdk.cmd")
+        #expect(pause?.ruleSource == .globalDefault)
+        #expect(controller.activationCount == LockController.maxConflictReverts)
+
+        // While paused, further external changes are left alone entirely.
+        uptime.advance(by: 1.0)
+        controller.selectedSourceDidChange()
+        #expect(provider.selectCalls.count == LockController.maxConflictReverts)
+    }
+
+    @Test("the conflict pause expires via a scheduled wakeup and re-asserts, with no notification")
+    func conflictPauseExpiryReAsserts() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us)
+        fight(controller, provider, uptime)
+        #expect(provider.current == abc)
+        // The expiry wakeup is armed for the pause length (plus the epsilon).
+        #expect(scheduler.scheduledDelays.last == LockController.conflictBackoffInterval + 0.02)
+
+        // The reconcile armed by the fight's first force fires mid-pause: it must
+        // respect the pause and change nothing.
+        uptime.advance(by: LockController.suppressionWindow + 0.01)
+        #expect(scheduler.fire())
+        #expect(provider.current == abc)
+
+        // Ride past the pause: the expiry wakeup re-runs enforcement and
+        // re-asserts the lock even though no further notification ever arrived.
+        uptime.advance(by: LockController.conflictBackoffInterval + 0.02)
+        #expect(scheduler.fire())
+        #expect(provider.current == us)
+    }
+
+    @Test("consecutive pauses in one context escalate; a context change resets the backoff")
+    func conflictBackoffEscalatesAndResets() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us, bundleID: "com.game.a")
+
+        fight(controller, provider, uptime)            // burst #1 → base pause
+        #expect(scheduler.scheduledDelays.last == LockController.conflictBackoffInterval + 0.02)
+
+        // Drain burst #1: the pending reconcile respects the pause; the expiry
+        // then re-asserts the lock.
+        uptime.advance(by: LockController.suppressionWindow + 0.01)
+        #expect(scheduler.fire())                      // reconcile: no-op (paused)
+        uptime.advance(by: LockController.conflictBackoffInterval + 0.02)
+        #expect(scheduler.fire())                      // expiry: re-asserts us
+        #expect(provider.current == us)
+
+        fight(controller, provider, uptime)            // burst #2, same context → doubled
+        #expect(scheduler.scheduledDelays.last == 2 * LockController.conflictBackoffInterval + 0.02)
+
+        // Drain burst #2 (reconcile from the re-assert force, then this expiry).
+        uptime.advance(by: 2 * LockController.conflictBackoffInterval + 0.02)
+        #expect(scheduler.fire())                      // reconcile: past the pause → re-forces us
+        #expect(scheduler.fire())                      // expiry: already satisfied → no-op
+        #expect(provider.current == us)
+
+        // A new frontmost app is a fresh enforcement context: escalation resets.
+        controller.setTarget(us, bundleID: "com.editor.b")
+        fight(controller, provider, uptime)            // burst #3 → back to the base pause
+        #expect(scheduler.scheduledDelays.last == LockController.conflictBackoffInterval + 0.02)
+    }
+
+    @Test("occasional manual flips never trip the conflict detector")
+    func slowRevertsNeverPause() {
+        let (controller, provider, uptime) = make(current: us, enabled: true)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        controller.setTarget(us)
+
+        // A flip every couple of seconds — a human re-trying, not a programmatic
+        // fight. The rolling window never fills, so every drift is corrected.
+        for round in 1...8 {
+            provider.current = abc
+            uptime.advance(by: 2.0)
+            controller.selectedSourceDidChange()
+            #expect(provider.selectCalls.count == round)
+        }
+        #expect(!events.contains { $0.reason == .conflictPaused })
+    }
+
+    @Test("flipping the master switch forgets the conflict pause and re-engages at once")
+    func toggleClearsConflictPause() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us)
+        fight(controller, provider, uptime)
+        #expect(provider.current == abc)               // paused; the opponent holds the source
+
+        controller.setEnabled(false)
+        controller.setEnabled(true)                    // a deliberate re-engage
+        #expect(provider.current == us)                // enforced immediately, pause forgotten
+    }
+
+    @Test("a cleared fight orphans its expiry wakeup; the next pause arms a fresh one")
+    func staleExpiryWakeupOrphaned() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us, bundleID: "com.game.a")
+        fight(controller, provider, uptime)            // pause #1: reconcile + expiry pending
+        let pendingAfterPause1 = scheduler.pendingCount
+
+        // Mid-pause, the user cmd-tabs away and back: each context change clears
+        // the fight, orphaning pause #1's still-in-flight expiry wakeup.
+        controller.setTarget(us, bundleID: "com.other")
+        controller.setTarget(us, bundleID: "com.game.a")
+        fight(controller, provider, uptime)            // pause #2 must arm ITS OWN wakeup —
+        // — a bare coalescing flag would swallow it while the stale one is in flight.
+        #expect(scheduler.pendingCount == pendingAfterPause1 + 1)
+        #expect(scheduler.scheduledDelays.last == LockController.conflictBackoffInterval + 0.02)
+
+        // The stale wakeup fires mid-pause #2: it must be inert — no enforcement,
+        // no re-arm — because its generation is gone.
+        uptime.advance(by: 1.0)
+        let calls = provider.selectCalls.count
+        #expect(scheduler.fire())                      // pause #1's reconcile: no-op (paused)
+        #expect(scheduler.fire())                      // pause #1's expiry: orphaned → dropped
+        #expect(provider.selectCalls.count == calls)
+        #expect(scheduler.pendingCount == 1)           // only pause #2's own wakeup remains
+
+        // …which fires past the pause and recovers the lock.
+        uptime.advance(by: LockController.conflictBackoffInterval)
+        #expect(scheduler.fire())
+        #expect(provider.current == us)
+    }
+
+    @Test("a fight that resumes after a long quiet stretch starts from the base pause again")
+    func conflictEscalationDecaysAfterQuiet() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us, bundleID: "com.game.a")
+
+        fight(controller, provider, uptime)            // pause #1 (base)
+        uptime.advance(by: LockController.suppressionWindow + 0.01)
+        #expect(scheduler.fire())                      // reconcile: no-op (paused)
+        uptime.advance(by: LockController.conflictBackoffInterval + 0.02)
+        #expect(scheduler.fire())                      // expiry: re-asserts us
+        #expect(provider.current == us)
+
+        fight(controller, provider, uptime)            // an immediate re-fight → doubled
+        #expect(scheduler.scheduledDelays.last == 2 * LockController.conflictBackoffInterval + 0.02)
+
+        // Drain pause #2 fully, then a long healthy stretch with the lock held.
+        uptime.advance(by: 2 * LockController.conflictBackoffInterval + 0.02)
+        while scheduler.fire() {}
+        #expect(provider.current == us)
+        uptime.advance(by: 3600)                       // an hour of peace in the same app
+
+        fight(controller, provider, uptime)            // a NEW episode, not a lost retry
+        #expect(scheduler.scheduledDelays.last == LockController.conflictBackoffInterval + 0.02)
+    }
 }

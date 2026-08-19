@@ -38,6 +38,31 @@ public final class LockController {
     /// field's focus lifetime).
     public static let secureInputPollInterval: TimeInterval = 0.5
 
+    /// Rolling window over which `.revertedSwitch` corrective forces count as
+    /// one continuous fight. Sized to catch a programmatic opponent (which
+    /// reverts our force within a second or two at most) while staying above
+    /// any plausible cadence of deliberate manual flips.
+    public static let conflictWindow: TimeInterval = 5.0
+
+    /// Corrective re-forces allowed within `conflictWindow` before the
+    /// controller concludes another process is programmatically managing the
+    /// source (e.g. a game's built-in IME switcher re-asserting ABC in
+    /// gameplay) and pauses enforcement instead of fighting an unwinnable
+    /// tug-of-war. `maxReconcileRetries` cannot bound that fight: every force
+    /// that *takes* raises its own echo, which satisfies the lock and refills
+    /// the reconcile budget before the opponent reverts again.
+    public static let maxConflictReverts = 4
+
+    /// The first conflict pause. Long enough to end the visible flapping at
+    /// once, short enough that a lock a *human* out-mashed (the false-positive
+    /// case) recovers promptly.
+    public static let conflictBackoffInterval: TimeInterval = 10
+
+    /// Escalation cap: each consecutive pause in the same enforcement context
+    /// doubles the interval (a persistent manager like a game keeps winning the
+    /// re-try at every expiry), never past this.
+    public static let maxConflictBackoffInterval: TimeInterval = 120
+
     /// Production default for the secure-input probe: the process-GLOBAL Carbon
     /// flag. Injected (see `init`) so tests drive it deterministically. Declared
     /// `public static` so it can serve as a default argument at external call
@@ -81,6 +106,23 @@ public final class LockController {
     private var pendingRecheck = false
     /// Coalesces overlapping secure-input watches into a single in-flight poll.
     private var secureWatchPending = false
+    /// Uptime stamps of recent `.revertedSwitch` corrective forces, pruned to
+    /// `conflictWindow`. A full window means the lock is fighting another IME
+    /// manager, not correcting isolated drift.
+    private var conflictRevertTimes: [TimeInterval] = []
+    /// While `uptime()` is below this, enforcement is paused (conflict backoff).
+    private var conflictBackoffUntil: TimeInterval = 0
+    /// Consecutive conflict pauses in the current enforcement context; each one
+    /// doubles the next pause, up to `maxConflictBackoffInterval`. Reset with
+    /// the rest of the conflict state whenever the context changes.
+    private var consecutiveConflictPauses = 0
+    /// Invalidates in-flight backoff-expiry wakeups: each armed wakeup captures
+    /// the generation at schedule time and no-ops if it has moved on (a newer
+    /// pause re-armed, or the fight was cleared). A bare "pending" flag cannot
+    /// do this — the production scheduler is fire-and-forget, so a stale
+    /// long-delay wakeup would keep a *fresh, shorter* pause from arming its
+    /// own, leaving the lock un-asserted until the stale one finally fired.
+    private var conflictExpiryGeneration = 0
 
     /// Context describing where the current `target` came from, set alongside it
     /// by `setTarget` and attached to every event the target produces (including
@@ -115,6 +157,9 @@ public final class LockController {
     /// while still disabled and this is what actually enforces on enable.
     public func setEnabled(_ on: Bool, reason: ActivationReason = .lockEngaged) {
         isEnabled = on
+        // Flipping the master switch is a deliberate (re-)engagement: forget any
+        // conflict pause and give enforcement one fresh try.
+        clearConflictState()
         guard on else { return }
         enforceIfNeeded(reason: reason)
     }
@@ -138,6 +183,11 @@ public final class LockController {
         matchedHost: String? = nil
     ) {
         let changed = id != target
+        // The conflict detector is scoped to one (target, app) enforcement
+        // context: a new target *or* a new frontmost app is a fresh fight, so an
+        // opponent met in one app (a game managing the IME itself) must not keep
+        // the lock paused anywhere else.
+        if changed || bundleID != targetBundleID { clearConflictState() }
         target = id
         targetBundleID = bundleID
         targetRuleSource = ruleSource
@@ -247,13 +297,114 @@ public final class LockController {
             scheduleSecureInputWatch()
             return
         }
+        // Conflict backoff: a recent tug-of-war conceded the source to the other
+        // manager for a bounded pause — stand down until it expires (the expiry
+        // wakeup then re-runs this decision).
+        if uptime() < conflictBackoffUntil { return }
         guard let current = provider.currentSourceID() else { return }
         if current == target {                 // (1) idempotent — absorbs our echo;
             reconcileRetries = 0               //     lock satisfied → refill budget
             return
         }
         if uptime() < settleUntil { return }   // (2) recent force still settling
-        force(target, reason: reason, from: current) // (3) verified mismatch → re-force
+        // (3) verified mismatch → re-force. But a reverted-switch correction that
+        // keeps recurring is a fight with another IME manager: once the rolling
+        // window fills, pause instead of flapping (see the conflict backoff).
+        if reason == .revertedSwitch, registerConflictRevert() {
+            enterConflictBackoff()
+            return
+        }
+        force(target, reason: reason, from: current)
+    }
+
+    // MARK: - Conflict backoff (dueling IME managers)
+
+    /// Record one `.revertedSwitch` corrective force at "now" and report whether
+    /// the rolling window is already full — i.e. the correction about to run
+    /// would be one more round of a programmatic fight, not an isolated drift.
+    private func registerConflictRevert() -> Bool {
+        let now = uptime()
+        conflictRevertTimes.removeAll { now - $0 > Self.conflictWindow }
+        guard conflictRevertTimes.count < Self.maxConflictReverts else { return true }
+        conflictRevertTimes.append(now)
+        return false
+    }
+
+    /// Enter (or escalate) the pause: the opponent keeps the source until the
+    /// backoff expires, when a scheduled wakeup re-runs the enforcement decision
+    /// — so a vanished opponent (the game quit, the user left the fight) is
+    /// recovered from even if no further notification ever arrives. Emits the
+    /// one **non-switch** event (`.conflictPaused`, not counted as an
+    /// activation) so the log can tell the user why the lock stood down.
+    private func enterConflictBackoff() {
+        guard let target else { return }
+        // A fight that resumes long after the previous pause ended is a new
+        // episode — the lock held fine in between — not the opponent winning
+        // the retry at expiry, so escalation starts over from the base pause.
+        // (`conflictBackoffUntil` is the previous pause's end; a fresh context
+        // holds 0, which trivially resets.)
+        if uptime() - conflictBackoffUntil > Self.conflictWindow {
+            consecutiveConflictPauses = 0
+        }
+        let interval = min(
+            Self.conflictBackoffInterval * pow(2, Double(consecutiveConflictPauses)),
+            Self.maxConflictBackoffInterval
+        )
+        consecutiveConflictPauses += 1
+        conflictBackoffUntil = uptime() + interval
+        conflictRevertTimes.removeAll()
+        scheduleConflictExpiry(after: interval + 0.02)
+        onActivation?(
+            ActivationEvent(
+                timestamp: clock(),
+                inputSource: target,
+                inputSourceName: provider.source(for: target)?.localizedName ?? target.rawValue,
+                reason: .conflictPaused,
+                durationMs: 0,
+                fromSourceName: nil,
+                triggeringBundleID: targetBundleID,
+                ruleSource: targetRuleSource,
+                matchedHost: targetMatchedHost
+            )
+        )
+    }
+
+    /// Arm the wakeup for the pause running out. Bumping the generation first
+    /// invalidates any earlier in-flight wakeup, so exactly one — the newest —
+    /// is ever live.
+    private func scheduleConflictExpiry(after delay: TimeInterval) {
+        conflictExpiryGeneration += 1
+        let generation = conflictExpiryGeneration
+        scheduler(delay) { [weak self] in
+            self?.performConflictExpiry(generation: generation)
+        }
+    }
+
+    /// The pause ran out — or the machine slept through it (`uptime()` excludes
+    /// sleep while the scheduler's clock does not), in which case re-arm for the
+    /// remainder. Re-runs the enforcement decision: a still-fighting opponent
+    /// re-fills the window and escalates the next pause; a vanished one lets the
+    /// lock re-assert and stay.
+    private func performConflictExpiry(generation: Int) {
+        // A superseded wakeup (a newer pause re-armed, or the fight was
+        // cleared) is inert — the current generation's wakeup owns recovery.
+        guard generation == conflictExpiryGeneration else { return }
+        let remaining = conflictBackoffUntil - uptime()
+        guard remaining <= 0 else {
+            scheduleConflictExpiry(after: remaining + 0.02)
+            return
+        }
+        enforceIfNeeded(reason: .revertedSwitch)
+    }
+
+    /// Forget the fight: the enforcement context changed (new target or app) or
+    /// the master switch was deliberately flipped, so the next mismatch starts
+    /// from a clean window and an unescalated pause.
+    private func clearConflictState() {
+        conflictRevertTimes.removeAll()
+        conflictBackoffUntil = 0
+        consecutiveConflictPauses = 0
+        conflictExpiryGeneration += 1 // orphan any in-flight expiry wakeup
     }
 
     /// Arm one deferred re-check just past the settle window. Skipped when there

@@ -67,6 +67,13 @@ public enum ActivationReason: String, Sendable, Codable, CaseIterable {
     /// lock targeting a different source still wins and reverts it on the next
     /// change (recorded separately as `.revertedSwitch`).
     case apiCommand
+    /// Rapid repeated external reverts tripped the conflict detector: another
+    /// process is programmatically managing the input source (e.g. a game's
+    /// built-in IME switcher), so enforcement paused briefly instead of fighting
+    /// an unwinnable tug-of-war (see `LockController`'s conflict backoff). The
+    /// only reason that records **no** forced switch — a diagnostic row telling
+    /// the user why the lock momentarily stood down.
+    case conflictPaused
 }
 
 /// A single enforcement event, emitted whenever the engine forces the source.

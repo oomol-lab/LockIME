@@ -184,7 +184,7 @@ Os comandos de consulta retornam um payload JSON através do callback
 | `list-sources` *(alias `sources`)* | Array das fontes instaladas: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Array de `{ "bundleID", "mode", "source"? }`. |
 | `list-url-rules` *(alias `url-rules`)* | Array de `{ "id", "host", "action", "matchType", "source" }`, em ordem de prioridade (a primeira correspondência vence). |
-| `list-log` *(aliases `log`, `recent-activations`)* | As últimas 24 h de entradas de troca forçada, da mais recente para a mais antiga: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
+| `list-log` *(aliases `log`, `recent-activations`)* | As últimas 24 h de entradas de troca forçada, da mais recente para a mais antiga: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. As linhas com `"reason": "conflictPaused"` são de diagnóstico (aplicação pausada após um cabo de guerra com outro gerenciador de IME) — nenhuma troca foi realizada e `durationMs` é `0`. |
 | `get-config` *(alias `config`)* | O objeto de configuração persistida completo. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }` — uma sonda barata de presença/versão. |

@@ -178,7 +178,7 @@ LockIME は設計上、**UI を開くコマンドを一切公開していませ�
 | `list-sources` *(alias `sources`)* | インストール済みソースの配列：`{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`。 |
 | `list-app-rules` *(alias `app-rules`)* | `{ "bundleID", "mode", "source"? }` の配列。 |
 | `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "matchType", "source" }` の配列。優先順位順（最初にマッチしたものが優先）。 |
-| `list-log` *(aliases `log`, `recent-activations`)* | 直近 24 時間の強制切り替えエントリ。新しいものから順に：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。 |
+| `list-log` *(aliases `log`, `recent-activations`)* | 直近 24 時間の強制切り替えエントリ。新しいものから順に：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。`"reason": "conflictPaused"` の行は診断用です（他の IME 管理者との綱引きの末に強制を一時停止）——切り替えは行われておらず、`durationMs` は `0` です。 |
 | `get-config` *(alias `config`)* | 永続化された設定オブジェクト全体。 |
 | `version` | `{ "version": "x.y.z", "build": "n" }`。 |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }`——軽量な存在確認/バージョンプローブ。 |

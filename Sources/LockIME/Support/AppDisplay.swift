@@ -33,7 +33,9 @@ extension NSImage {
 enum AppDisplay {
     static func name(for bundleID: String) -> String {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            return bundleID
+            // Not an installed `.app` — a bare-executable process (e.g.
+            // Minecraft's `java`) still shows its live name while running.
+            return runningApplication(for: bundleID)?.localizedName ?? bundleID
         }
         let bundle = Bundle(url: url)
         return (bundle?.localizedInfoDictionary?["CFBundleDisplayName"] as? String)
@@ -44,8 +46,12 @@ enum AppDisplay {
 
     static func icon(for bundleID: String) -> NSImage? {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            return nil
+            return runningApplication(for: bundleID)?.icon
         }
         return NSWorkspace.shared.icon(forFile: url.path)
+    }
+
+    private static func runningApplication(for bundleID: String) -> NSRunningApplication? {
+        NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleID }
     }
 }

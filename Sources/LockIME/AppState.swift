@@ -210,7 +210,12 @@ final class AppState {
         accessibilityGranted = AXIsProcessTrusted()
         engine.onActivation = { [weak self] event in
             guard let self else { return }
-            self.activationCount = self.activationStore.increment()
+            // `.conflictPaused` is the one diagnostic (non-switch) event: log it
+            // below so the user can see why the lock stood down, but never count
+            // it as an activation.
+            if event.reason != .conflictPaused {
+                self.activationCount = self.activationStore.increment()
+            }
             // Resolve the triggering app's display name here (AppKit lives in
             // the app, not the kit) so the log row keeps it even after that app
             // quits. App names are proper nouns shown verbatim — the same

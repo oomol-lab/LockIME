@@ -46,10 +46,26 @@ public enum InstalledAppsScanner {
         }
 
         for running in NSWorkspace.shared.runningApplications {
+            // `bundleURL` is nil for a process launched from a bare executable
+            // rather than an `.app` wrapper — e.g. Minecraft's `java`, whose
+            // bundle ID comes from the binary's embedded Info.plist. Those are
+            // exactly the processes a user can't find anywhere else, so fall
+            // back to the executable path instead of dropping them.
             guard let id = running.bundleIdentifier,
-                  let url = running.bundleURL,
-                  seen.insert(id).inserted
+                  let url = running.bundleURL ?? running.executableURL
             else { continue }
+            // …but not XPC service helpers (WebKit's per-app "Web Content"
+            // renderers and the like, which also surface as bare processes):
+            // they can never become the frontmost app, so a rule could never
+            // apply — listing them would only mislead. Matched structurally by
+            // the `.xpc` bundle in the executable path, plus the WebKit helper
+            // ID prefix — some WebContent processes report only a *relative*
+            // executable path, which the structural check cannot see.
+            if running.bundleURL == nil,
+               url.path.contains(".xpc/") || id.hasPrefix("com.apple.WebKit.") {
+                continue
+            }
+            guard seen.insert(id).inserted else { continue }
             apps.append(InstalledApp(bundleID: id, name: running.localizedName ?? id, path: url.path))
         }
 

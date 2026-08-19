@@ -87,6 +87,7 @@ struct ActivationLogPane: View {
         case .configChanged: "Settings changed"
         case .startupApplied: "Lock restored"
         case .apiCommand: "API command"
+        case .conflictPaused: "Conflict detected"
         case nil: LocalizedStringKey(raw)
         }
     }

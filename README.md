@@ -58,6 +58,11 @@ Either way, the app keeps itself up to date via Sparkle.
 
 - **Instant re-lock** — switches the active input source back the moment you (or
   another app) change it, globally or per-app.
+- **Conflict-aware** — if another program keeps re-asserting its own input
+  source (say, a game with built-in IME management), LockIME notices the
+  tug-of-war and briefly stands down instead of flip-flopping forever,
+  recording *Conflict detected* in the activation log; give such an app its
+  own *Ignore* or *Switch to* rule for a lasting fix.
 - **Lock or switch** — per-app and per-URL rules can *lock* an input source
   (re-applied whenever it drifts) or just *switch* to it once when you focus the
   app or page, then step out of the way and let you change it freely.

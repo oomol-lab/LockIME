@@ -176,7 +176,7 @@ Query commands return a JSON payload through the `x-success` callback (see
 | `list-sources` *(alias `sources`)* | Array of installed sources: `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Array of `{ "bundleID", "mode", "source"? }`. |
 | `list-url-rules` *(alias `url-rules`)* | Array of `{ "id", "host", "action", "matchType", "source" }`, in priority order (first match wins). |
-| `list-log` *(aliases `log`, `recent-activations`)* | The last 24 h of forced-switch entries, newest first: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
+| `list-log` *(aliases `log`, `recent-activations`)* | The last 24 h of forced-switch entries, newest first: `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. Rows with `"reason": "conflictPaused"` are diagnostic (enforcement paused after a tug-of-war with another IME manager) — no switch was performed and `durationMs` is `0`. |
 | `get-config` *(alias `config`)* | The full persisted configuration object. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }` — a cheap presence/version probe. |

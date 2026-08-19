@@ -169,7 +169,7 @@ LockIME 刻意**不提供任何開啟其 UI 的指令**（Settings、About、更
 | `list-sources` *(alias `sources`)* | 已安裝輸入法的陣列：`{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`。 |
 | `list-app-rules` *(alias `app-rules`)* | `{ "bundleID", "mode", "source"? }` 的陣列。 |
 | `list-url-rules` *(alias `url-rules`)* | `{ "id", "host", "action", "matchType", "source" }` 的陣列，依優先序排列（第一個比對到的勝出）。 |
-| `list-log` *(aliases `log`, `recent-activations`)* | 過去 24 小時的強制切換條目，最新的在前：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。 |
+| `list-log` *(aliases `log`, `recent-activations`)* | 過去 24 小時的強制切換條目，最新的在前：`{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`。其中 `"reason": "conflictPaused"` 的行是診斷記錄（與其他輸入法管理者拉鋸後暫停執行）——未發生任何切換，`durationMs` 為 `0`。 |
 | `get-config` *(alias `config`)* | 完整的持久化設定物件。 |
 | `version` | `{ "version": "x.y.z", "build": "n" }`。 |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }`——一個低成本的存在/版本探測。 |

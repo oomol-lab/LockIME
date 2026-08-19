@@ -174,7 +174,7 @@ Les commandes de requête retournent une charge utile JSON via le rappel `x-succ
 | `list-sources` *(alias `sources`)* | Tableau des sources installées : `{ "id", "name", "isCJKV", "isEnabled", "isSelectCapable" }`. |
 | `list-app-rules` *(alias `app-rules`)* | Tableau de `{ "bundleID", "mode", "source"? }`. |
 | `list-url-rules` *(alias `url-rules`)* | Tableau de `{ "id", "host", "action", "matchType", "source" }`, par ordre de priorité (la première correspondance l'emporte). |
-| `list-log` *(aliases `log`, `recent-activations`)* | Les 24 dernières heures d'entrées de basculement forcé, du plus récent au plus ancien : `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. |
+| `list-log` *(aliases `log`, `recent-activations`)* | Les 24 dernières heures d'entrées de basculement forcé, du plus récent au plus ancien : `{ "timestamp", "inputSource", "inputSourceName", "reason", "durationMs", "fromSourceName"?, "app"?, "bundleID"?, "ruleSource"?, "matchedHost"? }`. Les lignes avec `"reason": "conflictPaused"` sont diagnostiques (application suspendue après un bras de fer avec un autre gestionnaire d'IME) — aucun basculement n'a été effectué et `durationMs` vaut `0`. |
 | `get-config` *(alias `config`)* | L'objet de configuration persistée complet. |
 | `version` | `{ "version": "x.y.z", "build": "n" }`. |
 | `ping` | `{ "ok": true, "app": "LockIME", "version": "x.y.z", "build": "n" }` — une sonde de présence/version peu coûteuse. |
