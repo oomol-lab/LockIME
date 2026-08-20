@@ -3,6 +3,26 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.7.0</title>
+            <pubDate>Thu, 20 Aug 2026 02:40:13 +0000</pubDate>
+            <sparkle:version>202608200237</sparkle:version>
+            <sparkle:shortVersionString>1.7.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* feat(rules): give the global default a lock/switch action by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/57
+* ci(deps): bump softprops/action-gh-release from 3 to 3.0.1 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/58
+* ci(deps): bump softprops/action-gh-release from 3.0.1 to 3.0.2 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/59
+* fix(menubar): restore menu icons hidden by macOS 27 by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/60
+* fix(lock): back off when another app manages the input source by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/61
+* feat(rules): match bundle-less processes by synthetic identity by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/62
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.2...v1.7.0
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.0/LockIME-1.7.0-arm64.zip" length="2524980" type="application/octet-stream" sparkle:edSignature="dqlSzvdfq1tpRg4rSlilKAQ1bg4LYS+mfozW/oqRl0CfDp3eNRvnQPnvkwmWf/7a6LNe329pcT5LB8Ua9gsXBQ=="/>
+        </item>
+        <item>
             <title>1.6.3-beta.6</title>
             <pubDate>Wed, 19 Aug 2026 14:33:21 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -17,38 +37,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.3-beta.5...v1.6.3-beta.6
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.3-beta.6/LockIME-1.6.3-beta.6-arm64.zip" length="2525019" type="application/octet-stream" sparkle:edSignature="B2/Nh26j8riQfAHlpOfz43KkEamX4047pRas2c3NvG3N/zduhzYW4Q7TOSLXzv6c3yLYDcQBqj+opPzGAP9YBA=="/>
-        </item>
-        <item>
-            <title>1.6.3-beta.5</title>
-            <pubDate>Wed, 19 Aug 2026 07:41:03 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202608190738</sparkle:version>
-            <sparkle:shortVersionString>1.6.3-beta.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(lock): back off when another app manages the input source by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/61
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.3-beta.4...v1.6.3-beta.5
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.3-beta.5/LockIME-1.6.3-beta.5-arm64.zip" length="2523567" type="application/octet-stream" sparkle:edSignature="QdFJWji/Yb6BEL/SW06H66xAgUa7q+jL3fShLsEi6FaoyYbb2QwMCAheHNBDJUWVNog5lOw65dBoPz1tz6MMDQ=="/>
-        </item>
-        <item>
-            <title>1.6.3-beta.4</title>
-            <pubDate>Tue, 21 Jul 2026 01:43:28 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202607210141</sparkle:version>
-            <sparkle:shortVersionString>1.6.3-beta.4</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(menubar): restore menu icons hidden by macOS 27 by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/60
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.3-beta.3...v1.6.3-beta.4
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.3-beta.4/LockIME-1.6.3-beta.4-arm64.zip" length="2503411" type="application/octet-stream" sparkle:edSignature="A6uFBRtTVH6elugA6VmYt/ha7u2sHTza3MLx3Jp2B/ggps3vSgFVO5iiAAYlRcotRgWL+PbF5Bwuuw1slQmMCQ=="/>
         </item>
         <item>
             <title>1.6.2</title>
@@ -80,22 +68,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.0...v1.6.1
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1/LockIME-1.6.1-arm64.zip" length="2496321" type="application/octet-stream" sparkle:edSignature="3miVuiZBWGUWkVaXaZQqBsxDu0DS8JV5zHjbfYSlUS1WZFSHIwJbn8EjD4IoqVHDqWR4RokmaL1Qf2PhtMvXBg=="/>
-        </item>
-        <item>
-            <title>1.6.0</title>
-            <pubDate>Thu, 02 Jul 2026 06:11:43 +0000</pubDate>
-            <sparkle:version>202607020609</sparkle:version>
-            <sparkle:shortVersionString>1.6.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(menubar): realign tray icon geometry by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/49
-* feat!: collapse the two-level enable model into one master switch by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/50
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.5.1...v1.6.0
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.0/LockIME-1.6.0-arm64.zip" length="2491579" type="application/octet-stream" sparkle:edSignature="lamiJVcmd36IQ2rZEG0FE2jRPnKpN/UpL7YmdV6zQNrwTa5ORzYRmZwK30FkCBNPUF1+6WWBMvN4ipfz/6Z3Ag=="/>
         </item>
         <item>
             <title>1.0.2</title>
