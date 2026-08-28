@@ -87,6 +87,28 @@ public enum InstalledAppsScanner {
             )
         }
 
+        // Launcher overlays are rule targets even when their process is not
+        // running and they live outside the scanned directories. Spotlight is
+        // the case that matters: it was only ever discoverable as a *running*
+        // app (`/System/Library/CoreServices` is not scanned), and macOS 27 no
+        // longer runs it at all — the Siri AI process draws its panel — yet
+        // `com.apple.Spotlight` remains the identity a Spotlight rule keys on
+        // (`LauncherOverlayCatalog`). Resolve each catalog entry through Launch
+        // Services so an installed-but-idle launcher still gets its row.
+        for bundleID in LauncherOverlayCatalog.bundleIDs where !seen.contains(bundleID) {
+            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID),
+                  let bundle = Bundle(url: url)
+            else { continue }
+            seen.insert(bundleID)
+            apps.append(
+                InstalledApp(
+                    bundleID: bundleID,
+                    name: displayName(bundle, fallback: url.lastPathComponent),
+                    path: url.path
+                )
+            )
+        }
+
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 

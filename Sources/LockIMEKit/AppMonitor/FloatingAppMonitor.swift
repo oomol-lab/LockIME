@@ -15,6 +15,18 @@ import Foundation
 /// which focus resolves back to the underlying app. So the whole thing is
 /// event-driven — no polling.
 ///
+/// macOS 27 moved the Spotlight panel into the Siri AI process
+/// (`LauncherOverlayCatalog.siriAI`) and no longer runs `Spotlight` at all, so
+/// that host is observed instead; the same notifications fire from it. Two
+/// differences shape the watched set (issue #63). The dismissed panel is only
+/// destroyed once its fade-out ends (about 0.7 s), while keyboard focus has
+/// already returned to the app behind it — but the panel *resizes* the instant
+/// it starts closing, so `windowResized` re-reads focus without that lag. And
+/// because the host is also a regular app (Siri's chat window),
+/// `applicationDeactivated` re-reads focus when that window loses it, clearing
+/// the attribution so the next panel over another app registers as a change
+/// instead of being de-duplicated away as "still the same process".
+///
 /// **Accessibility-gated.** Without the grant `AXObserverAddNotification` fails
 /// and we observe nothing, leaving the permission-free core unchanged; the
 /// engine calls `refresh()` once the grant is detected to attach for real.
@@ -107,12 +119,19 @@ public final class FloatingAppMonitor: FloatingAppMonitoring {
     }
 
     /// AX notifications worth a re-read: a launcher overlay appearing, taking
-    /// focus, or being torn down.
+    /// focus, or being torn down — plus the two earlier "focus has moved on"
+    /// signals macOS 27's Spotlight host needs (see the type comment): the
+    /// panel resizing as it starts to close, and the host process deactivating
+    /// when its regular window loses focus. Every re-read is de-duplicated
+    /// against `current`, so the extra notifications cost one focused-element
+    /// read each and never a spurious report.
     private static let watchedNotifications: [CFString] = [
         kAXWindowCreatedNotification as CFString,
         kAXFocusedUIElementChangedNotification as CFString,
         kAXMainWindowChangedNotification as CFString,
         kAXUIElementDestroyedNotification as CFString,
+        kAXWindowResizedNotification as CFString,
+        kAXApplicationDeactivatedNotification as CFString,
     ]
 
     private func attach(_ pid: pid_t) {

@@ -66,8 +66,18 @@ public final class LockEngine {
     private var lastLauncherSwitchKey: SwitchKey?
 
     /// The app rules should resolve against right now: the focused launcher
-    /// overlay when one is up, otherwise the `NSWorkspace` frontmost app.
-    private var effectiveBundleID: String? { launcherBundleID ?? frontmostBundleID }
+    /// overlay when one is up, otherwise the `NSWorkspace` frontmost app. The
+    /// launcher is the focused *process*; the identity its rule keys on can
+    /// differ (macOS 27's Siri AI hosting the Spotlight panel resolves the
+    /// Spotlight rule — unless Siri AI is itself frontmost, i.e. its regular
+    /// chat window is up), which `LauncherOverlayCatalog.ruleIdentity` decides.
+    private var effectiveBundleID: String? {
+        guard let launcherBundleID else { return frontmostBundleID }
+        return LauncherOverlayCatalog.ruleIdentity(
+            forLauncher: launcherBundleID,
+            frontmostBundleID: frontmostBundleID
+        )
+    }
 
     public var activationCount: Int { controller.activationCount }
 
@@ -206,6 +216,14 @@ public final class LockEngine {
     /// focus. While it holds focus, rules resolve against *it* rather than the
     /// unchanged frontmost app; `nil` reverts to the frontmost app.
     private func handleLauncherChange(_ bundleID: String?) {
+        // A report that changes nothing is not a transition. The monitor re-reads
+        // focus on more than the open/close events (a launcher's regular window
+        // deactivating, the panel resizing as it closes), and such a re-read can
+        // land *after* the frontmost change already cleared the attribution.
+        // Treating it as a dismissal would reset `addressBarFocused` and drop an
+        // address-bar focus the browser monitor has just reported (and, being
+        // de-duplicated, will not repeat).
+        guard bundleID != launcherBundleID else { return }
         launcherBundleID = bundleID
         // A launcher overlay shadows the browser, so the address bar isn't the
         // keyboard focus any more; clear it and re-arm monitoring against the

@@ -304,6 +304,87 @@ struct LockEngineLauncherTests {
         engine.accessibilityDidChange()
         #expect(provider.current == us) // reverted to foo's default
     }
+
+    // macOS 27 (issue #63): the Cmd-Space panel is drawn by the Siri AI process
+    // (`com.apple.campo`), which is what the focused-element read reports; the
+    // `Spotlight` process never runs. The user's rule is still keyed on
+    // `com.apple.Spotlight`, so the host must resolve *that* rule.
+    @Test("the Siri AI process hosting Spotlight's panel resolves the Spotlight rule")
+    func spotlightHostResolvesSpotlightRule() {
+        let (engine, provider, floating) = makeEngine(current: us, frontmost: "com.foo.App")
+        var reported: [String?] = []
+        engine.onFrontmostChange = { reported.append($0) }
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // foo app → default
+
+        floating.setLauncher(LauncherOverlayCatalog.siriAI)
+        #expect(provider.current == abc) // the Spotlight rule, not a (missing) Siri rule
+        #expect(reported.last == spotlight) // the UI and the log see it as Spotlight
+
+        floating.setLauncher(nil)
+        #expect(provider.current == us) // dismissed → back to foo's default
+        #expect(reported.last == "com.foo.App")
+    }
+
+    @Test("the hosted Spotlight panel does not inherit the underlying app's lock")
+    func spotlightHostDoesNotInheritUnderlyingLock() {
+        let (engine, provider, floating) = makeEngine(current: pinyin, frontmost: "com.cjkv.App")
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: "com.cjkv.App", mode: .locked, lockedSourceID: pinyin)]
+        ))
+        #expect(provider.current == pinyin) // the CJKV app is pinned to pinyin
+
+        floating.setLauncher(LauncherOverlayCatalog.siriAI)
+        #expect(provider.current == us) // no Spotlight rule → global default, NOT pinyin
+
+        floating.setLauncher(nil)
+        #expect(provider.current == pinyin) // dismissed → underlying lock returns
+    }
+
+    // The same process owns Siri's regular chat window, which — unlike the
+    // panel — *does* become frontmost. There it is Siri, not Spotlight: its own
+    // rule applies and the Spotlight rule stays out of it.
+    @Test("a frontmost Siri AI resolves its own rule rather than Spotlight's")
+    func frontmostSiriKeepsOwnRule() {
+        let siri = LauncherOverlayCatalog.siriAI
+        let (engine, provider, floating) = makeEngine(current: us, frontmost: siri)
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [
+                AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc),
+                AppRule(bundleID: siri, mode: .locked, lockedSourceID: pinyin),
+            ]
+        ))
+        #expect(provider.current == pinyin) // frontmost Siri → its own rule
+
+        // Focus inside the chat window is reported by the launcher monitor too
+        // (same process); a frontmost Siri must keep resolving as Siri.
+        floating.setLauncher(siri)
+        #expect(provider.current == pinyin)
+        #expect(!provider.selectCalls.contains(abc)) // the Spotlight rule never fired
+    }
+
+    @Test("a frontmost Siri AI without its own rule takes the default, not the Spotlight rule")
+    func frontmostSiriWithoutRuleTakesDefault() {
+        let siri = LauncherOverlayCatalog.siriAI
+        let (engine, provider, floating) = makeEngine(current: abc, frontmost: siri)
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            defaultSourceID: us,
+            appRules: [AppRule(bundleID: spotlight, mode: .locked, lockedSourceID: abc)]
+        ))
+        #expect(provider.current == us) // no Siri rule → default
+
+        floating.setLauncher(siri)
+        #expect(provider.current == us) // still the default; Spotlight's abc lock stays out
+    }
 }
 
 /// A URL provider that, like the real Accessibility reader, only yields a URL

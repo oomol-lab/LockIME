@@ -282,6 +282,12 @@ hatch for anything the scan can't discover (say, a process that isn't running
 right now), added by typing its bundle identifier — or a `process:<name>`
 identity.
 
+Launcher overlays from `LauncherOverlayCatalog` are offered whenever they are
+installed, even when their process is not running and they live outside the
+scanned directories: Spotlight was only ever discoverable as a *running* app
+(`/System/Library/CoreServices` is not scanned), and macOS 27 no longer runs
+it at all, yet `com.apple.Spotlight` stays the identity a Spotlight rule keys on.
+
 ### 4.6 Toast replacement — DELETE `ToastPresenter`/`ToastView`
 The black capsule is the single most off-brand element (ignores light/dark, accent,
 Reduce Transparency). Replace with:
@@ -306,6 +312,7 @@ Reduce Transparency). Replace with:
 | About icon | 128pt |
 | Glass scope | Update buttons + transient confirmation only |
 | About/Update window host | **Keep `HostedWindowController`** — SwiftUI `Window` scenes opened from an `LSUIElement` menu fall behind other windows (project-verified P11 bug). Give the hosted window Tahoe styling itself. |
+| Spotlight on macOS 27 (issue #63) | The Cmd-Space panel is drawn by the Siri AI process (`com.apple.campo`); `Spotlight` never runs. `FloatingAppMonitor` observes that host, and the engine resolves a focused host that is **not** frontmost as `com.apple.Spotlight` (existing rules, backups and the picker entry keep working), while a *frontmost* host — Siri's regular chat window — keeps its own identity so a Siri rule can coexist. No new rule identity, no polling. |
 
 ## 6. Risks (Xcode 26 / macOS 26)
 

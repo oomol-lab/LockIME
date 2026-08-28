@@ -51,6 +51,33 @@ struct LockEngineAddressBarTests {
         #expect(provider.current == us)                 // blur → back to the default lock
     }
 
+    // The launcher monitor re-reads focus on more than open/close (a launcher's
+    // regular window deactivating, the panel resizing as it closes), and such a
+    // re-read can arrive after the frontmost change already cleared the
+    // attribution. A "no launcher" report when the engine already has none must
+    // be a no-op — otherwise it would reset the address-bar focus the browser
+    // monitor just reported, which is de-duplicated and will not be repeated.
+    @Test("a stale no-launcher report does not drop a focused address bar")
+    func staleLauncherReportKeepsAddressBarFocus() {
+        let provider = MockInputSourceProvider(current: us, sources: [.stub(us.rawValue), .stub(abc.rawValue)])
+        let floating = MockFloatingMonitor()
+        let ab = MockAddressBarMonitor()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: safari),
+            floatingAppMonitor: floating,
+            addressBarMonitor: ab
+        )
+        engine.start()
+        engine.apply(config(action: .lock, source: abc, default: us))
+        ab.setFocused(true)
+        #expect(provider.current == abc)                // address-bar lock applied
+
+        floating.setLauncher(nil)                       // late re-read: still no launcher
+        #expect(provider.current == abc)                // focus attribution survives
+        #expect(provider.selectCalls == [abc])          // and nothing was re-forced
+    }
+
     @Test("switch mode fires once on focus and re-arms after blur")
     func switchModeFiresOnceAndReArms() {
         let (engine, provider, _, ab) = makeEngine(current: us, frontmost: safari)
