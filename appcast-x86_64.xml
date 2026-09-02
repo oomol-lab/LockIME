@@ -3,6 +3,21 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.7.1-beta.2</title>
+            <pubDate>Wed, 02 Sep 2026 01:31:25 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202609020129</sparkle:version>
+            <sparkle:shortVersionString>1.7.1-beta.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* ci(deps): bump softprops/action-gh-release from 3.0.2 to 3.0.3 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/65
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.1-beta.1...v1.7.1-beta.2
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.1-beta.2/LockIME-1.7.1-beta.2-x86_64.zip" length="2648206" type="application/octet-stream" sparkle:edSignature="T0470B5I2eu3jqdXg2WNcnYb0RHpg4lPXJAWQPchtclbyV+IbWt4tkEN9uFPuE6e+oOLCEqdyRyQFKf6xLMdAA=="/>
+        </item>
+        <item>
             <title>1.7.1-beta.1</title>
             <pubDate>Fri, 28 Aug 2026 10:02:35 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
