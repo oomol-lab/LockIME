@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.7.1</title>
+            <pubDate>Fri, 18 Sep 2026 02:59:40 +0000</pubDate>
+            <sparkle:version>202609180257</sparkle:version>
+            <sparkle:shortVersionString>1.7.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* fix(lock): detect Spotlight hosted by Siri AI on macOS 27 by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/64
+* ci(deps): bump softprops/action-gh-release from 3.0.2 to 3.0.3 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/65
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.0...v1.7.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.1/LockIME-1.7.1-arm64.zip" length="2495874" type="application/octet-stream" sparkle:edSignature="QSye0SDC2skMnpD0H6LyaVy5xN5H3kQLElhf0SaEE8OsTWrNJzf+KxTDtAa3GnM8+ojESExvlDRcL76dNq7RCg=="/>
+        </item>
+        <item>
             <title>1.7.1-beta.2</title>
             <pubDate>Wed, 02 Sep 2026 01:31:25 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -17,22 +33,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.1-beta.1...v1.7.1-beta.2
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.1-beta.2/LockIME-1.7.1-beta.2-arm64.zip" length="2525973" type="application/octet-stream" sparkle:edSignature="hiSSPOq0h8RW8AcbhO8ifmYJgukIRtMxGsIy+zcncGQ+NhAsa5AxtCQAy4aV5f7Il6xAmmUXYEUMmP0WmUQGDA=="/>
-        </item>
-        <item>
-            <title>1.7.1-beta.1</title>
-            <pubDate>Fri, 28 Aug 2026 10:02:35 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202608281000</sparkle:version>
-            <sparkle:shortVersionString>1.7.1-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* fix(lock): detect Spotlight hosted by Siri AI on macOS 27 by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/64
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.3-beta.6...v1.7.1-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.1-beta.1/LockIME-1.7.1-beta.1-arm64.zip" length="2525959" type="application/octet-stream" sparkle:edSignature="wqW3aq3xqer01VzI25jzIchjFFcqA9d681UfV0UO1afHQMn991JEJ17hkxQlEX/V37D7eUepu8zqBabhR7s4CA=="/>
         </item>
         <item>
             <title>1.7.0</title>
@@ -55,22 +55,6 @@
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.0/LockIME-1.7.0-arm64.zip" length="2524980" type="application/octet-stream" sparkle:edSignature="dqlSzvdfq1tpRg4rSlilKAQ1bg4LYS+mfozW/oqRl0CfDp3eNRvnQPnvkwmWf/7a6LNe329pcT5LB8Ua9gsXBQ=="/>
         </item>
         <item>
-            <title>1.6.3-beta.6</title>
-            <pubDate>Wed, 19 Aug 2026 14:33:21 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202608191431</sparkle:version>
-            <sparkle:shortVersionString>1.6.3-beta.6</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(rules): match bundle-less processes by synthetic identity by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/62
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.3-beta.5...v1.6.3-beta.6
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.3-beta.6/LockIME-1.6.3-beta.6-arm64.zip" length="2525019" type="application/octet-stream" sparkle:edSignature="B2/Nh26j8riQfAHlpOfz43KkEamX4047pRas2c3NvG3N/zduhzYW4Q7TOSLXzv6c3yLYDcQBqj+opPzGAP9YBA=="/>
-        </item>
-        <item>
             <title>1.6.2</title>
             <pubDate>Mon, 06 Jul 2026 02:58:58 +0000</pubDate>
             <sparkle:version>202607060257</sparkle:version>
@@ -84,22 +68,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.1...v1.6.2
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.2/LockIME-1.6.2-arm64.zip" length="2499162" type="application/octet-stream" sparkle:edSignature="PuFcn1yuCmjl8gFACWfci3Q05hT2uxj8uSUCOwfm3dIjIqe73mrAGj4jPNyI48eMPKVRbVej9TBWZi9DjSLSAQ=="/>
-        </item>
-        <item>
-            <title>1.6.1</title>
-            <pubDate>Fri, 03 Jul 2026 15:02:08 +0000</pubDate>
-            <sparkle:version>202607031500</sparkle:version>
-            <sparkle:shortVersionString>1.6.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* ci(nightly): version betas as the next patch of the latest stable by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/51
-* feat(lock): add secure-input policy for password fields by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/53
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.0...v1.6.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.1/LockIME-1.6.1-arm64.zip" length="2496321" type="application/octet-stream" sparkle:edSignature="3miVuiZBWGUWkVaXaZQqBsxDu0DS8JV5zHjbfYSlUS1WZFSHIwJbn8EjD4IoqVHDqWR4RokmaL1Qf2PhtMvXBg=="/>
         </item>
         <item>
             <title>1.0.2</title>
