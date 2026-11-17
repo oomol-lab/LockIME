@@ -591,6 +591,19 @@ struct LockControllerTests {
         #expect(provider.selectCalls == [us]) // the old rule does not reach into the new app
     }
 
+    @Test("a context that ends from the activation callback still cancels the one-shot")
+    func switchOnceRetryCancelledWhenContextEndsInCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        // The callback runs before the confirmation is armed, so the operation
+        // must already be known as rule-bound for the context end to reach it.
+        controller.onActivation = { _ in controller.oneShotContextDidEnd() }
+        controller.switchOnce(us)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us])
+    }
+
     @Test("an external command's retry survives a rule context ending")
     func commandSwitchRetrySurvivesContextEnd() {
         // A command belongs to no rule, so the engine re-resolving to "nothing

@@ -138,10 +138,12 @@ public final class LockController {
     /// cleared target alone therefore says nothing; the engine reports a rule
     /// context that genuinely ended through `oneShotContextDidEnd`.
     private var oneShotGeneration = 0
-    /// Whether the armed confirmation belongs to a *rule's* one-shot
+    /// Whether the newest one-shot operation belongs to a *rule*
     /// (`switchOnce`) rather than an external command (`commandSwitch`). Only
-    /// the former is tied to the context that fired it.
-    private var pendingOneShotIsRuleBound = false
+    /// the former is tied to the context that fired it. Recorded when the
+    /// operation *begins*, alongside its generation, so a context that ends
+    /// from inside the activation callback still cancels it.
+    private var oneShotIsRuleBound = false
 
     /// Context describing where the current `target` came from, set alongside it
     /// by `setTarget` and attached to every event the target produces (including
@@ -239,6 +241,7 @@ public final class LockController {
     ) {
         oneShotGeneration += 1
         let generation = oneShotGeneration
+        oneShotIsRuleBound = true
         // A one-shot switch never holds the lock: drop any standing target so a
         // later "source changed" notification is a no-op.
         target = nil
@@ -262,17 +265,18 @@ public final class LockController {
         scheduleOneShotConfirmation(id, from: current, ruleBound: true, generation: generation)
     }
 
-    /// The engine resolved to a context that manages nothing — an ignored app,
-    /// or no rule at all — so whatever rule fired a one-shot no longer applies
-    /// (the user moved to another app, or the rule was removed). Its pending
-    /// confirmation must not select the old rule's source in the new context,
-    /// least of all in an app the user told LockIME to leave alone. Clearing
-    /// the target cannot signal this by itself: the engine also clears it on
-    /// every re-resolution of the *same* one-shot rule, which must keep the
-    /// confirmation. An external command's confirmation belongs to no rule
-    /// context and is left armed.
+    /// The engine resolved to something other than the rule that fired the last
+    /// one-shot — a context that manages nothing (an ignored app, no rule at
+    /// all), or a *different* one-shot rule that is not firing because it was
+    /// already consumed (focus returning to an app from a launcher). The rule
+    /// behind the pending confirmation no longer applies, so it must not select
+    /// its source in the new context, least of all in an app the user told
+    /// LockIME to leave alone. Clearing the target cannot signal this by
+    /// itself: the engine also clears it on every re-resolution of the *same*
+    /// one-shot rule, which must keep the confirmation. An external command's
+    /// confirmation belongs to no rule context and is left armed.
     public func oneShotContextDidEnd() {
-        if pendingOneShotIsRuleBound { oneShotGeneration += 1 }
+        if oneShotIsRuleBound { oneShotGeneration += 1 }
     }
 
     /// Perform a **transient** switch for an external command (the
@@ -290,6 +294,7 @@ public final class LockController {
     public func commandSwitch(_ id: InputSourceID) {
         oneShotGeneration += 1
         let generation = oneShotGeneration
+        oneShotIsRuleBound = false
         guard let current = provider.currentSourceID(), current != id else { return }
         let start = uptime()
         let fromName = provider.source(for: current)?.localizedName ?? current.rawValue
@@ -499,7 +504,6 @@ public final class LockController {
         generation: Int
     ) {
         guard generation == oneShotGeneration else { return }
-        pendingOneShotIsRuleBound = ruleBound
         scheduler(Self.suppressionWindow + 0.02) { [weak self] in
             self?.performOneShotConfirmation(
                 id, from: from, ruleBound: ruleBound, generation: generation

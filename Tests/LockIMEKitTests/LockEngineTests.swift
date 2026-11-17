@@ -1138,6 +1138,46 @@ struct LockEngineSecureInputTests {
         #expect(provider.current == us)
     }
 
+    @Test("a launcher's missed one-shot is not retried into the app it returns to")
+    func launcherOneShotNotRetriedIntoConsumedApp() {
+        let pinyin: InputSourceID = "com.apple.inputmethod.SCIM.ITABC"
+        let spotlight = "com.apple.Spotlight"
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let floating = MockFloatingMonitor()
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            floatingAppMonitor: floating,
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [
+                AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: us),
+                AppRule(bundleID: spotlight, mode: .switched, lockedSourceID: pinyin),
+            ]
+        ))
+        #expect(provider.current == us)   // the app's one-shot fired and is consumed
+        while scheduler.fire() {}         // …and confirmed
+
+        provider.selectIsNoOp = true      // the launcher's switch is accepted but misses
+        floating.setLauncher(spotlight)
+        #expect(provider.selectCalls == [us, pinyin])
+        floating.setLauncher(nil)         // dismissed before the confirmation runs
+
+        while scheduler.fire() {}
+        // The app's rule is consumed, so nothing fires for it — and the
+        // launcher's retry must not land in the app either.
+        #expect(provider.selectCalls == [us, pinyin])
+        #expect(provider.current == us)
+    }
+
     @Test("a one-shot that silently missed is not retried after its rule is removed")
     func oneShotNotRetriedAfterRuleRemoved() {
         let provider = MockInputSourceProvider(

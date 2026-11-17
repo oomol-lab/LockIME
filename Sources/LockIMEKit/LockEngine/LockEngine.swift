@@ -64,6 +64,11 @@ public final class LockEngine {
     /// fresh re-entry. (The `.lock`/`.ignore` arms avoid this by simply not
     /// touching `lastSwitchKey` while a launcher is up.)
     private var lastLauncherSwitchKey: SwitchKey?
+    /// The one-shot rule whose switch was fired last, in either slot — the only
+    /// one that can still have a confirmation pending in the controller. A
+    /// resolution to any *other* one-shot rule ends that context even when the
+    /// other rule is deduplicated and fires nothing (see `reevaluate`).
+    private var lastFiredSwitchKey: SwitchKey?
 
     /// The app rules should resolve against right now: the focused launcher
     /// overlay when one is up, otherwise the `NSWorkspace` frontmost app. The
@@ -278,6 +283,13 @@ public final class LockEngine {
             controller.setTarget(nil)
             let context = ruleSource == .urlRule ? urlMatch?.pattern : effectiveBundleID
             let key = SwitchKey(ruleSource: ruleSource, context: context, sourceID: id)
+            // Resolving to a one-shot rule other than the one fired last ends
+            // that rule's context. If this rule fires, its own switch supersedes
+            // the pending confirmation anyway; the case that needs saying is a
+            // *consumed* rule (focus returning to an app from a launcher), which
+            // fires nothing and would otherwise let the launcher's retry land in
+            // the app. A re-resolution of the same rule keeps the confirmation.
+            if key != lastFiredSwitchKey { controller.oneShotContextDidEnd() }
             // Dedup against the launcher slot during an excursion, the frontmost
             // slot otherwise — so a launcher's own `.switched` rule firing while it
             // shadows the app never overwrites the app's memory and re-yanks the
@@ -332,6 +344,7 @@ public final class LockEngine {
                 matchedHost: ruleSource == .urlRule ? context : nil
             )
             slot = key
+            lastFiredSwitchKey = key
         }
     }
 
