@@ -1,18 +1,18 @@
 import AppKit
 import Foundation
 
-/// Best-effort nudge to make a background `TISSelectInputSource` for a CJKV
-/// source take effect. Invoked by `TISInputSourceProvider.select` only after a
-/// read-back shows the active source did not flip — never on a switch that
-/// already took.
+/// Last-resort nudge for the **fallback** path of `TISInputSourceProvider.select`:
+/// the key-focus selection (`KeyFocusInputSourceSelector`) was unavailable, the
+/// public `TISSelectInputSource` returned `noErr`, and a read-back shows the
+/// active source still did not flip. Never invoked for a switch that took.
 ///
 /// Note: this used to re-activate the previously-frontmost app after the nudge.
 /// That `activate()` made the window server re-take the cursor environment on
 /// *every* CJKV switch, which leaves the mouse pointer stuck as an arrow in
 /// Chromium/Electron apps until the next mouse move (issue #1), so it was
 /// removed. The borderless window below cannot become key, so this is a weak
-/// fallback; if real per-app input-method context misses surface, replace it
-/// with a key-capable text-input window (macism-style).
+/// fallback. The real fix for input methods that end up half-switched is the
+/// key-focus selection (issue #69), not a stronger focus dance here.
 @MainActor
 enum FocusNudge {
     static func perform() {

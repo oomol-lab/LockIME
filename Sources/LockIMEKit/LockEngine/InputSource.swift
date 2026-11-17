@@ -8,7 +8,8 @@ public struct InputSource: Hashable, Sendable, Identifiable {
     public let isSelectCapable: Bool
     public let isEnabled: Bool
     /// Whether this is a Chinese/Japanese/Korean/Vietnamese input *method*,
-    /// which needs the focus-stealing workaround to switch reliably.
+    /// which is selected through the app that owns keyboard focus to switch
+    /// reliably.
     public let isCJKV: Bool
 
     public init(
