@@ -3,6 +3,22 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.7.2</title>
+            <pubDate>Tue, 17 Nov 2026 14:46:28 +0000</pubDate>
+            <sparkle:version>202611171444</sparkle:version>
+            <sparkle:shortVersionString>1.7.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* ci(deps): bump softprops/action-gh-release from 3.0.3 to 3.0.4 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/68
+* fix(lock): select input methods in the key-focus app by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/70
+* docs(readme): add Greptile open source badge ([`1b5e426`](https://github.com/oomol-lab/LockIME/commit/1b5e426c4a0053fb39f8c92357d818cb7af038f2))
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.1...v1.7.2
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.2/LockIME-1.7.2-arm64.zip" length="2509010" type="application/octet-stream" sparkle:edSignature="3XYEsvYxJuLOWMSi0CWmx2hOIRQoMLDsExJwnmFDKw/Bk5xwhPSjCKqC9trX8r3XoMdGactKyETnPt8B2fo0Bw=="/>
+        </item>
+        <item>
             <title>1.7.2-beta.3</title>
             <pubDate>Tue, 17 Nov 2026 14:33:05 +0000</pubDate>
             <sparkle:channel>beta</sparkle:channel>
@@ -17,37 +33,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.2-beta.2...v1.7.2-beta.3
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.2-beta.3/LockIME-1.7.2-beta.3-arm64.zip" length="2508985" type="application/octet-stream" sparkle:edSignature="Y9JzsKOsmMwudI1riTeZjJRHpZadWLqUhxAu+1efw4eGvbv9Z/x/Muk8mQXWDkMPct9UN+Z8dPdLV4mL8qAPDQ=="/>
-        </item>
-        <item>
-            <title>1.7.2-beta.2</title>
-            <pubDate>Tue, 17 Nov 2026 01:18:46 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202611170116</sparkle:version>
-            <sparkle:shortVersionString>1.7.2-beta.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* docs(readme): add Greptile open source badge ([`1b5e426`](https://github.com/oomol-lab/LockIME/commit/1b5e426c4a0053fb39f8c92357d818cb7af038f2))
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.2-beta.1...v1.7.2-beta.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.2-beta.2/LockIME-1.7.2-beta.2-arm64.zip" length="2504499" type="application/octet-stream" sparkle:edSignature="1pXHZlsoUV1WW9bEGc+X/3lpAW+b6H/EzDwjJA9nWRCVDoP+VgXr6GkKxrVKNSBps70OKDoHI7weHoeTOYVOBg=="/>
-        </item>
-        <item>
-            <title>1.7.2-beta.1</title>
-            <pubDate>Tue, 10 Nov 2026 01:14:35 +0000</pubDate>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:version>202611100112</sparkle:version>
-            <sparkle:shortVersionString>1.7.2-beta.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* ci(deps): bump softprops/action-gh-release from 3.0.3 to 3.0.4 in the github-actions group by @dependabot[bot] in https://github.com/oomol-lab/LockIME/pull/68
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.1...v1.7.2-beta.1
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.2-beta.1/LockIME-1.7.2-beta.1-arm64.zip" length="2504510" type="application/octet-stream" sparkle:edSignature="jlyjsMs20Xj8nhIKiMcwkmURDlm8No75XfGJhA2Rabr8v3pzpZOHu/iW/cFzhVJzo6mTqKvVk2/NGVj6ZMtDCg=="/>
         </item>
         <item>
             <title>1.7.1</title>
@@ -84,21 +69,6 @@
 **Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.2...v1.7.0
 ]]></description>
             <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.0/LockIME-1.7.0-arm64.zip" length="2524980" type="application/octet-stream" sparkle:edSignature="dqlSzvdfq1tpRg4rSlilKAQ1bg4LYS+mfozW/oqRl0CfDp3eNRvnQPnvkwmWf/7a6LNe329pcT5LB8Ua9gsXBQ=="/>
-        </item>
-        <item>
-            <title>1.6.2</title>
-            <pubDate>Mon, 06 Jul 2026 02:58:58 +0000</pubDate>
-            <sparkle:version>202607060257</sparkle:version>
-            <sparkle:shortVersionString>1.6.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[## What's Changed
-* feat(rules): add default behavior for new app rules by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/55
-
-
-**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.6.1...v1.6.2
-]]></description>
-            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.6.2/LockIME-1.6.2-arm64.zip" length="2499162" type="application/octet-stream" sparkle:edSignature="PuFcn1yuCmjl8gFACWfci3Q05hT2uxj8uSUCOwfm3dIjIqe73mrAGj4jPNyI48eMPKVRbVej9TBWZi9DjSLSAQ=="/>
         </item>
         <item>
             <title>1.0.2</title>
