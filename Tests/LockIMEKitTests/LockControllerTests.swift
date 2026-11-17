@@ -578,6 +578,33 @@ struct LockControllerTests {
         #expect(provider.selectCalls == [us, us])
     }
 
+    @Test("a rule's one-shot retry is cancelled when its context ends")
+    func switchOnceRetryCancelledWhenContextEnds() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us, bundleID: "com.rule.App")
+        // The user moves to an ignored app before the confirmation fires.
+        controller.setTarget(nil)
+        controller.oneShotContextDidEnd()
+        scheduler.fire()
+        #expect(provider.selectCalls == [us]) // the old rule does not reach into the new app
+    }
+
+    @Test("an external command's retry survives a rule context ending")
+    func commandSwitchRetrySurvivesContextEnd() {
+        // A command belongs to no rule, so the engine re-resolving to "nothing
+        // managed here" (its normal state without rules) must not cancel it.
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: us, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.commandSwitch(abc)
+        controller.setTarget(nil)
+        controller.oneShotContextDidEnd()
+        scheduler.fire()
+        #expect(provider.selectCalls == [abc, abc])
+    }
+
     @Test("turning the master switch off cancels a pending one-shot retry")
     func switchOnceRetryCancelledByDisable() {
         let scheduler = FakeScheduler()

@@ -134,8 +134,14 @@ public final class LockController {
     /// Deliberately *not* bumped by calls that carry no new intent, because
     /// the engine makes them around every one-shot: `apply` enables right
     /// after re-resolving (which is what fired the one-shot), and each
-    /// re-resolution of a one-shot rule first clears the standing target.
+    /// re-resolution of a one-shot rule first clears the standing target. A
+    /// cleared target alone therefore says nothing; the engine reports a rule
+    /// context that genuinely ended through `oneShotContextDidEnd`.
     private var oneShotGeneration = 0
+    /// Whether the armed confirmation belongs to a *rule's* one-shot
+    /// (`switchOnce`) rather than an external command (`commandSwitch`). Only
+    /// the former is tied to the context that fired it.
+    private var pendingOneShotIsRuleBound = false
 
     /// Context describing where the current `target` came from, set alongside it
     /// by `setTarget` and attached to every event the target produces (including
@@ -253,7 +259,20 @@ public final class LockController {
         guard force(id, reason: reason, from: current) else { return }
         // No standing target means no trailing reconcile, so confirm the
         // one-shot on its own.
-        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: true, generation: generation)
+        scheduleOneShotConfirmation(id, from: current, ruleBound: true, generation: generation)
+    }
+
+    /// The engine resolved to a context that manages nothing — an ignored app,
+    /// or no rule at all — so whatever rule fired a one-shot no longer applies
+    /// (the user moved to another app, or the rule was removed). Its pending
+    /// confirmation must not select the old rule's source in the new context,
+    /// least of all in an app the user told LockIME to leave alone. Clearing
+    /// the target cannot signal this by itself: the engine also clears it on
+    /// every re-resolution of the *same* one-shot rule, which must keep the
+    /// confirmation. An external command's confirmation belongs to no rule
+    /// context and is left armed.
+    public func oneShotContextDidEnd() {
+        if pendingOneShotIsRuleBound { oneShotGeneration += 1 }
     }
 
     /// Perform a **transient** switch for an external command (the
@@ -294,7 +313,7 @@ public final class LockController {
         )
         // A command switch arms no reconcile either. An explicit external
         // command is not gated on secure input, and neither is its retry.
-        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: false, generation: generation)
+        scheduleOneShotConfirmation(id, from: current, ruleBound: false, generation: generation)
     }
 
     /// Call when the system posts a "selected input source changed" notification.
@@ -476,13 +495,14 @@ public final class LockController {
     private func scheduleOneShotConfirmation(
         _ id: InputSourceID,
         from: InputSourceID,
-        respectsSecureInput: Bool,
+        ruleBound: Bool,
         generation: Int
     ) {
         guard generation == oneShotGeneration else { return }
+        pendingOneShotIsRuleBound = ruleBound
         scheduler(Self.suppressionWindow + 0.02) { [weak self] in
             self?.performOneShotConfirmation(
-                id, from: from, respectsSecureInput: respectsSecureInput, generation: generation
+                id, from: from, ruleBound: ruleBound, generation: generation
             )
         }
     }
@@ -497,11 +517,13 @@ public final class LockController {
     private func performOneShotConfirmation(
         _ id: InputSourceID,
         from: InputSourceID,
-        respectsSecureInput: Bool,
+        ruleBound: Bool,
         generation: Int
     ) {
         guard generation == oneShotGeneration else { return }
-        if respectsSecureInput, !revertsInSecureInput, isSecureInputEnabled() { return }
+        // A rule's autonomous one-shot honors secure input like the lock does;
+        // an explicit external command is never gated, and neither is its retry.
+        if ruleBound, !revertsInSecureInput, isSecureInputEnabled() { return }
         guard provider.currentSourceID() == from else { return }
         provider.select(id)
     }

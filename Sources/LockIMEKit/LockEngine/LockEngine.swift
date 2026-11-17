@@ -289,6 +289,9 @@ public final class LockEngine {
             }
         case .ignore, .noTarget:
             controller.setTarget(nil)
+            // Nothing is managed here, so a one-shot fired by the rule we just
+            // left must not be retried into this context.
+            controller.oneShotContextDidEnd()
             // Re-arm only on a genuine state, never on a launcher excursion: a
             // Spotlight/Raycast overlay (handleLauncherChange sets launcherBundleID
             // before this runs) over an already-switched app resolves here, and

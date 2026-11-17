@@ -1105,6 +1105,65 @@ struct LockEngineSecureInputTests {
         #expect(provider.current == us)
     }
 
+    @Test("a one-shot that silently missed is not retried into an ignored app")
+    func oneShotNotRetriedIntoIgnoredApp() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.switch.App")
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: monitor,
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        provider.selectIsNoOp = true // accepted, but the source never flips
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [
+                AppRule(bundleID: "com.switch.App", mode: .switched, lockedSourceID: abc),
+                AppRule(bundleID: "com.ignored.App", mode: .ignored),
+            ]
+        ))
+        #expect(provider.selectCalls == [abc]) // the one-shot fired for the switch app
+
+        monitor.activate("com.ignored.App")    // before the confirmation runs
+        while scheduler.fire() {}
+        // LockIME was told to leave this app alone: no late switch from the rule
+        // the user just left.
+        #expect(provider.selectCalls == [abc])
+        #expect(provider.current == us)
+    }
+
+    @Test("a one-shot that silently missed is not retried after its rule is removed")
+    func oneShotNotRetriedAfterRuleRemoved() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.switch.App"),
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        provider.selectIsNoOp = true
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [AppRule(bundleID: "com.switch.App", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.selectCalls == [abc])
+
+        engine.apply(LockConfiguration(isEnabled: true)) // the rule is gone
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [abc])
+    }
+
     @Test("apply keeps the confirmation of the one-shot it just fired")
     func applyKeepsOneShotConfirmation() {
         let provider = MockInputSourceProvider(
