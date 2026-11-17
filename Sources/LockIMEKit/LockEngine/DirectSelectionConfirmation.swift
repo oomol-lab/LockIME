@@ -7,7 +7,8 @@ import Foundation
 /// prove the source actually changed. So a successful direct selection stays
 /// *unconfirmed* until the system reports that source as current. If the lock
 /// asks for the same source again while it is still unconfirmed — its trailing
-/// reconcile found the switch did not take — the retry skips the private path
+/// reconcile, or the one-shot confirmation for a switch with no standing
+/// target, found the switch did not take — the retry skips the private path
 /// and uses the public `TISSelectInputSource`, exactly as before the private
 /// path existed.
 ///
