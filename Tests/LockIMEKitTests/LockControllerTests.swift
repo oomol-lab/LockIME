@@ -563,6 +563,60 @@ struct LockControllerTests {
         #expect(provider.selectCalls == [us]) // never fights the lock for `us`
     }
 
+    @Test("enabling right after a one-shot keeps its confirmation (the engine's apply order)")
+    func switchOnceRetrySurvivesEnable() {
+        // `LockEngine.apply` re-resolves first — clearing the target and firing
+        // the one-shot — and only then enables. Neither bracket is a new intent.
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: false, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.setTarget(nil)
+        controller.switchOnce(us)
+        controller.setEnabled(true)
+        controller.setTarget(nil)            // a later re-resolution of the same rule
+        scheduler.fire()
+        #expect(provider.selectCalls == [us, us])
+    }
+
+    @Test("turning the master switch off cancels a pending one-shot retry")
+    func switchOnceRetryCancelledByDisable() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us)
+        controller.setEnabled(false)
+        scheduler.fire()
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a newer command issued from the activation callback still supersedes the one-shot")
+    func switchOnceRetrySupersededFromActivationCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        // The callback runs before the one-shot arms its confirmation. A newer
+        // command in there must not be outlived by the operation it replaced.
+        controller.onActivation = { [abc] event in
+            if event.inputSource != abc { controller.commandSwitch(abc) } // stay on abc
+        }
+        controller.switchOnce(us)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a newer command issued from the activation callback supersedes a commandSwitch")
+    func commandSwitchRetrySupersededFromActivationCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: us, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.onActivation = { [us] event in
+            if event.inputSource != us { controller.switchOnce(us) } // stay on us
+        }
+        controller.commandSwitch(abc)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [abc])
+    }
+
     @Test("default policy: a one-shot retry stands down if secure input turned on meanwhile")
     func switchOnceRetryRespectsSecureInput() {
         let scheduler = FakeScheduler()

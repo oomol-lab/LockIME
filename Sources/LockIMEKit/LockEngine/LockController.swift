@@ -125,9 +125,16 @@ public final class LockController {
     private var conflictExpiryGeneration = 0
 
     /// Invalidates an in-flight one-shot confirmation (see
-    /// `scheduleOneShotConfirmation`): bumped by every newer command and by
-    /// every observed source change, so only an untouched, silently-failed
-    /// one-shot switch is ever retried.
+    /// `scheduleOneShotConfirmation`). Bumped by whatever supersedes the
+    /// one-shot's intent — a newer one-shot or command, a lock taking over the
+    /// source (a non-nil target, an enforcing force), the master switch turning
+    /// off, and every observed source change — so only an untouched,
+    /// silently-failed one-shot switch is ever retried.
+    ///
+    /// Deliberately *not* bumped by calls that carry no new intent, because
+    /// the engine makes them around every one-shot: `apply` enables right
+    /// after re-resolving (which is what fired the one-shot), and each
+    /// re-resolution of a one-shot rule first clears the standing target.
     private var oneShotGeneration = 0
 
     /// Context describing where the current `target` came from, set alongside it
@@ -163,7 +170,7 @@ public final class LockController {
     /// while still disabled and this is what actually enforces on enable.
     public func setEnabled(_ on: Bool, reason: ActivationReason = .lockEngaged) {
         isEnabled = on
-        oneShotGeneration += 1
+        if !on { oneShotGeneration += 1 }
         // Flipping the master switch is a deliberate (re-)engagement: forget any
         // conflict pause and give enforcement one fresh try.
         clearConflictState()
@@ -190,7 +197,7 @@ public final class LockController {
         matchedHost: String? = nil
     ) {
         let changed = id != target
-        oneShotGeneration += 1
+        if id != nil { oneShotGeneration += 1 }
         // The conflict detector is scoped to one (target, app) enforcement
         // context: a new target *or* a new frontmost app is a fresh fight, so an
         // opponent met in one app (a game managing the IME itself) must not keep
@@ -225,6 +232,7 @@ public final class LockController {
         matchedHost: String? = nil
     ) {
         oneShotGeneration += 1
+        let generation = oneShotGeneration
         // A one-shot switch never holds the lock: drop any standing target so a
         // later "source changed" notification is a no-op.
         target = nil
@@ -245,7 +253,7 @@ public final class LockController {
         guard force(id, reason: reason, from: current) else { return }
         // No standing target means no trailing reconcile, so confirm the
         // one-shot on its own.
-        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: true)
+        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: true, generation: generation)
     }
 
     /// Perform a **transient** switch for an external command (the
@@ -262,6 +270,7 @@ public final class LockController {
     /// the moment it takes effect, even if a lock then reverts it.
     public func commandSwitch(_ id: InputSourceID) {
         oneShotGeneration += 1
+        let generation = oneShotGeneration
         guard let current = provider.currentSourceID(), current != id else { return }
         let start = uptime()
         let fromName = provider.source(for: current)?.localizedName ?? current.rawValue
@@ -285,7 +294,7 @@ public final class LockController {
         )
         // A command switch arms no reconcile either. An explicit external
         // command is not gated on secure input, and neither is its retry.
-        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: false)
+        scheduleOneShotConfirmation(id, from: current, respectsSecureInput: false, generation: generation)
     }
 
     /// Call when the system posts a "selected input source changed" notification.
@@ -333,6 +342,7 @@ public final class LockController {
             enterConflictBackoff()
             return
         }
+        oneShotGeneration += 1 // the lock is taking the source: no one-shot retry
         force(target, reason: reason, from: current)
     }
 
@@ -457,13 +467,19 @@ public final class LockController {
     /// by the focused app before the system reports the source, and a flaky
     /// CJKV select can return success without flipping anything. Without this
     /// the old source would simply stay active behind a logged switch.
+    ///
+    /// `generation` is the one the operation captured when it *began*, before
+    /// the select and the activation callback. If either moved it on — the
+    /// callback issued a newer command, say — nothing is armed: handing the
+    /// older operation a fresh generation here would let it outlive the intent
+    /// that replaced it.
     private func scheduleOneShotConfirmation(
         _ id: InputSourceID,
         from: InputSourceID,
-        respectsSecureInput: Bool
+        respectsSecureInput: Bool,
+        generation: Int
     ) {
-        oneShotGeneration += 1
-        let generation = oneShotGeneration
+        guard generation == oneShotGeneration else { return }
         scheduler(Self.suppressionWindow + 0.02) { [weak self] in
             self?.performOneShotConfirmation(
                 id, from: from, respectsSecureInput: respectsSecureInput, generation: generation
@@ -471,9 +487,9 @@ public final class LockController {
         }
     }
 
-    /// Retry the one-shot **once**, and only if nothing has happened since: no
-    /// newer command, no observed source change (both bump the generation),
-    /// and the source still sits exactly where the switch left from. That
+    /// Retry the one-shot **once**, and only if nothing has superseded it (see
+    /// `oneShotGeneration`) and the source still sits exactly where the switch
+    /// left from. That
     /// keeps it from ever turning into a standing lock or yanking a user who
     /// switched away again. The retry is not logged or counted — the switch
     /// already was — and goes back through `select`, where the provider uses
@@ -514,7 +530,6 @@ public final class LockController {
 
     @discardableResult
     private func force(_ id: InputSourceID, reason: ActivationReason, from: InputSourceID?) -> Bool {
-        oneShotGeneration += 1
         let start = uptime()
         // Resolve the source we're leaving *before* the switch takes effect.
         let fromName = from.flatMap { provider.source(for: $0)?.localizedName ?? $0.rawValue }

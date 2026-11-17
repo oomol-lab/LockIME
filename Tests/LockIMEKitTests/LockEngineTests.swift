@@ -1104,4 +1104,30 @@ struct LockEngineSecureInputTests {
         #expect(provider.selectCalls == [us])
         #expect(provider.current == us)
     }
+
+    @Test("apply keeps the confirmation of the one-shot it just fired")
+    func applyKeepsOneShotConfirmation() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        provider.selectIsNoOp = true // accepted, but the source never flips
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+
+        let config = LockConfiguration(isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce)
+        engine.apply(config)            // re-resolve (fires the one-shot), then enable
+        #expect(provider.selectCalls == [us])
+        engine.apply(config)            // an unrelated commit: same rule, no new one-shot
+        #expect(provider.selectCalls == [us])
+
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us, us]) // the silent miss was still retried once
+    }
 }
