@@ -8,8 +8,9 @@ public enum InputSourceClassifier {
     ]
 
     /// Whether an input source's `kTISPropertyInputSourceLanguages` indicates a
-    /// CJKV input method (these can ignore a background switch and may need the
-    /// `FocusNudge` workaround).
+    /// CJKV input method. A background `TISSelectInputSource` is unreliable
+    /// for these, so they are selected through the app that owns keyboard
+    /// focus (`KeyFocusInputSourceSelector`).
     public static func isCJKV(languages: [String]) -> Bool {
         languages.contains { language in
             let primary = language.split(separator: "-").first.map(String.init) ?? language

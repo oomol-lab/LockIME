@@ -1104,4 +1104,129 @@ struct LockEngineSecureInputTests {
         #expect(provider.selectCalls == [us])
         #expect(provider.current == us)
     }
+
+    @Test("a one-shot that silently missed is not retried into an ignored app")
+    func oneShotNotRetriedIntoIgnoredApp() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let monitor = MockFrontmostMonitor(bundleID: "com.switch.App")
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: monitor,
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        provider.selectIsNoOp = true // accepted, but the source never flips
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [
+                AppRule(bundleID: "com.switch.App", mode: .switched, lockedSourceID: abc),
+                AppRule(bundleID: "com.ignored.App", mode: .ignored),
+            ]
+        ))
+        #expect(provider.selectCalls == [abc]) // the one-shot fired for the switch app
+
+        monitor.activate("com.ignored.App")    // before the confirmation runs
+        while scheduler.fire() {}
+        // LockIME was told to leave this app alone: no late switch from the rule
+        // the user just left.
+        #expect(provider.selectCalls == [abc])
+        #expect(provider.current == us)
+    }
+
+    @Test("a launcher's missed one-shot is not retried into the app it returns to")
+    func launcherOneShotNotRetriedIntoConsumedApp() {
+        let pinyin: InputSourceID = "com.apple.inputmethod.SCIM.ITABC"
+        let spotlight = "com.apple.Spotlight"
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue), .stub(pinyin.rawValue, cjkv: true)]
+        )
+        let floating = MockFloatingMonitor()
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            floatingAppMonitor: floating,
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [
+                AppRule(bundleID: "com.foo.App", mode: .switched, lockedSourceID: us),
+                AppRule(bundleID: spotlight, mode: .switched, lockedSourceID: pinyin),
+            ]
+        ))
+        #expect(provider.current == us)   // the app's one-shot fired and is consumed
+        while scheduler.fire() {}         // …and confirmed
+
+        provider.selectIsNoOp = true      // the launcher's switch is accepted but misses
+        floating.setLauncher(spotlight)
+        #expect(provider.selectCalls == [us, pinyin])
+        floating.setLauncher(nil)         // dismissed before the confirmation runs
+
+        while scheduler.fire() {}
+        // The app's rule is consumed, so nothing fires for it — and the
+        // launcher's retry must not land in the app either.
+        #expect(provider.selectCalls == [us, pinyin])
+        #expect(provider.current == us)
+    }
+
+    @Test("a one-shot that silently missed is not retried after its rule is removed")
+    func oneShotNotRetriedAfterRuleRemoved() {
+        let provider = MockInputSourceProvider(
+            current: us,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.switch.App"),
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+        provider.selectIsNoOp = true
+        engine.apply(LockConfiguration(
+            isEnabled: true,
+            appRules: [AppRule(bundleID: "com.switch.App", mode: .switched, lockedSourceID: abc)]
+        ))
+        #expect(provider.selectCalls == [abc])
+
+        engine.apply(LockConfiguration(isEnabled: true)) // the rule is gone
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [abc])
+    }
+
+    @Test("apply keeps the confirmation of the one-shot it just fired")
+    func applyKeepsOneShotConfirmation() {
+        let provider = MockInputSourceProvider(
+            current: abc,
+            sources: [.stub(us.rawValue), .stub(abc.rawValue)]
+        )
+        provider.selectIsNoOp = true // accepted, but the source never flips
+        let scheduler = FakeScheduler()
+        let engine = LockEngine(
+            provider: provider,
+            appMonitor: MockFrontmostMonitor(bundleID: "com.foo.App"),
+            isSecureInputEnabled: { false },
+            scheduler: scheduler.schedule
+        )
+        engine.start()
+
+        let config = LockConfiguration(isEnabled: true, defaultSourceID: us, defaultAction: .switchOnce)
+        engine.apply(config)            // re-resolve (fires the one-shot), then enable
+        #expect(provider.selectCalls == [us])
+        engine.apply(config)            // an unrelated commit: same rule, no new one-shot
+        #expect(provider.selectCalls == [us])
+
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us, us]) // the silent miss was still retried once
+    }
 }

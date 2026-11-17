@@ -492,6 +492,217 @@ struct LockControllerTests {
         #expect(controller.activationCount == 0)
     }
 
+    // MARK: - One-shot confirmation
+
+    @Test("a switchOnce that silently did not take is retried exactly once")
+    func switchOnceRetriedWhenItDidNotTake() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        provider.selectIsNoOp = true // accepted, but the source never flips
+
+        controller.switchOnce(us)
+        #expect(provider.selectCalls == [us])
+        #expect(scheduler.pendingCount == 1)
+        // Armed just past the suppression window, like the lock's reconcile.
+        #expect((scheduler.scheduledDelays.last ?? 0) > LockController.suppressionWindow)
+
+        scheduler.fire()
+        #expect(provider.selectCalls == [us, us]) // one retry
+        #expect(scheduler.pendingCount == 0)      // bounded: the retry arms nothing
+        #expect(controller.target == nil)         // still no standing lock
+        #expect(events.count == 1)                // the retry is not logged again
+        #expect(controller.activationCount == 1)
+    }
+
+    @Test("a switchOnce that took is not retried")
+    func switchOnceNotRetriedWhenItTook() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        controller.switchOnce(us)
+        #expect(provider.current == us)
+        scheduler.fire()
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a source change after the one-shot cancels its retry")
+    func switchOnceRetryCancelledBySourceChange() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        controller.switchOnce(us)            // took
+        // The user switches straight back to where the one-shot left from. The
+        // source now equals `from` again, but that is their choice, not a
+        // switch that failed — retrying would yank them a second time.
+        provider.current = abc
+        controller.selectedSourceDidChange()
+        scheduler.fire()
+        #expect(provider.selectCalls == [us])
+        #expect(provider.current == abc)
+    }
+
+    @Test("a newer command supersedes a pending one-shot retry")
+    func switchOnceRetrySupersededByNewerCommand() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us)            // did not take, retry pending
+        controller.switchOnce(abc)           // newer intent: stay on abc (a no-op)
+        scheduler.fire()
+        #expect(provider.selectCalls == [us]) // the stale one-shot is not retried
+    }
+
+    @Test("installing a lock target supersedes a pending one-shot retry")
+    func switchOnceRetrySupersededByLockTarget() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us)            // did not take, retry pending
+        controller.setTarget(abc)            // a lock rule now owns the source
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us]) // never fights the lock for `us`
+    }
+
+    @Test("enabling right after a one-shot keeps its confirmation (the engine's apply order)")
+    func switchOnceRetrySurvivesEnable() {
+        // `LockEngine.apply` re-resolves first — clearing the target and firing
+        // the one-shot — and only then enables. Neither bracket is a new intent.
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: false, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.setTarget(nil)
+        controller.switchOnce(us)
+        controller.setEnabled(true)
+        controller.setTarget(nil)            // a later re-resolution of the same rule
+        scheduler.fire()
+        #expect(provider.selectCalls == [us, us])
+    }
+
+    @Test("a rule's one-shot retry is cancelled when its context ends")
+    func switchOnceRetryCancelledWhenContextEnds() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us, bundleID: "com.rule.App")
+        // The user moves to an ignored app before the confirmation fires.
+        controller.setTarget(nil)
+        controller.oneShotContextDidEnd()
+        scheduler.fire()
+        #expect(provider.selectCalls == [us]) // the old rule does not reach into the new app
+    }
+
+    @Test("a context that ends from the activation callback still cancels the one-shot")
+    func switchOnceRetryCancelledWhenContextEndsInCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        // The callback runs before the confirmation is armed, so the operation
+        // must already be known as rule-bound for the context end to reach it.
+        controller.onActivation = { _ in controller.oneShotContextDidEnd() }
+        controller.switchOnce(us)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("an external command's retry survives a rule context ending")
+    func commandSwitchRetrySurvivesContextEnd() {
+        // A command belongs to no rule, so the engine re-resolving to "nothing
+        // managed here" (its normal state without rules) must not cancel it.
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: us, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.commandSwitch(abc)
+        controller.setTarget(nil)
+        controller.oneShotContextDidEnd()
+        scheduler.fire()
+        #expect(provider.selectCalls == [abc, abc])
+    }
+
+    @Test("turning the master switch off cancels a pending one-shot retry")
+    func switchOnceRetryCancelledByDisable() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us)
+        controller.setEnabled(false)
+        scheduler.fire()
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a newer command issued from the activation callback still supersedes the one-shot")
+    func switchOnceRetrySupersededFromActivationCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: abc, enabled: true, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        // The callback runs before the one-shot arms its confirmation. A newer
+        // command in there must not be outlived by the operation it replaced.
+        controller.onActivation = { [abc] event in
+            if event.inputSource != abc { controller.commandSwitch(abc) } // stay on abc
+        }
+        controller.switchOnce(us)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a newer command issued from the activation callback supersedes a commandSwitch")
+    func commandSwitchRetrySupersededFromActivationCallback() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, _) = make(current: us, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.onActivation = { [us] event in
+            if event.inputSource != us { controller.switchOnce(us) } // stay on us
+        }
+        controller.commandSwitch(abc)
+        while scheduler.fire() {}
+        #expect(provider.selectCalls == [abc])
+    }
+
+    @Test("default policy: a one-shot retry stands down if secure input turned on meanwhile")
+    func switchOnceRetryRespectsSecureInput() {
+        let scheduler = FakeScheduler()
+        let secure = FakeSecureInput(false)
+        let (controller, provider, _) = make(current: abc, enabled: true, secureInput: secure, scheduler: scheduler)
+        provider.selectIsNoOp = true
+        controller.switchOnce(us)
+        secure.isEnabled = true              // a password field took focus
+        scheduler.fire()
+        #expect(provider.selectCalls == [us])
+    }
+
+    @Test("a commandSwitch that silently did not take is retried once, even in secure input")
+    func commandSwitchRetriedWhenItDidNotTake() {
+        let scheduler = FakeScheduler()
+        let secure = FakeSecureInput(true)   // an explicit command is never gated
+        let (controller, provider, _) = make(current: us, secureInput: secure, scheduler: scheduler)
+        var events: [ActivationEvent] = []
+        controller.onActivation = { events.append($0) }
+        provider.selectIsNoOp = true
+
+        controller.commandSwitch(abc)
+        #expect(provider.selectCalls == [abc])
+        scheduler.fire()
+        #expect(provider.selectCalls == [abc, abc])
+        #expect(scheduler.pendingCount == 0)
+        #expect(events.count == 1)
+    }
+
+    @Test("a commandSwitch a standing lock reverted is not retried")
+    func commandSwitchRetryYieldsToLock() {
+        let scheduler = FakeScheduler()
+        let (controller, provider, uptime) = make(current: us, enabled: true, scheduler: scheduler)
+        controller.setTarget(us)             // lock on us (already there)
+        uptime.advance(by: 1.0)
+        controller.commandSwitch(abc)        // transient switch away
+        controller.selectedSourceDidChange() // the lock reverts it to us
+        #expect(provider.current == us)
+        let callsAfterRevert = provider.selectCalls
+        while scheduler.fire() {}
+        // `us` is where the command left from, but the lock put it back on
+        // purpose: the command must not be replayed against the lock.
+        #expect(provider.selectCalls == callsAfterRevert)
+        #expect(provider.current == us)
+    }
+
     @Test("switchOnce emits one event with the rule context and given reason")
     func switchOnceEmitsContext() {
         let (controller, _, _) = make(current: abc, enabled: true)

@@ -1,5 +1,6 @@
 import Carbon
 import Foundation
+import os
 
 /// Real `InputSourceProviding` backed by Carbon Text Input Services.
 ///
@@ -7,13 +8,21 @@ import Foundation
 /// `TISGetInputSourceProperty` follows the "get" rule (`takeUnretainedValue`).
 @MainActor
 public final class TISInputSourceProvider: InputSourceProviding {
+    private static let logger = Logger(subsystem: LogSubsystem.current, category: "TISInputSourceProvider")
+
     public init() {}
+
+    /// Tracks a key-focus selection the system has not confirmed yet (see
+    /// `DirectSelectionConfirmation`).
+    private var directSelection = DirectSelectionConfirmation()
 
     public func currentSourceID() -> InputSourceID? {
         guard let source = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue() else {
             return nil
         }
-        return Self.string(source, kTISPropertyInputSourceID).map { InputSourceID($0) }
+        let id = Self.string(source, kTISPropertyInputSourceID).map { InputSourceID($0) }
+        directSelection.observed(current: id)
+        return id
     }
 
     public func selectableSources() -> [InputSource] {
@@ -36,16 +45,40 @@ public final class TISInputSourceProvider: InputSourceProviding {
               Self.bool(source, kTISPropertyInputSourceIsEnabled)
         else { return false }
 
+        let isCJKV = InputSourceClassifier.isCJKV(languages: Self.languages(source))
+
+        // A background `TISSelectInputSource` for an input *method* can leave
+        // the focused app half-switched: the menu bar and every read-back show
+        // the IME while the app keeps typing Latin (issue #69). Have the app
+        // that owns keyboard focus perform the selection itself instead. Any
+        // failure — and a retry of a selection the system never confirmed —
+        // falls through to the public API below, i.e. the previous behavior.
+        //
+        // Unlike `TISSelectInputSource`, a key-focus selection is not visible
+        // to our own `currentSourceID()` until the "selected source changed"
+        // notification has been delivered, so don't read it back here.
+        if isCJKV {
+            if !directSelection.shouldTryDirect(for: id) {
+                Self.logger.debug("Key-focus selection of \(id.rawValue, privacy: .public) was never confirmed; using TISSelectInputSource")
+            } else {
+                switch KeyFocusInputSourceSelector.select(source) {
+                case .success:
+                    directSelection.didSelectDirectly(id)
+                    return true
+                case let .failure(error):
+                    Self.logger.debug("Key-focus selection failed (\(String(describing: error), privacy: .public)); using TISSelectInputSource")
+                }
+            }
+        }
+
         guard TISSelectInputSource(source) == noErr else { return false }
 
-        // CJKV input methods sometimes ignore a background `TISSelectInputSource`:
-        // the call returns `noErr` but the active source doesn't actually flip.
-        // Only nudge when a read-back confirms the switch didn't take — the old
-        // code nudged on *every* CJKV switch, and the nudge re-activated the
-        // frontmost app, which reset the mouse pointer in Chromium/Electron
-        // apps (issue #1).
-        if InputSourceClassifier.isCJKV(languages: Self.languages(source)),
-           currentSourceID() != id {
+        // Fallback path only. A CJKV `TISSelectInputSource` can also fail
+        // outright: `noErr`, but the active source doesn't flip. Only nudge
+        // when a read-back confirms that — the old code nudged on *every* CJKV
+        // switch, and the nudge re-activated the frontmost app, which reset
+        // the mouse pointer in Chromium/Electron apps (issue #1).
+        if isCJKV, currentSourceID() != id {
             FocusNudge.perform()
         }
         return true
