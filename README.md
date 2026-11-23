@@ -15,16 +15,9 @@
 
 </div>
 
-A macOS menu-bar app that **locks your keyboard input source**. Whenever you (or
-another app) switch input methods, LockIME immediately switches back to the locked
-one — globally, or per-frontmost-app, or (with the optional enhanced mode) per
-browser URL.
-
-> macOS 14+ · Apple silicon & Intel — separate apps, download the `-arm64` or
-> `-x86_64` file matching your Mac · built with SwiftUI, Liquid Glass on
-> macOS 26 (Tahoe).
-
-## Screenshots
+LockIME is a macOS menu-bar app that locks your keyboard input source. When you
+or another app switches input methods, it switches straight back: globally, per
+app, or per browser URL.
 
 <p align="center">
   <picture>
@@ -43,127 +36,75 @@ browser URL.
 
 ## Install
 
-Install with [Homebrew](https://brew.sh) (the cask picks the build matching
-your Mac's architecture):
-
 ```sh
 brew install --cask oomol-lab/tap/lockime
 ```
 
-Or download the `.dmg` matching your Mac (`-arm64` for Apple silicon,
-`-x86_64` for Intel) from the
-[latest release](https://github.com/oomol-lab/LockIME/releases/latest).
-Either way, the app keeps itself up to date via Sparkle.
+Or download the `.dmg` from the
+[latest release](https://github.com/oomol-lab/LockIME/releases/latest): `-arm64`
+for Apple silicon, `-x86_64` for Intel. Requires macOS 14 or later. LockIME
+updates itself through Sparkle, on a stable or beta channel.
 
 ## Features
 
-- **Instant re-lock** — switches the active input source back the moment you (or
-  another app) change it, globally or per-app.
-- **Conflict-aware** — if another program keeps re-asserting its own input
-  source (say, a game with built-in IME management), LockIME notices the
-  tug-of-war and briefly stands down instead of flip-flopping forever,
-  recording *Conflict detected* in the activation log; give such an app its
-  own *Ignore* or *Switch to* rule for a lasting fix.
-- **Bare-process rules** — programs that run from a bare executable rather than
-  an `.app` bundle (say, Minecraft's `java`, spawned by a third-party launcher)
-  can get rules too: while they are running, the app picker lists them under a
-  synthetic `process:<executable>` identity (e.g. `process:java`).
-- **Lock or switch** — per-app and per-URL rules can *lock* an input source
-  (re-applied whenever it drifts) or just *switch* to it once when you focus the
-  app or page, then step out of the way and let you change it freely.
-- **Lock globally, or just switch** — give the global default input source one of
-  three behaviors: *lock* to pin it everywhere; *switch* to switch you into it
-  once whenever an app falls back to the global default (it has no rule of its
-  own, or its rule is *Use default*), then leave you free; or **None** for no
-  global behavior at all — LockIME then acts only through your per-app and per-URL
-  rules. *Switch* actively switches you in whenever the default applies; **None**
-  does nothing globally.
-- **Flexible URL matching** — per-URL rules (enhanced mode) match by a domain and
-  its subdomains, an exact domain, a domain keyword, or a regular expression over
-  the full URL, and apply in a priority order you drag to arrange — first match
-  wins.
-- **Menu-bar control** — activate/deactivate, switch the locked input source,
-  view the current source, and track the activation count from the menu bar.
-- **Keyboard shortcuts** — configurable global shortcuts to toggle LockIME on or
-  off and cycle the locked input source, plus per-app shortcuts to cycle or
-  unbind the rule for whichever app is frontmost.
-- **Launch at login** — starts automatically when you log in (off by default).
-- **Light & dark mode** — a unified, system-native design language that adapts to
-  light and dark appearance, plus a bespoke app icon. See
-  [docs/DESIGN.md](docs/DESIGN.md).
-- **Live language switching** — switch between 9 languages instantly, no
-  restart: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español,
-  Português, Русский.
-- **24-hour activation log** — review what was switched, why, and for how long.
-- **Config backup** — export your per-app and per-URL rules to a `.lockime`
-  file and import them back, with a review step that previews additions,
+- **Lock or switch.** A rule for an app or URL either locks an input source,
+  switching back whenever it changes, or switches to it once when you focus the
+  app or page and then leaves you free.
+- **Global default.** Lock one input source everywhere, switch to it once in
+  every app that falls back to the default, or set it to *None* and let your
+  rules do all the work.
+- **URL and address-bar rules.** Core locking needs no system permissions. An
+  optional enhanced mode asks for Accessibility and adds rules per URL and for
+  the browser address bar. URL rules match a domain and its subdomains, an
+  exact domain, a keyword, or a regular expression over the full URL; drag them
+  to set priority, and the first match wins.
+- **Bare executables.** Programs without an `.app` bundle, such as Minecraft's
+  `java`, appear in the app picker as `process:java` while they run.
+- **Conflict handling.** When another program keeps forcing its own input
+  source, LockIME stands down instead of fighting it and records the conflict
+  in the log. Give that app an *Ignore* or *Switch to* rule for a lasting fix.
+- **Menu bar and shortcuts.** Toggle LockIME and change the locked input source
+  from the menu bar or with global shortcuts. Shortcuts can also cycle or
+  unbind the rule for the frontmost app.
+- **Activation log.** The last 24 hours of what was switched, why, and for how
+  long.
+- **Backup.** Export rules to a `.lockime` file. Importing previews additions,
   conflicts, and removals before anything is applied.
-- **Auto-update** — stable and beta channels via Sparkle, with a custom update
-  window.
-- **Tiny download** — the whole app ships in a `.dmg` under 3 MB.
-- **No system permissions for core locking** — an optional Accessibility-gated
-  enhanced mode unlocks finer-grained per-URL and focused-field rules.
-- **Automation** — a `lockime://` URL scheme lets other apps, scripts, and
-  Shortcuts drive LockIME (see below).
+- **Also:** launch at login, 9 interface languages switchable without a
+  restart, and a download under 3 MB.
 
 ## Comparison
 
-The two most widely-used alternatives to LockIME are
-**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** and
-**[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, alongside a
-long tail of smaller open-source and CLI tools. They all *switch* the input
-source as you move between apps or sites; LockIME is built around a continuous
-**lock** that re-applies it the moment it drifts — while any rule can still fall
-back to a one-time *switch*.
+[Input Source Pro](https://github.com/runjuu/InputSourcePro) and
+[KeyboardHolder](https://github.com/leaves615/KeyboardHolder) switch the input
+source as you move between apps or sites. LockIME also keeps it there: a locked
+input source is re-applied whenever it changes.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
-| Price | Free | Free | Free (donation) |
-| Open source | GPL-3.0 | GPL-3.0 | ✗ (closed) |
+| Open source | GPL-3.0 | GPL-3.0 | ✗ |
 | Minimum macOS | 14 | 11 | 10.15 |
 | Download size | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
-| Per-app rules | ✓ | ✓ | ✓ |
-| Per-website / URL rules | ✓ | ✓ | ✓ |
-| URL match types | subdomain · exact · keyword · regex | subdomain · exact · regex | domain (wildcard) |
-| Address-bar (URL field) rule | ✓ (lock/switch/priority) | ✓ (default source) | — |
 | Continuous re-lock | ✓ | ✗ | ✗ |
-| Lock *or* one-time switch, per rule | ✓ | ✗ | ✗ |
+| Lock or one-time switch, per rule | ✓ | ✗ | ✗ |
+| URL match types | subdomain, exact, keyword, regex | subdomain, exact, regex | domain (wildcard) |
+| Address-bar rule | ✓ (lock/switch/priority) | ✓ (default source) | — |
 | Global keyboard shortcuts | ✓ | ✓ | ✗ |
-| Menu-bar control | ✓ | ✓ | ✓ |
 | On-screen input hints | ✗ | ✓ | ✓ (optional) |
 | 24-hour activation log | ✓ | ✗ | ✗ |
 | Config backup / import | ✓ (`.lockime`, with review) | ✓ (export/import + CLI) | — |
 | URL-scheme automation | ✓ (`lockime://`, x-callback-url) | partial (`inputsourcepro://` import) | ✗ |
-| UI languages | 9 (live switch) | 6 | zh · en · ja |
-| System permissions | none for core · Accessibility for per-URL | none for core · Accessibility for per-URL | Accessibility¹ |
-| Auto-update | Sparkle (stable + beta) | ✓ | ✓ |
-| Actively maintained (2026) | ✓ | ✓ | ✓ |
+| UI languages | 9 | 6 | 3 |
 
-¹ KeyboardHolder does not document its permission requirements; reading the
-browser address bar for its per-website rules requires Accessibility access in
-practice. A "—" marks an undocumented capability, not a confirmed absence.
-
-**Choosing between them:** Input Source Pro has the largest community and the
-richest on-screen input hints; KeyboardHolder is a polished, zero-config per-app
-memory. Reach for LockIME when you want an input source *pinned* — per app, per
-URL, or in the address bar, re-applied the instant anything changes it — rather
-than only switched when you arrive.
-
-**Other tools:** [SwitchKey](https://github.com/itsuhane/SwitchKey) (per-app
-only, no longer maintained), [Kawa](https://github.com/hatashiro/kawa) (manual,
-shortcut-driven), InputSwitcher (freemium, per-app only), and
-[macism](https://github.com/laishulu/macism) (a command-line building block, not
-a GUI switcher).
-
-> Compared against Input Source Pro 2.11.0 and KeyboardHolder 1.14.10, mid-2026 — details drift; corrections welcome.
+> Compared against Input Source Pro 2.11.0 and KeyboardHolder 1.14.10 in
+> mid-2026. "—" means undocumented, not confirmed absent. Corrections welcome.
 
 ## Automation
 
-LockIME exposes a `lockime://` URL scheme so other apps, scripts, Shortcuts, and
-launchers can drive it — turn it on or off, retarget the input source, manage
-rules, and read state back with [x-callback-url](https://x-callback-url.com)
-callbacks. It is off by default — turn it on in **Settings ▸ General ▸
-Automation**.
+A `lockime://` URL scheme lets scripts, Shortcuts, and other apps toggle
+LockIME, change the locked input source, manage rules, and read state back
+through [x-callback-url](https://x-callback-url.com). It is off by default;
+turn it on in **Settings ▸ General ▸ Automation**.
 
 ```sh
 open "lockime://lock"
@@ -171,59 +112,31 @@ open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 ```
 
-Full reference: **[URL Scheme API](docs/URL-Scheme-API/README.md)**.
-
-## Design
-
-LockIME follows a single design system (`Sources/LockIME/UI/DesignSystem.swift`):
-semantic colors, system materials, and SF Symbols drive light/dark adaptation;
-Liquid Glass is reserved for the floating/navigation layer only. The brand
-"Lock Indigo" accent ships as an `AccentColor` asset. The full spec lives in
-[docs/DESIGN.md](docs/DESIGN.md).
-
-The app icon is generated programmatically (no design tool) — regenerate it with:
-
-```sh
-./scripts/make-appicon.sh   # renders the master via SwiftUI and rebuilds the appiconset
-```
+Full reference: [URL Scheme API](docs/URL-Scheme-API/README.md).
 
 ## Development
 
-Requires Xcode 26+ (the app itself targets macOS 14+), and
-[XcodeGen](https://github.com/yonaskolb/XcodeGen)
-+ [xcbeautify](https://github.com/cpisciotta/xcbeautify) (`brew install xcodegen xcbeautify`).
+Requires Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen), and
+[xcbeautify](https://github.com/cpisciotta/xcbeautify)
+(`brew install xcodegen xcbeautify`). The Xcode project is generated from
+`project.yml` and is not checked in.
 
 ```sh
-make gen     # generate LockIME.xcodeproj from project.yml
-make build   # build (Debug)
-make run     # build & launch
-make test    # run unit tests
-make archive # Release archive (Developer ID)
+make gen      # generate LockIME.xcodeproj from project.yml
+make build    # build (Debug)
+make run      # build & launch
+make test     # run unit tests
+make test-hw  # integration tests; briefly changes the input source
 ```
 
-The Xcode project is generated from `project.yml` and is not checked in.
+The logic lives in `LockIMEKit`, a unit-tested static library that uses only
+system frameworks. The `LockIME` app target holds the SwiftUI UI and the
+Sparkle, KeyboardShortcuts, and PermissionFlow integrations. The app icon is
+generated by `./scripts/make-appicon.sh`.
 
-Hardware-touching integration tests (real TIS switching) are excluded from
-`make test`; run them with `make test-hw` (briefly changes the input source).
-
-## Releasing
-
-Dispatch-driven, notarized Developer ID releases with Sparkle auto-update over
-**stable** and **beta** channels: run the Release workflow (Actions → Release)
-and it computes the version from git tags, builds, and creates the tag and
-GitHub Release automatically — never push a tag by hand. The beta channel is
-the nightly build. Every release ships separate Apple-silicon and Intel apps,
-each on its own update feed (no universal binary, no cross-arch updates). See
-[docs/RELEASING.md](docs/RELEASING.md).
-
-## Architecture
-
-- **LockIMEKit** (static library) — pure, fully unit-tested logic using only system
-  frameworks: lock engine, app monitor, rules, enhanced (Accessibility) observer,
-  logging model, localization.
-- **LockIME** (app) — `@main`, SwiftUI UI, the design system, and the thin
-  integration shims for Sparkle, KeyboardShortcuts, and PermissionFlow.
+See [docs/DESIGN.md](docs/DESIGN.md) for the design system and
+[docs/RELEASING.md](docs/RELEASING.md) for the release process.
 
 ## License
 
-Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
+[GPL-3.0](LICENSE). Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
