@@ -15,13 +15,7 @@
 
 </div>
 
-Une application de barre de menus macOS qui **verrouille votre source de saisie clavier**. Chaque fois que vous (ou une autre application) changez de méthode de saisie, LockIME rebascule immédiatement vers celle qui est verrouillée — globalement, par application au premier plan, ou (avec le mode renforcé optionnel) par URL de navigateur.
-
-> macOS 14+ · Apple silicon et Intel — applications séparées, téléchargez le
-> fichier `-arm64` ou `-x86_64` correspondant à votre Mac · construite avec
-> SwiftUI, Liquid Glass sous macOS 26 (Tahoe).
-
-## Screenshots
+LockIME est une application macOS de barre de menus qui verrouille votre source de saisie clavier. Lorsque vous ou une autre application changez de méthode de saisie, elle rebascule aussitôt : globalement, par application ou par URL de navigateur.
 
 <p align="center">
   <picture>
@@ -40,91 +34,49 @@ Une application de barre de menus macOS qui **verrouille votre source de saisie 
 
 ## Install
 
-Installez avec [Homebrew](https://brew.sh) (le cask choisit le build correspondant à l'architecture de votre Mac) :
-
 ```sh
 brew install --cask oomol-lab/tap/lockime
 ```
 
-Ou téléchargez le `.dmg` correspondant à votre Mac (`-arm64` pour Apple silicon, `-x86_64` pour Intel) depuis la [dernière version](https://github.com/oomol-lab/LockIME/releases/latest). Dans les deux cas, l'application se maintient automatiquement à jour via Sparkle.
+Ou téléchargez le `.dmg` depuis la [dernière version](https://github.com/oomol-lab/LockIME/releases/latest) : `-arm64` pour Apple silicon, `-x86_64` pour Intel. Nécessite macOS 14 ou ultérieur. LockIME se met à jour via Sparkle, sur un canal stable ou beta.
 
 ## Features
 
-- **Reverrouillage instantané** — rebascule la source de saisie active dès que vous (ou une autre application) la changez, globalement ou par application.
-- **Sensible aux conflits** — si un autre programme réimpose sans cesse sa propre source de saisie (par exemple un jeu qui gère lui-même l'IME), LockIME détecte ce bras de fer et s'efface brièvement au lieu de basculer sans fin, en consignant *Conflit détecté* dans le journal d'activation ; donnez à une telle application sa propre règle *Ignorer* ou *Basculer vers* pour un remède durable.
-- **Règles pour processus sans bundle** — les programmes qui s'exécutent depuis un simple exécutable plutôt que depuis un bundle `.app` (par exemple le `java` de Minecraft, lancé par un lanceur tiers) peuvent eux aussi recevoir des règles : pendant leur exécution, le sélecteur d'applications les liste sous une identité synthétique `process:<executable>` (par exemple `process:java`).
-- **Verrouiller ou basculer** — les règles par application et par URL peuvent *verrouiller* une source de saisie (réappliquée dès qu'elle dévie) ou simplement y *basculer* une fois lorsque vous activez l'application ou la page, puis vous laisser libre de la changer.
-- **Verrouiller globalement, ou simplement basculer** — attribuez à la source de saisie par défaut globale l'un des trois comportements : *verrouiller* pour l'épingler partout ; *basculer* pour vous y faire basculer une fois dès qu'une application se rabat sur la valeur par défaut globale, puis vous laisser libre (se redéclenchant à chaque fois) ; ou **Aucune** pour aucun comportement global — LockIME n'agit qu'à travers les règles par application et par URL. *Basculer* vous fait activement basculer chaque fois qu'une application se rabat sur la valeur par défaut globale ; **Aucune** ne fait rien globalement.
-- **Correspondance d'URL flexible** — les règles par URL (mode renforcé) correspondent par un domaine et ses sous-domaines, un domaine exact, un mot-clé de domaine, ou une expression régulière sur l'URL entière, et s'appliquent dans un ordre de priorité que vous organisez par glisser-déposer — la première correspondance l'emporte.
-- **Contrôle depuis la barre de menus** — activer/désactiver, changer la source de saisie verrouillée, voir la source actuelle et suivre le nombre d'activations depuis la barre de menus.
-- **Raccourcis clavier** — des raccourcis globaux configurables pour activer/désactiver LockIME et faire défiler la source de saisie verrouillée, ainsi que des raccourcis par application pour faire défiler ou supprimer la règle de l’application au premier plan.
-- **Lancement à la connexion** — démarre automatiquement à l'ouverture de session (désactivé par défaut).
-- **Mode clair et sombre** — un langage de design unifié et natif du système, qui s'adapte aux apparences claire et sombre, avec une icône d'application sur mesure. Voir [docs/DESIGN.md](../DESIGN.md).
-- **Changement de langue à chaud** — basculez instantanément entre 9 langues, sans redémarrage : English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.
-- **Journal d'activation sur 24 heures** — consultez ce qui a été rebasculé, pourquoi, et pendant combien de temps.
-- **Sauvegarde de la configuration** — exportez vos règles par application et par URL dans un fichier `.lockime`, puis réimportez-les, avec une étape de prévisualisation qui liste les ajouts, les conflits et les suppressions avant toute application.
-- **Mise à jour automatique** — canaux stable et beta via Sparkle, avec une fenêtre de mise à jour personnalisée.
-- **Téléchargement minuscule** — toute l'application tient dans un `.dmg` de moins de 3 MB.
-- **Aucune permission système pour le verrouillage de base** — un mode renforcé optionnel, soumis à l'autorisation Accessibility, débloque des règles plus fines par URL et par champ ayant le focus.
-- **Automatisation** — un schéma d'URL `lockime://` permet à d'autres applications, scripts et Shortcuts de piloter LockIME (voir ci-dessous).
+- **Verrouiller ou basculer.** Une règle pour une application ou une URL verrouille une source de saisie, en y revenant dès qu'elle change, ou y bascule une seule fois lorsque vous activez l'application ou la page, puis vous laisse libre.
+- **Valeur par défaut globale.** Verrouillez une source de saisie partout, basculez-y une fois dans chaque application qui se rabat sur la valeur par défaut, ou choisissez *Aucune* et laissez vos règles tout faire.
+- **Règles d'URL et de barre d'adresse.** Le verrouillage de base ne demande aucune permission système. Un mode renforcé optionnel requiert l'autorisation Accessibility et ajoute des règles par URL et pour la barre d'adresse du navigateur. Les règles d'URL font correspondre un domaine et ses sous-domaines, un domaine exact, un mot-clé ou une expression régulière sur l'URL entière ; faites-les glisser pour fixer la priorité, la première correspondance l'emporte.
+- **Exécutables sans bundle.** Les programmes sans bundle `.app`, comme le `java` de Minecraft, apparaissent dans le sélecteur d'applications sous `process:java` pendant leur exécution.
+- **Gestion des conflits.** Lorsqu'un autre programme réimpose sans cesse sa propre source de saisie, LockIME s'efface au lieu de lutter et consigne le conflit dans le journal. Donnez à cette application une règle *Ignorer* ou *Basculer vers* pour une solution durable.
+- **Barre de menus et raccourcis.** Activez ou désactivez LockIME et changez la source de saisie verrouillée depuis la barre de menus ou avec des raccourcis globaux. Des raccourcis permettent aussi de faire défiler ou de supprimer la règle de l'application au premier plan.
+- **Journal d'activation.** Les 24 dernières heures : ce qui a été basculé, pourquoi et pendant combien de temps.
+- **Sauvegarde.** Exportez les règles dans un fichier `.lockime`. L'import prévisualise les ajouts, les conflits et les suppressions avant toute application.
+- **Et aussi :** lancement à l'ouverture de session, 9 langues d'interface modifiables sans redémarrage et un téléchargement de moins de 3 MB.
 
 ## Comparison
 
-Les deux alternatives à LockIME les plus utilisées sont
-**[Input Source Pro](https://github.com/runjuu/InputSourcePro)** et
-**[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, aux côtés
-d'une longue série d'outils open-source et CLI plus modestes. Tous *basculent*
-la source de saisie à mesure que vous passez d'une application ou d'un site à
-l'autre ; LockIME est conçue autour d'un **verrouillage** continu qui la
-réapplique dès qu'elle dévie — tandis que chaque règle peut tout de même se
-rabattre sur une *bascule* unique.
+[Input Source Pro](https://github.com/runjuu/InputSourcePro) et [KeyboardHolder](https://github.com/leaves615/KeyboardHolder) basculent la source de saisie lorsque vous passez d'une application ou d'un site à l'autre. LockIME la maintient en plus : une source de saisie verrouillée est réappliquée dès qu'elle change.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
-| Prix | Gratuit | Gratuit | Gratuit (don) |
-| Open source | GPL-3.0 | GPL-3.0 | ✗ (fermé) |
+| Open source | GPL-3.0 | GPL-3.0 | ✗ |
 | macOS minimum | 14 | 11 | 10.15 |
 | Taille de téléchargement | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
-| Règles par application | ✓ | ✓ | ✓ |
-| Règles par site / URL | ✓ | ✓ | ✓ |
-| Types de correspondance d'URL | sous-domaine · exact · mot-clé · regex | sous-domaine · exact · regex | domaine (joker) |
-| Règle de barre d'adresse (champ URL) | ✓ (verrouillage/bascule/priorité) | ✓ (source par défaut) | — |
 | Reverrouillage continu | ✓ | ✗ | ✗ |
-| Verrouiller *ou* basculer une fois, par règle | ✓ | ✗ | ✗ |
+| Verrouiller ou basculer une fois, par règle | ✓ | ✗ | ✗ |
+| Types de correspondance d'URL | sous-domaine, exact, mot-clé, regex | sous-domaine, exact, regex | domaine (joker) |
+| Règle de barre d'adresse | ✓ (verrouillage/bascule/priorité) | ✓ (source par défaut) | — |
 | Raccourcis clavier globaux | ✓ | ✓ | ✗ |
-| Contrôle depuis la barre de menus | ✓ | ✓ | ✓ |
 | Indications de saisie à l'écran | ✗ | ✓ | ✓ (optionnel) |
 | Journal d'activation sur 24 heures | ✓ | ✗ | ✗ |
 | Sauvegarde / import de la configuration | ✓ (`.lockime`, avec prévisualisation) | ✓ (export/import + CLI) | — |
 | Automatisation par schéma d'URL | ✓ (`lockime://`, x-callback-url) | partiel (import `inputsourcepro://`) | ✗ |
-| Langues de l'interface | 9 (changement à chaud) | 6 | zh · en · ja |
-| Permissions système | aucune pour le cœur · Accessibility par URL | aucune pour le cœur · Accessibility par URL | Accessibility¹ |
-| Mise à jour automatique | Sparkle (stable + beta) | ✓ | ✓ |
-| Activement maintenu (2026) | ✓ | ✓ | ✓ |
+| Langues de l'interface | 9 | 6 | 3 |
 
-¹ KeyboardHolder ne documente pas ses exigences en matière de permissions ; la
-lecture de la barre d'adresse du navigateur pour ses règles par site nécessite
-en pratique l'accès Accessibility. Un « — » signale une capacité non
-documentée, et non une absence confirmée.
-
-**Choisir entre eux :** Input Source Pro possède la plus grande communauté et
-les indications de saisie à l'écran les plus riches ; KeyboardHolder est une
-mémoire par application soignée et sans configuration. Tournez-vous vers LockIME
-lorsque vous voulez *épingler* une source de saisie — par application, par URL
-ou dans la barre d'adresse, réappliquée dès que quoi que ce soit la change —
-plutôt que seulement la basculer à votre arrivée.
-
-**Autres outils :** [SwitchKey](https://github.com/itsuhane/SwitchKey)
-(uniquement par application, non maintenu), [Kawa](https://github.com/hatashiro/kawa)
-(manuel, piloté par raccourci), InputSwitcher (freemium, uniquement par
-application), et [macism](https://github.com/laishulu/macism) (une brique en
-ligne de commande, pas un commutateur graphique).
-
-> Comparaison effectuée avec Input Source Pro 2.11.0 et KeyboardHolder 1.14.10, à la mi-2026 — les détails évoluent ; les corrections sont les bienvenues.
+> Comparaison effectuée avec Input Source Pro 2.11.0 et KeyboardHolder 1.14.10, à la mi-2026. « — » signale une capacité non documentée, et non une absence confirmée. Les corrections sont les bienvenues.
 
 ## Automation
 
-LockIME expose un schéma d'URL `lockime://` afin que d'autres applications, scripts, Shortcuts et lanceurs puissent le piloter — l'activer ou le désactiver, recibler la source de saisie, gérer les règles et relire l'état grâce aux rappels [x-callback-url](https://x-callback-url.com). Elle est désactivée par défaut — activez-la dans **Réglages ▸ Général ▸ Automatisation**.
+Un schéma d'URL `lockime://` permet aux scripts, à Shortcuts et aux autres applications d'activer ou de désactiver LockIME, de changer la source de saisie verrouillée, de gérer les règles et de relire l'état via [x-callback-url](https://x-callback-url.com). Il est désactivé par défaut ; activez-le dans **Réglages ▸ Général ▸ Automatisation**.
 
 ```sh
 open "lockime://lock"
@@ -132,43 +84,24 @@ open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 ```
 
-Référence complète : **[URL Scheme API](../URL-Scheme-API/README.fr.md)**.
-
-## Design
-
-LockIME suit un système de design unique (`Sources/LockIME/UI/DesignSystem.swift`) : couleurs sémantiques, matériaux système et SF Symbols pilotent l'adaptation clair/sombre ; Liquid Glass est réservé à la couche flottante/de navigation. La couleur d'accent de la marque, « Lock Indigo », est fournie en tant qu'asset `AccentColor`. La spécification complète se trouve dans [docs/DESIGN.md](../DESIGN.md).
-
-L'icône de l'application est générée par programme (sans outil de design) — régénérez-la avec :
-
-```sh
-./scripts/make-appicon.sh   # renders the master via SwiftUI and rebuilds the appiconset
-```
+Référence complète : [URL Scheme API](../URL-Scheme-API/README.fr.md).
 
 ## Development
 
-Nécessite Xcode 26+ (l'application elle-même cible macOS 14+), ainsi que [XcodeGen](https://github.com/yonaskolb/XcodeGen) + [xcbeautify](https://github.com/cpisciotta/xcbeautify) (`brew install xcodegen xcbeautify`).
+Nécessite Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) et [xcbeautify](https://github.com/cpisciotta/xcbeautify) (`brew install xcodegen xcbeautify`). Le projet Xcode est généré à partir de `project.yml` et n'est pas versionné.
 
 ```sh
-make gen     # generate LockIME.xcodeproj from project.yml
-make build   # build (Debug)
-make run     # build & launch
-make test    # run unit tests
-make archive # Release archive (Developer ID)
+make gen      # generate LockIME.xcodeproj from project.yml
+make build    # build (Debug)
+make run      # build & launch
+make test     # run unit tests
+make test-hw  # integration tests; briefly changes the input source
 ```
 
-Le projet Xcode est généré à partir de `project.yml` et n'est pas versionné.
+La logique se trouve dans `LockIMEKit`, une bibliothèque statique couverte par des tests unitaires qui n'utilise que les frameworks système. La cible d'application `LockIME` contient l'interface SwiftUI et les intégrations Sparkle, KeyboardShortcuts et PermissionFlow. L'icône de l'application est générée par `./scripts/make-appicon.sh`.
 
-Les tests d'intégration touchant au matériel (bascule TIS réelle) sont exclus de `make test` ; lancez-les avec `make test-hw` (change brièvement la source de saisie).
-
-## Releasing
-
-Des versions Developer ID notariées, pilotées par dispatch, avec mise à jour automatique Sparkle sur les canaux **stable** et **beta** : lancez le workflow Release (Actions → Release) — il calcule la version à partir des tags git, construit, puis crée automatiquement le tag et la GitHub Release — ne poussez jamais un tag à la main. Le canal beta correspond au build nightly. Chaque version fournit des applications Apple silicon et Intel séparées, chacune sur son propre flux de mise à jour (pas de binaire universal, pas de mise à jour entre architectures). Voir [docs/RELEASING.md](../RELEASING.md).
-
-## Architecture
-
-- **LockIMEKit** (bibliothèque statique) — logique pure, entièrement couverte par des tests unitaires, n'utilisant que les frameworks système : moteur de verrouillage, moniteur d'applications, règles, observateur renforcé (Accessibility), modèle de journalisation, localisation.
-- **LockIME** (application) — `@main`, l'interface SwiftUI, le système de design, et les fines couches d'intégration pour Sparkle, KeyboardShortcuts et PermissionFlow.
+Voir [docs/DESIGN.md](../DESIGN.md) pour le système de design et [docs/RELEASING.md](../RELEASING.md) pour le processus de publication.
 
 ## License
 
-Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
+[GPL-3.0](../../LICENSE). Copyright © 2026 Hangzhou Wumou Software Co., Ltd.

@@ -15,13 +15,7 @@
 
 </div>
 
-**キーボードの入力ソースをロックする** macOS メニューバーアプリ。あなた（または他のアプリ）が入力メソッドを切り替えるたびに、LockIME はロック中の入力ソースへ即座に切り戻します——グローバルに、最前面のアプリごとに、あるいは（オプションの拡張モードでは）ブラウザの URL ごとに。
-
-> macOS 14+ · Apple silicon と Intel に対応——2 つの独立したアプリです。
-> お使いの Mac に合った `-arm64` または `-x86_64` ファイルをダウンロード
-> してください · SwiftUI 製、macOS 26 (Tahoe) では Liquid Glass を採用。
-
-## Screenshots
+LockIME は、キーボードの入力ソースをロックする macOS メニューバーアプリです。あなたや他のアプリが入力ソースを切り替えると、すぐに元へ戻します。グローバルにも、アプリごとにも、ブラウザの URL ごとにも設定できます。
 
 <p align="center">
   <picture>
@@ -40,72 +34,49 @@
 
 ## Install
 
-[Homebrew](https://brew.sh) でインストールできます（cask がお使いの Mac のアーキテクチャに合ったビルドを自動的に選択します）：
-
 ```sh
 brew install --cask oomol-lab/tap/lockime
 ```
 
-または、[最新リリース](https://github.com/oomol-lab/LockIME/releases/latest)からお使いの Mac に合った `.dmg`（Apple silicon は `-arm64`、Intel は `-x86_64`）をダウンロードしてください。いずれの方法でも、アプリは Sparkle により自動的に最新の状態に保たれます。
+または[最新リリース](https://github.com/oomol-lab/LockIME/releases/latest)から `.dmg` をダウンロードしてください。Apple silicon は `-arm64`、Intel は `-x86_64` です。macOS 14 以降が必要です。LockIME は Sparkle で自動アップデートされ、stable と beta のチャンネルがあります。
 
 ## Features
 
-- **即時再ロック**——あなた（または他のアプリ）が入力ソースを切り替えた瞬間に、ロック中のものへ切り戻します。グローバルにも、アプリごとにも。
-- **競合への配慮**——別のプログラム（たとえば IME 管理機能を内蔵したゲーム）が自分の入力ソースを繰り返し設定し直す場合、LockIME はその綱引きを察知し、延々と切り替え合戦を続ける代わりに少しのあいだ身を引きます。作動ログには*競合を検出*と記録されます。そうしたアプリには*無視*または*切り替え先*のルールを与えれば恒久的に解決します。
-- **素の実行ファイルのルール**——`.app` バンドルではなく素の実行ファイルから動くプログラム（たとえばサードパーティのランチャーから起動される Minecraft の `java`）にもルールを設定できます。実行中のあいだ、アプリピッカーには合成された `process:<executable>` という識別子（例：`process:java`）で一覧表示されます。
-- **ロックまたは切り替え**——アプリごと・URL ごとのルールは、入力ソースを*ロック*（ずれるたびに切り戻す）することも、アプリやページをアクティブにしたときに一度だけ*切り替え*て、その後は自由に変更できるようにすることもできます。
-- **グローバルにロック、または切り替えだけ**——グローバルのデフォルト入力ソースに、3 つの挙動のいずれかを与えられます：*ロック*はどこでもそれを固定します。*切り替え*は、アプリがグローバルのデフォルトにフォールバックするたびに一度だけそれへ切り替えてから自由にさせます（独自のルールを持たないアプリだけでなく、ルールが*デフォルトを使用*のアプリも対象です）。**なし**はグローバルな挙動を一切持たず、LockIME はアプリごと・URL ごとのルールを通じてのみ作用します。
-- **柔軟な URL マッチング**——URL ごとのルール（拡張モード）は、ドメインとそのサブドメイン、完全一致のドメイン、ドメインのキーワード、または URL 全体に対する正規表現でマッチし、ドラッグして並べ替える優先順位順に適用されます——最初にマッチしたものが優先されます。
-- **メニューバーからの操作**——メニューバーから有効化/無効化、ロック中の入力ソースの切り替え、現在の入力ソースの確認、作動回数の追跡。
-- **キーボードショートカット**——設定可能なグローバルショートカットで LockIME のオン/オフやロック中の入力ソースの切り替え（前 / 次）ができ、さらに最前面のアプリのルールを切り替えたり解除したりするアプリごとのショートカットも利用できます。
-- **ログイン時に起動**——ログイン時に自動的に起動（デフォルトはオフ）。
-- **ライト & ダークモード**——ライト/ダーク外観に適応する、統一されたシステムネイティブなデザイン言語と、専用のアプリアイコン。[docs/DESIGN.md](../DESIGN.md) を参照。
-- **ライブ言語切り替え**——9 言語を再起動なしで即座に切り替え：English、简体中文、繁體中文、日本語、Français、Deutsch、Español、Português、Русский。
-- **24 時間の作動ログ**——何が、なぜ、どれだけの時間切り替えられたかを確認できます。
-- **設定のバックアップ**——アプリごと・URL ごとのルールを `.lockime` ファイルに書き出し、また読み込めます。読み込み前にはプレビュー画面で、追加・競合・削除を確認してから適用します。
-- **自動アップデート**——Sparkle による stable / beta の 2 チャンネルと、カスタムアップデートウィンドウ。
-- **小さなダウンロード**——アプリ全体が 3 MB 未満の `.dmg` に収まります。
-- **コアのロックにシステム権限は不要**——オプションの Accessibility 権限付き拡張モードで、より細かい URL ごと / フォーカス中フィールドごとのルールが使えます。
-- **自動化**——`lockime://` URL スキームにより、他のアプリ・スクリプト・ショートカットから LockIME を操作できます（下記参照）。
+- **ロックまたは切り替え。** アプリや URL のルールは、入力ソースをロックして変更されるたびに戻すことも、アプリやページをアクティブにしたときに一度だけ切り替えて、その後は自由に変更できるようにすることもできます。
+- **グローバルのデフォルト。** 1 つの入力ソースをどこでもロックするか、デフォルトにフォールバックするアプリで一度だけ切り替えるか、*なし*にしてルールだけに任せるかを選べます。
+- **URL とアドレスバーのルール。** コアのロックにシステム権限は不要です。オプションの拡張モードは Accessibility 権限を必要とし、URL ごと、およびブラウザのアドレスバー用のルールを追加します。URL ルールは、ドメインとそのサブドメイン、完全一致のドメイン、キーワード、または URL 全体に対する正規表現でマッチします。ドラッグして優先順位を決め、最初にマッチしたものが適用されます。
+- **素の実行ファイル。** Minecraft の `java` のように `.app` バンドルを持たないプログラムは、実行中のあいだアプリピッカーに `process:java` として表示されます。
+- **競合の処理。** 別のプログラムが自分の入力ソースを強制し続ける場合、LockIME は張り合わずに身を引き、その競合をログに記録します。そのアプリに*無視*または*切り替え先*のルールを設定すれば恒久的に解決します。
+- **メニューバーとショートカット。** メニューバーまたはグローバルショートカットから、LockIME のオン/オフとロック中の入力ソースの変更ができます。ショートカットでは最前面のアプリのルールを切り替えたり解除したりもできます。
+- **作動ログ。** 直近 24 時間に何が、なぜ、どのくらいの時間切り替えられたかを確認できます。
+- **バックアップ。** ルールを `.lockime` ファイルに書き出せます。読み込み時には、適用前に追加、競合、削除をプレビューします。
+- **そのほか：** ログイン時に起動、再起動なしで切り替えられる 9 つの UI 言語、3 MB 未満のダウンロードサイズ。
 
 ## Comparison
 
-LockIME に対する最も広く使われている代替ツールは **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** と **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)** の 2 つで、加えてより小規模なオープンソース / CLI ツールが数多く存在します。いずれも、アプリやサイトを移動するたびに入力ソースを*切り替え*ます。LockIME は、入力ソースがずれた瞬間にそれを再適用する継続的な**ロック**を中心に設計されています——しかも、どのルールも一度きりの*切り替え*にフォールバックできます。
+[Input Source Pro](https://github.com/runjuu/InputSourcePro) と [KeyboardHolder](https://github.com/leaves615/KeyboardHolder) は、アプリやサイトを移動するたびに入力ソースを切り替えます。LockIME はさらにその状態を維持します。ロックした入力ソースは、変更されるたびに再適用されます。
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
-| 価格 | 無料 | 無料 | 無料（寄付制） |
-| オープンソース | GPL-3.0 | GPL-3.0 | ✗（クローズド） |
+| オープンソース | GPL-3.0 | GPL-3.0 | ✗ |
 | 最小 macOS | 14 | 11 | 10.15 |
 | ダウンロードサイズ | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
-| アプリごとのルール | ✓ | ✓ | ✓ |
-| ウェブサイトごと / URL ごとのルール | ✓ | ✓ | ✓ |
-| URL マッチタイプ | サブドメイン · 完全一致 · キーワード · 正規表現 | サブドメイン · 完全一致 · 正規表現 | ドメイン（ワイルドカード） |
-| アドレスバー（URL フィールド）ルール | ✓（ロック/切り替え/優先順位） | ✓（デフォルトソース） | — |
 | 継続的な再ロック | ✓ | ✗ | ✗ |
-| ルールごとにロック*または*一度きりの切り替え | ✓ | ✗ | ✗ |
+| ルールごとにロックまたは一度きりの切り替え | ✓ | ✗ | ✗ |
+| URL マッチタイプ | サブドメイン、完全一致、キーワード、正規表現 | サブドメイン、完全一致、正規表現 | ドメイン (ワイルドカード) |
+| アドレスバーのルール | ✓ (ロック/切り替え/優先順位) | ✓ (デフォルトソース) | — |
 | グローバルキーボードショートカット | ✓ | ✓ | ✗ |
-| メニューバーからの操作 | ✓ | ✓ | ✓ |
-| 画面上の入力ヒント | ✗ | ✓ | ✓（オプション） |
+| 画面上の入力ヒント | ✗ | ✓ | ✓ (オプション) |
 | 24 時間の作動ログ | ✓ | ✗ | ✗ |
-| 設定のバックアップ / インポート | ✓（`.lockime`、確認付き） | ✓（エクスポート/インポート + CLI） | — |
-| URL スキーム自動化 | ✓（`lockime://`、x-callback-url） | 部分的（`inputsourcepro://` インポート） | ✗ |
-| UI 言語 | 9（ライブ切り替え） | 6 | zh · en · ja |
-| システム権限 | コアには不要 · URL ごとには Accessibility | コアには不要 · URL ごとには Accessibility | Accessibility¹ |
-| 自動アップデート | Sparkle（stable + beta） | ✓ | ✓ |
-| アクティブにメンテナンス中（2026） | ✓ | ✓ | ✓ |
+| 設定のバックアップ / インポート | ✓ (`.lockime`、確認付き) | ✓ (エクスポート/インポート + CLI) | — |
+| URL スキーム自動化 | ✓ (`lockime://`、x-callback-url) | 部分的 (`inputsourcepro://` インポート) | ✗ |
+| UI 言語 | 9 | 6 | 3 |
 
-¹ KeyboardHolder はその権限要件を文書化していません。ウェブサイトごとのルールのためにブラウザのアドレスバーを読み取るには、実際には Accessibility 権限が必要です。「—」は確認された非対応ではなく、文書化されていない機能を示します。
-
-**選び方：** Input Source Pro は最大のコミュニティと最も充実した画面上の入力ヒントを備えています。KeyboardHolder は洗練された、ゼロ設定のアプリごとの記憶です。到着したときに切り替わるだけでなく、入力ソースを*固定*したい——アプリごと・URL ごと・アドレスバーで、何かがそれを変更した瞬間に再適用される——なら、LockIME に手を伸ばしてください。
-
-**その他のツール：** [SwitchKey](https://github.com/itsuhane/SwitchKey)（アプリごとのみ、メンテナンス終了）、[Kawa](https://github.com/hatashiro/kawa)（手動、ショートカット駆動）、InputSwitcher（フリーミアム、アプリごとのみ）、そして [macism](https://github.com/laishulu/macism)（コマンドラインの構成要素であり、GUI の切り替えツールではありません）。
-
-> Input Source Pro 2.11.0 と KeyboardHolder 1.14.10 を基準に、2026 年半ばに比較しました——詳細は変動します。訂正を歓迎します。
+> Input Source Pro 2.11.0 と KeyboardHolder 1.14.10 を基準に、2026 年半ばに比較しました。「—」は非対応の確認ではなく、文書化されていないことを示します。訂正を歓迎します。
 
 ## Automation
 
-LockIME は `lockime://` URL スキームを公開しており、他のアプリ・スクリプト・ショートカット・ランチャーから操作できます——オン/オフの切り替え、入力ソースの再設定、ルールの管理、そして [x-callback-url](https://x-callback-url.com) コールバックによる状態の読み取りが可能です。デフォルトではオフです——**設定 ▸ 一般 ▸ 自動化**でオンにしてください。
+`lockime://` URL スキームを使うと、スクリプト、ショートカット、他のアプリから LockIME のオン/オフ、ロック中の入力ソースの変更、ルールの管理、[x-callback-url](https://x-callback-url.com) による状態の読み取りができます。デフォルトではオフです。**設定 ▸ 一般 ▸ 自動化**でオンにしてください。
 
 ```sh
 open "lockime://lock"
@@ -113,43 +84,24 @@ open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 ```
 
-詳細なリファレンス：**[URL Scheme API](../URL-Scheme-API/README.ja.md)**。
-
-## Design
-
-LockIME は単一のデザインシステム（`Sources/LockIME/UI/DesignSystem.swift`）に従います：セマンティックカラー、システムマテリアル、SF Symbols がライト/ダーク適応を担い、Liquid Glass はフローティング/ナビゲーション層だけに使用します。ブランドのアクセントカラー "Lock Indigo" は `AccentColor` アセットとして同梱されています。完全な仕様は [docs/DESIGN.md](../DESIGN.md) を参照してください。
-
-アプリアイコンはプログラムで生成されます（デザインツール不使用）——次のコマンドで再生成できます：
-
-```sh
-./scripts/make-appicon.sh   # renders the master via SwiftUI and rebuilds the appiconset
-```
+詳細なリファレンス：[URL Scheme API](../URL-Scheme-API/README.ja.md)。
 
 ## Development
 
-Xcode 26+（アプリ自体のターゲットは macOS 14+）と、[XcodeGen](https://github.com/yonaskolb/XcodeGen) + [xcbeautify](https://github.com/cpisciotta/xcbeautify)（`brew install xcodegen xcbeautify`）が必要です。
+Xcode 26+、[XcodeGen](https://github.com/yonaskolb/XcodeGen)、[xcbeautify](https://github.com/cpisciotta/xcbeautify) が必要です (`brew install xcodegen xcbeautify`)。Xcode プロジェクトは `project.yml` から生成され、リポジトリには含まれません。
 
 ```sh
-make gen     # generate LockIME.xcodeproj from project.yml
-make build   # build (Debug)
-make run     # build & launch
-make test    # run unit tests
-make archive # Release archive (Developer ID)
+make gen      # generate LockIME.xcodeproj from project.yml
+make build    # build (Debug)
+make run      # build & launch
+make test     # run unit tests
+make test-hw  # integration tests; briefly changes the input source
 ```
 
-Xcode プロジェクトは `project.yml` から生成され、リポジトリには含まれません。
+ロジックは `LockIMEKit` にあります。システムフレームワークのみを使う、単体テスト済みの静的ライブラリです。`LockIME` アプリターゲットには、SwiftUI の UI と、Sparkle、KeyboardShortcuts、PermissionFlow の統合が含まれます。アプリアイコンは `./scripts/make-appicon.sh` で生成されます。
 
-ハードウェアに触れる統合テスト（実際の TIS 切り替え）は `make test` から除外されています。`make test-hw` で実行してください（入力ソースが一時的に変わります）。
-
-## Releasing
-
-dispatch 駆動の、公証済み Developer ID リリース。Sparkle による **stable** と **beta** の 2 チャンネルで自動アップデートします：Release ワークフロー（Actions → Release）を実行すると、git タグからバージョンを計算してビルドし、タグと GitHub Release を自動的に作成します——タグを手動でプッシュしないでください。beta チャンネルはナイトリービルドです。各リリースは Apple silicon と Intel の独立したアプリをそれぞれ提供し、各々が独自のアップデートフィードを持ちます（universal バイナリなし、アーキテクチャをまたぐアップデートなし）。[docs/RELEASING.md](../RELEASING.md) を参照してください。
-
-## Architecture
-
-- **LockIMEKit**（静的ライブラリ）——システムフレームワークのみを使う、純粋で完全に単体テストされたロジック：ロックエンジン、アプリモニター、ルール、拡張（Accessibility）オブザーバー、ログモデル、ローカリゼーション。
-- **LockIME**（アプリ）——`@main`、SwiftUI の UI、デザインシステム、そして Sparkle・KeyboardShortcuts・PermissionFlow 向けの薄い統合シム。
+デザインシステムは [docs/DESIGN.md](../DESIGN.md)、リリース手順は [docs/RELEASING.md](../RELEASING.md) を参照してください。
 
 ## License
 
-Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
+[GPL-3.0](../../LICENSE)。Copyright © 2026 Hangzhou Wumou Software Co., Ltd.

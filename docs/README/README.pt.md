@@ -15,13 +15,7 @@
 
 </div>
 
-Um app de barra de menus para macOS que **bloqueia a sua fonte de entrada do teclado**. Sempre que você (ou outro app) troca o método de entrada, o LockIME volta imediatamente para o que está bloqueado — globalmente, por app em primeiro plano, ou (com o modo aprimorado opcional) por URL do navegador.
-
-> macOS 14+ · Apple silicon e Intel — apps separados, baixe o arquivo
-> `-arm64` ou `-x86_64` correspondente ao seu Mac · construído com SwiftUI,
-> Liquid Glass no macOS 26 (Tahoe).
-
-## Screenshots
+O LockIME é um app de barra de menus para macOS que bloqueia a sua fonte de entrada do teclado. Quando você ou outro app troca o método de entrada, ele volta na hora para a bloqueada: globalmente, por app ou por URL do navegador.
 
 <p align="center">
   <picture>
@@ -40,76 +34,49 @@ Um app de barra de menus para macOS que **bloqueia a sua fonte de entrada do tec
 
 ## Install
 
-Instale com o [Homebrew](https://brew.sh) (o cask escolhe a build
-correspondente à arquitetura do seu Mac):
-
 ```sh
 brew install --cask oomol-lab/tap/lockime
 ```
 
-Ou baixe o `.dmg` correspondente ao seu Mac (`-arm64` para Apple silicon,
-`-x86_64` para Intel) na
-[última versão](https://github.com/oomol-lab/LockIME/releases/latest).
-De qualquer forma, o app se mantém atualizado sozinho via Sparkle.
+Ou baixe o `.dmg` na [versão mais recente](https://github.com/oomol-lab/LockIME/releases/latest): `-arm64` para Apple silicon, `-x86_64` para Intel. Requer macOS 14 ou posterior. O LockIME se atualiza pelo Sparkle, em um canal stable ou beta.
 
 ## Features
 
-- **Rebloqueio instantâneo** — devolve a fonte de entrada ativa para a bloqueada no momento em que você (ou outro app) a troca, globalmente ou por app.
-- **Detecção de conflitos** — se outro programa reimpõe repetidamente a própria fonte de entrada (por exemplo, um jogo com gestão de IME integrada), o LockIME percebe o cabo de guerra e recua por um instante em vez de alternar sem fim, registrando *Conflito detectado* no registro de ativações; dê a esse app uma regra própria de *Ignorar* ou *Alternar para* para uma solução duradoura.
-- **Regras para processos avulsos** — programas que rodam a partir de um executável avulso em vez de um bundle `.app` (por exemplo, o `java` do Minecraft, iniciado por um launcher de terceiros) também podem receber regras: enquanto estão em execução, o seletor de apps os lista sob uma identidade sintética `process:<executable>` (por exemplo, `process:java`).
-- **Bloquear ou alternar** — as regras por app e por URL podem *bloquear* uma fonte de entrada (reaplicada sempre que ela desvia) ou apenas *alternar* para ela uma vez quando você foca o app ou a página, deixando você livre para mudá-la depois.
-- **Bloquear globalmente, ou apenas alternar** — dê à fonte de entrada padrão global um de três comportamentos: *bloquear* para fixá-la em todo lugar; *alternar* para alternar você para ela uma vez sempre que um app recorre ao padrão global, depois deixá-lo livre (disparando de novo cada vez que um app recorre ao padrão global); ou **Nenhuma** para nenhum comportamento global — o LockIME age apenas através de regras por app e por URL. *Alternar* alterna você ativamente sempre que um app recorre ao padrão global; **Nenhuma** não faz nada globalmente.
-- **Correspondência flexível de URL** — as regras por URL (modo aprimorado) correspondem por um domínio e seus subdomínios, por um domínio exato, por uma palavra-chave de domínio, ou por uma expressão regular sobre a URL inteira, e se aplicam em uma ordem de prioridade que você arrasta para organizar — a primeira correspondência vence.
-- **Controle pela barra de menus** — ative/desative, troque a fonte de entrada bloqueada, veja a fonte atual e acompanhe o contador de ativações pela barra de menus.
-- **Atalhos de teclado** — atalhos globais configuráveis para ativar/desativar o LockIME e percorrer a fonte de entrada bloqueada, além de atalhos por app para percorrer ou remover a regra do app em primeiro plano.
-- **Iniciar no login** — inicia automaticamente quando você faz login (desativado por padrão).
-- **Modo claro e escuro** — uma linguagem de design unificada e nativa do sistema, que se adapta às aparências clara e escura, além de um ícone de app sob medida. Veja [docs/DESIGN.md](../DESIGN.md).
-- **Troca de idioma ao vivo** — alterne instantaneamente entre 9 idiomas, sem reiniciar: English, 简体中文, 繁體中文, 日本語, Français, Deutsch, Español, Português, Русский.
-- **Registro de ativações de 24 horas** — veja o que foi trocado, por quê e por quanto tempo.
-- **Backup da configuração** — exporte suas regras por app e por URL para um arquivo `.lockime` e importe-as de volta, com uma etapa de prévia que lista adições, conflitos e remoções antes de aplicar qualquer coisa.
-- **Atualização automática** — canais stable e beta via Sparkle, com uma janela de atualização personalizada.
-- **Download minúsculo** — o app inteiro cabe em um `.dmg` com menos de 3 MB.
-- **Sem permissões do sistema para o bloqueio básico** — um modo aprimorado opcional, condicionado à permissão de Accessibility, libera regras mais finas por URL e por campo em foco.
-- **Automação** — um esquema de URL `lockime://` permite que outros apps, scripts e o Shortcuts controlem o LockIME (veja abaixo).
+- **Bloquear ou alternar.** Uma regra para um app ou URL bloqueia uma fonte de entrada, voltando a ela sempre que muda, ou alterna para ela uma única vez quando você foca o app ou a página e depois deixa você livre.
+- **Padrão global.** Bloqueie uma fonte de entrada em todo lugar, alterne para ela uma vez em cada app que recorre ao padrão, ou escolha *Nenhuma* e deixe suas regras fazerem todo o trabalho.
+- **Regras de URL e da barra de endereços.** O bloqueio básico não precisa de permissões do sistema. Um modo aprimorado opcional pede a permissão de Accessibility e adiciona regras por URL e para a barra de endereços do navegador. As regras de URL correspondem por um domínio e seus subdomínios, um domínio exato, uma palavra-chave ou uma expressão regular sobre a URL inteira; arraste-as para definir a prioridade, e a primeira correspondência vence.
+- **Executáveis avulsos.** Programas sem bundle `.app`, como o `java` do Minecraft, aparecem no seletor de apps como `process:java` enquanto estão em execução.
+- **Tratamento de conflitos.** Quando outro programa insiste em impor a própria fonte de entrada, o LockIME recua em vez de brigar e anota o conflito no registro. Dê a esse app uma regra *Ignorar* ou *Alternar para* para uma solução duradoura.
+- **Barra de menus e atalhos.** Ative ou desative o LockIME e troque a fonte de entrada bloqueada pela barra de menus ou com atalhos globais. Os atalhos também podem percorrer ou remover a regra do app em primeiro plano.
+- **Registro de ativações.** As últimas 24 horas: o que foi alternado, por quê e por quanto tempo.
+- **Backup.** Exporte as regras para um arquivo `.lockime`. A importação mostra uma prévia de adições, conflitos e remoções antes de aplicar qualquer coisa.
+- **E também:** abrir ao iniciar sessão, 9 idiomas de interface que mudam sem reiniciar e um download de menos de 3 MB.
 
 ## Comparison
 
-As duas alternativas ao LockIME mais usadas são o **[Input Source Pro](https://github.com/runjuu/InputSourcePro)** e o **[KeyboardHolder](https://github.com/leaves615/KeyboardHolder)**, ao lado de uma longa cauda de ferramentas menores de código aberto e de linha de comando. Todas elas *alternam* a fonte de entrada conforme você se move entre apps ou sites; o LockIME é construído em torno de um **bloqueio** contínuo que a reaplica no momento em que ela desvia — ao mesmo tempo em que qualquer regra ainda pode recorrer a uma *alternância* única.
+O [Input Source Pro](https://github.com/runjuu/InputSourcePro) e o [KeyboardHolder](https://github.com/leaves615/KeyboardHolder) alternam a fonte de entrada conforme você passa de um app ou site para outro. O LockIME também a mantém: uma fonte de entrada bloqueada é reaplicada sempre que muda.
 
 | | LockIME | Input Source Pro | KeyboardHolder |
 |---|---|---|---|
-| Preço | Grátis | Grátis | Grátis (doação) |
-| Código aberto | GPL-3.0 | GPL-3.0 | ✗ (fechado) |
+| Código aberto | GPL-3.0 | GPL-3.0 | ✗ |
 | macOS mínimo | 14 | 11 | 10.15 |
 | Tamanho do download | < 3 MB | ≈ 7.6 MB | ≈ 4.5 MB |
-| Regras por app | ✓ | ✓ | ✓ |
-| Regras por site / URL | ✓ | ✓ | ✓ |
-| Tipos de correspondência de URL | subdomínio · exato · palavra-chave · regex | subdomínio · exato · regex | domínio (curinga) |
-| Regra da barra de endereços (campo de URL) | ✓ (bloqueio/alternância/prioridade) | ✓ (fonte padrão) | — |
 | Rebloqueio contínuo | ✓ | ✗ | ✗ |
-| Bloquear *ou* alternar uma vez, por regra | ✓ | ✗ | ✗ |
+| Bloquear ou alternar uma vez, por regra | ✓ | ✗ | ✗ |
+| Tipos de correspondência de URL | subdomínio, exato, palavra-chave, regex | subdomínio, exato, regex | domínio (curinga) |
+| Regra da barra de endereços | ✓ (bloqueio/alternância/prioridade) | ✓ (fonte padrão) | — |
 | Atalhos de teclado globais | ✓ | ✓ | ✗ |
-| Controle pela barra de menus | ✓ | ✓ | ✓ |
 | Dicas de entrada na tela | ✗ | ✓ | ✓ (opcional) |
 | Registro de ativações de 24 horas | ✓ | ✗ | ✗ |
 | Backup / importação da configuração | ✓ (`.lockime`, com prévia) | ✓ (exportar/importar + CLI) | — |
 | Automação por esquema de URL | ✓ (`lockime://`, x-callback-url) | parcial (importação `inputsourcepro://`) | ✗ |
-| Idiomas da interface | 9 (troca ao vivo) | 6 | zh · en · ja |
-| Permissões do sistema | nenhuma para o básico · Accessibility por URL | nenhuma para o básico · Accessibility por URL | Accessibility¹ |
-| Atualização automática | Sparkle (stable + beta) | ✓ | ✓ |
-| Mantido ativamente (2026) | ✓ | ✓ | ✓ |
+| Idiomas da interface | 9 | 6 | 3 |
 
-¹ O KeyboardHolder não documenta seus requisitos de permissão; ler a barra de endereços do navegador para suas regras por site exige acesso de Accessibility na prática. Um "—" marca uma capacidade não documentada, não uma ausência confirmada.
-
-**Escolhendo entre eles:** o Input Source Pro tem a maior comunidade e as dicas de entrada na tela mais ricas; o KeyboardHolder é uma memória por app refinada e sem configuração. Recorra ao LockIME quando você quer uma fonte de entrada *fixada* — por app, por URL ou na barra de endereços, reaplicada no instante em que qualquer coisa a muda — em vez de apenas alternada quando você chega.
-
-**Outras ferramentas:** [SwitchKey](https://github.com/itsuhane/SwitchKey) (apenas por app, sem manutenção), [Kawa](https://github.com/hatashiro/kawa) (manual, acionado por atalhos), InputSwitcher (freemium, apenas por app) e [macism](https://github.com/laishulu/macism) (um bloco de construção de linha de comando, não um alternador com interface gráfica).
-
-> Comparado com o Input Source Pro 2.11.0 e o KeyboardHolder 1.14.10, em meados de 2026 — os detalhes mudam; correções são bem-vindas.
+> Comparado com o Input Source Pro 2.11.0 e o KeyboardHolder 1.14.10, em meados de 2026. "—" indica um recurso não documentado, não uma ausência confirmada. Correções são bem-vindas.
 
 ## Automation
 
-O LockIME expõe um esquema de URL `lockime://` para que outros apps, scripts, o Shortcuts e launchers possam controlá-lo — ativá-lo ou desativá-lo, redirecionar a fonte de entrada, gerenciar regras e ler o estado de volta com callbacks [x-callback-url](https://x-callback-url.com). Ela está desativada por padrão — ative-a em **Ajustes ▸ Geral ▸ Automação**.
+Um esquema de URL `lockime://` permite que scripts, o Shortcuts e outros apps ativem ou desativem o LockIME, troquem a fonte de entrada bloqueada, gerenciem regras e leiam o estado via [x-callback-url](https://x-callback-url.com). Ele vem desativado por padrão; ative-o em **Ajustes ▸ Geral ▸ Automação**.
 
 ```sh
 open "lockime://lock"
@@ -117,43 +84,24 @@ open "lockime://lock-to-source?id=com.apple.keylayout.ABC"
 open "lockime://set-app-rule?bundle=com.apple.Terminal&mode=lock&source=com.apple.keylayout.ABC"
 ```
 
-Referência completa: **[URL Scheme API](../URL-Scheme-API/README.pt.md)**.
-
-## Design
-
-O LockIME segue um único sistema de design (`Sources/LockIME/UI/DesignSystem.swift`): cores semânticas, materiais do sistema e SF Symbols conduzem a adaptação claro/escuro; o Liquid Glass fica reservado apenas à camada flutuante/de navegação. A cor de destaque da marca, "Lock Indigo", é distribuída como asset `AccentColor`. A especificação completa está em [docs/DESIGN.md](../DESIGN.md).
-
-O ícone do app é gerado programaticamente (sem ferramenta de design) — regenere-o com:
-
-```sh
-./scripts/make-appicon.sh   # renders the master via SwiftUI and rebuilds the appiconset
-```
+Referência completa: [URL Scheme API](../URL-Scheme-API/README.pt.md).
 
 ## Development
 
-Requer Xcode 26+ (o app em si tem como alvo o macOS 14+), além de [XcodeGen](https://github.com/yonaskolb/XcodeGen) + [xcbeautify](https://github.com/cpisciotta/xcbeautify) (`brew install xcodegen xcbeautify`).
+Requer Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) e [xcbeautify](https://github.com/cpisciotta/xcbeautify) (`brew install xcodegen xcbeautify`). O projeto do Xcode é gerado a partir de `project.yml` e não é versionado.
 
 ```sh
-make gen     # generate LockIME.xcodeproj from project.yml
-make build   # build (Debug)
-make run     # build & launch
-make test    # run unit tests
-make archive # Release archive (Developer ID)
+make gen      # generate LockIME.xcodeproj from project.yml
+make build    # build (Debug)
+make run      # build & launch
+make test     # run unit tests
+make test-hw  # integration tests; briefly changes the input source
 ```
 
-O projeto do Xcode é gerado a partir de `project.yml` e não é versionado.
+A lógica fica no `LockIMEKit`, uma biblioteca estática com testes unitários que usa apenas frameworks do sistema. O target de app `LockIME` contém a interface SwiftUI e as integrações com Sparkle, KeyboardShortcuts e PermissionFlow. O ícone do app é gerado por `./scripts/make-appicon.sh`.
 
-Os testes de integração que tocam o hardware (troca real de TIS) estão excluídos do `make test`; execute-os com `make test-hw` (muda brevemente a fonte de entrada).
-
-## Releasing
-
-Lançamentos Developer ID notarizados e acionados por dispatch, com atualização automática via Sparkle nos canais **stable** e **beta**: execute o workflow Release (Actions → Release) — ele calcula a versão a partir das tags do git, compila e cria a tag e a GitHub Release automaticamente — nunca envie uma tag manualmente. O canal beta é a build nightly. Cada lançamento traz apps separados para Apple silicon e Intel, cada um com seu próprio feed de atualização (sem binário universal, sem atualizações entre arquiteturas). Veja [docs/RELEASING.md](../RELEASING.md).
-
-## Architecture
-
-- **LockIMEKit** (biblioteca estática) — lógica pura, totalmente coberta por testes unitários, usando apenas frameworks do sistema: motor de bloqueio, monitor de apps, regras, observador aprimorado (Accessibility), modelo de registro, localização.
-- **LockIME** (app) — `@main`, a interface SwiftUI, o sistema de design e as finas camadas de integração para Sparkle, KeyboardShortcuts e PermissionFlow.
+Veja [docs/DESIGN.md](../DESIGN.md) para o sistema de design e [docs/RELEASING.md](../RELEASING.md) para o processo de lançamento.
 
 ## License
 
-Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
+[GPL-3.0](../../LICENSE). Copyright © 2026 Hangzhou Wumou Software Co., Ltd.
