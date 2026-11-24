@@ -3,6 +3,21 @@
     <channel>
         <title>LockIME</title>
         <item>
+            <title>1.7.3-beta.1</title>
+            <pubDate>Tue, 24 Nov 2026 01:15:37 +0000</pubDate>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:version>202611240113</sparkle:version>
+            <sparkle:shortVersionString>1.7.3-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## What's Changed
+* docs(readme): trim the README in every language by @BlackHole1 in https://github.com/oomol-lab/LockIME/pull/72
+
+
+**Full Changelog**: https://github.com/oomol-lab/LockIME/compare/v1.7.2...v1.7.3-beta.1
+]]></description>
+            <enclosure url="https://github.com/oomol-lab/LockIME/releases/download/v1.7.3-beta.1/LockIME-1.7.3-beta.1-x86_64.zip" length="2635921" type="application/octet-stream" sparkle:edSignature="jrS0yPTofX2kCYn49g4cjzXV3vdScpjbtoY8yFjcbs1MjzDVO6fCM0EsKpUGrgTWzblXQe10umVi6oP1nl1DDA=="/>
+        </item>
+        <item>
             <title>1.7.2</title>
             <pubDate>Tue, 17 Nov 2026 14:46:28 +0000</pubDate>
             <sparkle:version>202611171444</sparkle:version>
